@@ -56,6 +56,7 @@ public sealed class PgRectificaciones(PgDatabase database, FotosPrivadas fotos)
             SELECT c."CilindroQR" AS "Value" FROM afrisan."Pesaje" p JOIN afrisan."Cilindros" c USING("Id_Cilindro")
             WHERE p."Id_Pesaje"=@p0 AND p."Id_OrdenTrabajo"=@p1
             """,dto.PesajeId,ot)).SingleOrDefault() ?? throw new ReglaInventarioException("Pesaje no encontrado en esta OT.",404);
+        if (anterior is null) await Prevalidar(u, ot, dto);
         var f = await fotos.Guardar(id,dto.Foto.Id,"Rectificacion",cilindro,dto.Foto.Nombre,
             dto.Foto.ContentType,dto.Foto.Base64,user.FindFirstValue("correo")!,previa);
         if (anterior is not null) return anterior;
@@ -87,6 +88,27 @@ public sealed class PgRectificaciones(PgDatabase database, FotosPrivadas fotos)
         await u.Commit();
         return resultado;
     }
+    // Repite, en el mismo orden y con los mismos mensajes (HTTP 409), las reglas de afrisan.rectificacion_validar()
+    // que no dependen de la foto. Así una solicitud que la base rechazaría no deja una foto huérfana en Storage.
+    private static async Task Prevalidar(PgUnit u, long ot, SolicitarRectificacionRequest dto)
+    {
+        var p = (await u.Query<PrevalidacionRectificacion>("""
+            SELECT o."Estado",p."Tipo",c."TaraGr" AS "Tara",c."Capacidadgr" AS "Capacidad",v."PesoBrutoGr" AS "Vigente",
+              (EXISTS(SELECT 1 FROM afrisan."Despacho" WHERE "Id_Pesaje"=p."Id_Pesaje")
+               OR EXISTS(SELECT 1 FROM afrisan."RecepcionBodega" WHERE "Id_Pesaje"=p."Id_Pesaje")
+               OR EXISTS(SELECT 1 FROM afrisan."OperacionTerreno" WHERE "Estado"='Registrada' AND p."Id_Pesaje" IN ("Id_PesajeInstalado","Id_PesajeRetirado"))) AS "Confirmado"
+            FROM afrisan."Pesaje" p JOIN afrisan."Cilindros" c USING("Id_Cilindro")
+            JOIN afrisan."OrdenTrabajo" o ON o."Id_OrdenTrabajo"=@p1
+            JOIN afrisan."PesajeVigente" v ON v."Id_Pesaje"=p."Id_Pesaje"
+            WHERE p."Id_Pesaje"=@p0 AND p."Id_OrdenTrabajo"=@p1
+            """, dto.PesajeId, ot)).SingleOrDefault() ?? throw new ReglaInventarioException("Pesaje no encontrado en esta OT.", 404);
+        if (p.Estado == "Cerrada") throw new ReglaInventarioException("No se rectifica una OT cerrada", 409);
+        if (p.Tipo == "Inicial") throw new ReglaInventarioException("Pesaje ajeno a la OT", 409);
+        if (!p.Confirmado) throw new ReglaInventarioException("El pesaje debe estar confirmado", 409);
+        if (dto.PesoPropuestoGr < p.Tara || (decimal)dto.PesoPropuestoGr > (decimal)p.Tara + p.Capacidad)
+            throw new ReglaInventarioException("Peso fuera de tara/capacidad", 409);
+        if (dto.PesoPropuestoGr == p.Vigente) throw new ReglaInventarioException("El peso propuesto no cambia el vigente", 409);
+    }
     private static async Task<FotoArchivo?> Evidencia(PgUnit u,long ot,Guid solicitud)
     {
         var json = (await u.Query<string>("SELECT \"Evidencia\"::text AS \"Value\" FROM afrisan.\"RectificacionPesaje\" WHERE \"Id\"=@p0 AND \"Id_OrdenTrabajo\"=@p1",solicitud,ot)).SingleOrDefault();
@@ -100,3 +122,4 @@ public sealed class PgRectificaciones(PgDatabase database, FotosPrivadas fotos)
     }
 }
 public sealed record AccesoRectificacion(long Id,int Tecnico);
+public sealed record PrevalidacionRectificacion(string Estado,string Tipo,long Tara,long Capacidad,long Vigente,bool Confirmado);

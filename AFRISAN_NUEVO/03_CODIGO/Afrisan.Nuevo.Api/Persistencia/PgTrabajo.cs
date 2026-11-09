@@ -88,6 +88,10 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         var c=await Cilindro(u,dto.Codigo);
         var anterior=(await u.Query<EvidenciaRow>(EvidenciasSql+" JOIN afrisan.\"Despacho\" d ON d.\"Id_Pesaje\"=e.\"Id_Pesaje\" WHERE d.\"Id_Despacho\"=@p0 AND d.\"Id_OrdenTrabajo\"=@p1",dto.IdOperacion,o.Id)).SingleOrDefault();
         var previa=anterior is null?null:new FotoArchivo(anterior.Id,"Despacho",c.Codigo,anterior.Nombre,anterior.ContentType,anterior.Bytes,anterior.Ruta,anterior.Sha256,anterior.Fecha,anterior.Usuario,anterior.Bucket);
+        // Antes de subir la foto se rechaza el peso que el disparador de Pesaje rechazaría (mismo mensaje y HTTP 409),
+        // para no dejar fotos huérfanas en Storage. Los reintentos conservan su validación original.
+        if(anterior is null&&(dto.PesoBrutoGr<c.TaraGr||(decimal)dto.PesoBrutoGr>(decimal)c.TaraGr+c.CapacidadGr))
+            throw new ReglaInventarioException("Peso fuera de tara/capacidad",409);
         var f=await fotos.Guardar(id,dto.Foto.Id,"Despacho",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user),previa);
         var metadata=Write(new[]{new{id=f.Id,bucket=f.Bucket,ruta=f.Ruta,nombre=f.Nombre,mime=f.ContentType,bytes=f.Bytes,sha256=f.Sha256}});
         await u.Query<Guid>("SELECT \"Id_Despacho\" AS \"Value\" FROM afrisan.retirar_cilindro(@p0,@p1,@p2,@p3,@p4::jsonb)",dto.IdOperacion,o.Id,c.Id,dto.PesoBrutoGr,metadata);
