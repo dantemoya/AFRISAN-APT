@@ -1,0 +1,121 @@
+@page "/mantenedores"
+@attribute [Authorize(Roles = Roles.Catalogo)]
+@inject InventarioClient Api
+@inject SesionService Sesion
+
+<PageTitle>Mantenedores · AFRISAN</PageTitle>
+<div class="page-heading"><div><span class="eyebrow">CATÁLOGOS</span><h1>Mantenedores</h1><p>Edita los datos de referencia y administra su disponibilidad para nuevos registros.</p></div><a class="btn secondary" href="refrigerantes">Registrar refrigerante</a></div>
+@if (error is not null) { <div class="notice error" role="alert">@error</div> }
+@if (mensaje is not null) { <div class="notice success" role="status">@mensaje</div> }
+@if (Sesion.Entorno?.Modo != "PostgreSQL")
+{
+    <div class="notice info">La gestión de mantenedores requiere la instalación persistente de AFRISAN.</div>
+}
+else
+{
+    <section class="panel"><div class="filter-bar">
+        <div><label for="mant-tipo">Mantenedor</label><select id="mant-tipo" @bind="tipo" @bind:after="Cerrar" disabled="@ocupado">
+            @if (EsAdmin) { <option value="Cliente">Clientes</option><option value="Sucursal">Sucursales</option> }
+            <option value="Refrigerante">Refrigerantes</option>
+        </select></div>
+        <div><label for="mant-buscar">Buscar</label><input id="mant-buscar" @bind="busqueda" @bind:event="oninput" /></div>
+        <button class="btn secondary" disabled="@(ocupado || cargando)" @onclick="Actualizar">Actualizar</button>
+    </div><label class="check-label"><input type="checkbox" @bind="incluirInactivos" /> Mostrar también inactivos</label>
+    @if (EsAdmin && tipo is "Cliente" or "Sucursal") { <p class="mt"><a href="administracion">Crear clientes o sucursales →</a></p> }
+    @if (cargando) { <p role="status">Consultando mantenedores…</p> }
+    else
+    {
+        <div class="table-wrap"><table><thead><tr><th>Referencia</th><th>Nombre</th><th>Estado</th><th></th></tr></thead><tbody>
+        @if (tipo == "Cliente")
+        {
+            @foreach (var c in clientes.Where(c=>(incluirInactivos||c.Activo)&&Coincide(c.Rut,c.Nombre)))
+            { <tr @key="c.Id"><td>@c.Rut</td><td>@c.Nombre</td><td>@Estado(c.Activo)</td><td><button class="btn subtle" disabled="@ocupado" @onclick="()=>Elegir(c)">Gestionar</button></td></tr> }
+        }
+        else if (tipo == "Sucursal")
+        {
+            @foreach (var s in sucursales.Where(s=>(incluirInactivos||(s.Activo&&s.ClienteActivo))&&Coincide(s.Cliente,s.Nombre,s.Direccion)))
+            { <tr @key="s.Id"><td>@s.Cliente<small class="cell-note">@s.Direccion</small></td><td>@s.Nombre</td><td>@Estado(s.Activo)@if (!s.ClienteActivo) { <small class="cell-note">Cliente inactivo</small> }</td><td><button class="btn subtle" disabled="@ocupado" @onclick="()=>Elegir(s)">Gestionar</button></td></tr> }
+        }
+        else
+        {
+            @foreach (var g in gases.Where(g=>(incluirInactivos||g.Activo)&&Coincide(g.Codigo,g.Nombre)))
+            { <tr @key="g.Id"><td>@g.Codigo</td><td>@g.Nombre</td><td>@Estado(g.Activo)</td><td><button class="btn subtle" disabled="@ocupado" @onclick="()=>Elegir(g)">Gestionar</button></td></tr> }
+        }
+        </tbody></table></div>
+    }
+    </section>
+    @if (Seleccionado)
+    {
+        <section class="panel mt"><h2>Gestionar @tipo.ToLowerInvariant(): @NombreActual</h2>
+            <p>Estado: <strong>@Estado(Activo)</strong>. Las desactivaciones conservan los registros anteriores.</p>
+            @if (sucursal is not null) { <p class="muted">Cliente: @sucursal.Cliente. La sucursal conserva su cliente.</p> }
+            <EditForm Model="edicion" OnValidSubmit="Guardar"><DataAnnotationsValidator /><ValidationSummary />
+                <fieldset disabled="@ocupado">
+                @if (tipo != "Sucursal") { <label for="mant-referencia">@(tipo == "Cliente" ? "RUT del cliente" : "Código del refrigerante")</label><InputText id="mant-referencia" @bind-Value="edicion.Referencia" maxlength="@(tipo=="Cliente"?20:40)" /> }
+                <label for="mant-nombre">Nombre</label><InputText id="mant-nombre" @bind-Value="edicion.Nombre" maxlength="@(tipo=="Refrigerante"?150:200)" />
+                @if (tipo == "Sucursal") { <label for="mant-direccion">Dirección</label><InputText id="mant-direccion" @bind-Value="edicion.Direccion" maxlength="400" /> }
+                <div class="form-actions"><button type="submit" class="btn primary">Guardar cambios</button><button type="button" class="btn secondary" @onclick="Cerrar">Cerrar edición</button></div>
+                </fieldset>
+            </EditForm>
+            <button class="btn secondary mt" disabled="@ocupado" @onclick="CambiarEstado">@(Activo ? "Desactivar registro" : "Activar registro")</button>
+            <p class="field-help">No se desactivan clientes o sucursales con OT abiertas o cilindros instalados, ni refrigerantes con OT abiertas. Reactivar una sucursal requiere que su cliente esté activo.</p>
+        </section>
+    }
+}
+
+@code {
+    private ClienteMantenedorResponse[] clientes=[];
+    private SucursalMantenedorResponse[] sucursales=[];
+    private RefrigeranteMantenedorResponse[] gases=[];
+    private ClienteMantenedorResponse? cliente;
+    private SucursalMantenedorResponse? sucursal;
+    private RefrigeranteMantenedorResponse? gas;
+    private Edicion edicion=new();
+    private string tipo="Refrigerante",busqueda="";
+    private bool incluirInactivos,cargando,ocupado;
+    private string? error,mensaje;
+    private bool EsAdmin=>Sesion.Sesion?.Rol=="Administrador";
+    private bool Seleccionado=>cliente is not null||sucursal is not null||gas is not null;
+    private bool Activo=>cliente?.Activo??sucursal?.Activo??gas?.Activo??false;
+    private string NombreActual=>cliente?.Nombre??sucursal?.Nombre??gas?.Nombre??"";
+    private static string Estado(bool activo)=>activo?"Activo":"Inactivo";
+    private bool Coincide(params string[] valores)=>valores.Any(v=>v.Contains(busqueda,StringComparison.OrdinalIgnoreCase));
+    protected override async Task OnInitializedAsync() { if(EsAdmin)tipo="Cliente"; await Cargar(); }
+    private async Task Cargar()
+    {
+        if(Sesion.Entorno?.Modo!="PostgreSQL")return;
+        cargando=true;
+        try { if(EsAdmin) { clientes=await Api.ClientesMantenedorAsync(); sucursales=await Api.SucursalesMantenedorAsync(); } gases=await Api.RefrigerantesMantenedorAsync(); }
+        catch(Exception ex){error=Formato.Error(ex);}
+        finally{cargando=false;}
+    }
+    private async Task Actualizar(){error=null;mensaje=null;Cerrar();await Cargar();}
+    private void Cerrar(){cliente=null;sucursal=null;gas=null;edicion=new();}
+    private void Elegir(ClienteMantenedorResponse c){Cerrar();cliente=c;edicion=new(){Nombre=c.Nombre,Referencia=c.Rut};error=null;mensaje=null;}
+    private void Elegir(SucursalMantenedorResponse s){Cerrar();sucursal=s;edicion=new(){Nombre=s.Nombre,Direccion=s.Direccion};error=null;mensaje=null;}
+    private void Elegir(RefrigeranteMantenedorResponse g){Cerrar();gas=g;edicion=new(){Nombre=g.Nombre,Referencia=g.Codigo};error=null;mensaje=null;}
+    private async Task Ejecutar(Func<Task> accion,string exito)
+    {
+        if(ocupado)return;ocupado=true;error=null;mensaje=null;
+        try{await accion();await Cargar();mensaje=exito;}catch(Exception ex){error=Formato.Error(ex);}finally{ocupado=false;}
+    }
+    private Task Guardar()=>Ejecutar(async()=>
+    {
+        if(cliente is not null){var r=await Api.EditarClienteAsync(cliente.Id,new(){Rut=edicion.Referencia,Nombre=edicion.Nombre,Version=cliente.Version});Elegir(r);}
+        else if(sucursal is not null){var r=await Api.EditarSucursalAsync(sucursal.Id,new(){Nombre=edicion.Nombre,Direccion=edicion.Direccion,Version=sucursal.Version});Elegir(r);}
+        else if(gas is not null){var r=await Api.EditarRefrigeranteAsync(gas.Id,new(){Codigo=edicion.Referencia,Nombre=edicion.Nombre,Version=gas.Version});Elegir(r);}
+    },"Cambios guardados. Se conserva la identidad y el historial del registro.");
+    private Task CambiarEstado()=>Ejecutar(async()=>
+    {
+        var activar=!Activo;
+        if(cliente is not null)cliente=await Api.EstadoClienteAsync(cliente.Id,new(){Activo=activar,Version=cliente.Version});
+        else if(sucursal is not null)sucursal=await Api.EstadoSucursalAsync(sucursal.Id,new(){Activo=activar,Version=sucursal.Version});
+        else if(gas is not null)gas=await Api.EstadoRefrigeranteAsync(gas.Id,new(){Activo=activar,Version=gas.Version});
+    },"Estado actualizado. Los registros anteriores se conservan.");
+    private sealed class Edicion
+    {
+        [System.ComponentModel.DataAnnotations.Required,System.ComponentModel.DataAnnotations.StringLength(200)] public string Nombre{get;set;}="";
+        public string Referencia{get;set;}="";
+        public string Direccion{get;set;}="";
+    }
+}

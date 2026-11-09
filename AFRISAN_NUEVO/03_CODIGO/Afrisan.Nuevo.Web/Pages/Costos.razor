@@ -1,0 +1,119 @@
+@page "/costos"
+@attribute [Authorize(Roles = RolesControl.Costos)]
+@inject InventarioClient Api
+@inject SesionService Sesion
+
+<PageTitle>Precios y costos · AFRISAN</PageTitle>
+<div class="page-heading"><div><span class="eyebrow">REFRIGERANTES</span><h1>Precios y costos</h1><p>Valora una cantidad declarada de refrigerante en CLP, EUR, USD o UF.</p></div><button class="btn secondary" disabled="@ocupado" @onclick="Cargar">Actualizar</button></div>
+@if(error is not null){<div class="notice error" role="alert">@error</div>}
+@if(mensaje is not null){<div class="notice success" role="status">@mensaje</div>}
+@if(Sesion.Entorno?.Modo!="PostgreSQL"){<div class="notice info">Este módulo requiere la instalación persistente de AFRISAN.</div>}
+else
+{
+    <section class="panel"><h2>Valores de conversión ingresados</h2><p class="muted">Ingresa cuántos pesos chilenos equivale una unidad de EUR, USD o UF y la fecha de ese valor. La aplicación utiliza esos valores para calcular; no consulta cotizaciones automáticamente.</p>
+        @foreach(var moneda in new[]{"EUR","USD","UF"})
+        {
+            var c=cambios.FirstOrDefault(c=>c.Moneda==moneda);
+            <p><strong>@moneda</strong>: @(c is null?"Sin valor ingresado":$"1 {moneda} = {N(c.ClpPorUnidad)} CLP · valor del {c.FechaValor:dd/MM/yyyy}")</p>
+        }
+        @if(EsAdmin)
+        {
+            <form @onsubmit="GuardarCambio" @onsubmit:preventDefault><fieldset disabled="@ocupado">
+                <label for="cambio-moneda">Moneda</label><select id="cambio-moneda" @bind="cambioMoneda"><option>USD</option><option>EUR</option><option>UF</option></select>
+                <label for="cambio-valor">CLP por una unidad</label><input id="cambio-valor" type="number" step="0.00000001" min="0.00000001" max="9999999" required @bind="cambioValor" />
+                <label for="cambio-fecha">Fecha del valor ingresado</label><input id="cambio-fecha" type="date" required @bind="cambioFecha" max="@Hoy.ToString("yyyy-MM-dd")" />
+                <button class="btn primary mt" type="submit">Guardar valor de cambio</button>
+            </fieldset></form>
+        }
+    </section>
+    <section class="panel mt"><h2>Precios por gramo</h2>
+        @if(EsAdmin)
+        {
+            <form @onsubmit="GuardarPrecio" @onsubmit:preventDefault><fieldset disabled="@ocupado">
+                <label for="precio-gas">Refrigerante</label><select id="precio-gas" required @bind="precioGas"><option value="0">Selecciona un gas</option>@foreach(var g in gases){<option value="@g.Id">@g.Codigo · @g.Nombre</option>}</select>
+                <label for="precio-moneda">Moneda del precio</label><select id="precio-moneda" @bind="precioMoneda"><option>CLP</option><option>EUR</option><option>USD</option><option>UF</option></select>
+                <label for="precio-valor">Precio de un gramo</label><input id="precio-valor" type="number" min="0" max="999999" step="0.00000001" required @bind="precioValor" />
+                <label for="precio-fecha">Vigente desde</label><input id="precio-fecha" type="date" required @bind="precioFecha" />
+                <button class="btn primary mt" type="submit">Registrar precio</button>
+            </fieldset></form>
+        }
+        <div class="table-wrap mt"><table><thead><tr><th>Gas</th><th>Precio / g</th><th>Vigencia</th></tr></thead><tbody>@foreach(var p in precios){<tr><td>@p.Refrigerante</td><td>@N(p.PrecioPorGramo) @p.Moneda</td><td>@p.VigenteDesde.ToString("dd/MM/yyyy")</td></tr>}</tbody></table></div>
+        @if(precios.Length==0){<p>No hay precios registrados.</p>}
+    </section>
+    @if(EsAdmin)
+    {
+        <section class="panel mt"><h2>Valorar refrigerante de una operación</h2><p class="muted">Escribe los gramos que deseas valorar. El gas instalado se muestra como referencia; esta valoración no registra consumo ni una factura.</p>
+            <form @onsubmit="GuardarCosto" @onsubmit:preventDefault><fieldset disabled="@ocupado">
+                <label for="costo-operacion">Operación confirmada</label><select id="costo-operacion" required @bind="operacionId" @bind:after="LimpiarSeleccion"><option value="@Guid.Empty">Selecciona una operación</option>@foreach(var o in operaciones){<option value="@o.Id">@o.Orden · @o.Sucursal · @o.Refrigerante · @N(o.GrInstalados) g instalados</option>}</select>
+                <label for="costo-precio">Precio aplicado</label><select id="costo-precio" required @bind="costoPrecio" @bind:after="LimpiarCambio"><option value="0">Selecciona un precio vigente</option>@foreach(var p in PreciosOperacion){<option value="@p.Id">@p.Refrigerante · @N(p.PrecioPorGramo) @p.Moneda/g · @p.VigenteDesde.ToString("dd/MM/yyyy")</option>}</select>
+                <label for="costo-gramos">Gramos a valorar</label><input id="costo-gramos" type="number" min="0.000001" max="999999999" step="0.000001" required @bind="gramos" />
+                @if(Precio is not null&&Precio.Moneda!="CLP")
+                {
+                    <label for="costo-cambio">Valor manual de conversión a CLP</label><select id="costo-cambio" required @bind="costoCambio"><option value="0">Selecciona un valor ingresado</option>@foreach(var c in cambios.Where(c=>c.Moneda==Precio.Moneda)){<option value="@c.Id">@N(c.ClpPorUnidad) CLP / @c.Moneda · @c.FechaValor.ToString("dd/MM/yyyy")</option>}</select>
+                }
+                @if(Total is not null)
+                {
+                    <p role="status"><strong>Total: @N(Total.Value) @Precio!.Moneda</strong></p>
+                    @if(TotalClp is not null)
+                    {
+                        <p>Equivalente: <strong>@N(TotalClp.Value) CLP</strong></p>
+                        @foreach(var moneda in new[]{"EUR","USD","UF"})
+                        {
+                            var c=cambios.FirstOrDefault(c=>c.Moneda==moneda);
+                            if(c is not null){<p>@N(TotalClp.Value/c.ClpPorUnidad) @moneda <small>(referencia con el valor del @c.FechaValor.ToString("dd/MM/yyyy"))</small></p>}
+                        }
+                    }
+                }
+                <button class="btn primary mt" type="submit">Guardar valoración</button>
+            </fieldset></form>
+        </section>
+    }
+    <section class="panel mt"><h2>Valoraciones guardadas</h2><p class="muted">El precio y la conversión aplicada quedan conservados. Las conversiones de referencia mostradas al calcular no reemplazan el valor histórico.</p>
+        <p><strong>Total valorado: @N(costos.Sum(c=>c.TotalClp??0)) CLP</strong>@if(costos.Any(c=>c.TotalClp is null)){<span> · Existen registros anteriores sin conversión a CLP.</span>}</p>
+        <div class="table-wrap"><table><thead><tr><th>OT / sucursal</th><th>Refrigerante</th><th>Cantidad</th><th>Total original</th><th>Total CLP</th><th>Conversión aplicada</th></tr></thead><tbody>
+            @foreach(var c in costos){<tr><td>@c.Orden<small class="cell-note">@c.Sucursal</small></td><td>@c.Refrigerante</td><td>@N(c.Gramos) g</td><td>@N(c.Total) @c.Moneda</td><td>@(c.TotalClp is null?"Sin conversión":N(c.TotalClp.Value))</td><td>@(c.FactorClp is null?"Sin valor":N(c.FactorClp.Value))<small class="cell-note">@(c.FechaCambio?.ToString("dd/MM/yyyy")??"CLP")</small></td></tr>}
+        </tbody></table></div>@if(costos.Length==0){<p>No hay valoraciones guardadas.</p>}
+    </section>
+}
+
+@code {
+    private PrecioResponse[] precios=[];private CambioResponse[] cambios=[];private CostoResponse[] costos=[];private OperacionValorableResponse[] operaciones=[];private RefrigeranteResponse[] gases=[];
+    private bool ocupado;private string? error,mensaje;
+    private bool EsAdmin=>Sesion.Sesion?.Rol=="Administrador";
+    private static DateOnly Hoy=>DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTimeOffset.UtcNow,"America/Santiago").DateTime);
+    private string cambioMoneda="USD",precioMoneda="CLP";private decimal cambioValor,precioValor,gramos;private long precioGas,costoPrecio,costoCambio;private Guid operacionId;
+    private DateOnly cambioFecha=Hoy,precioFecha=Hoy;
+    private PrecioRequest? envioPrecio;private CambioRequest? envioCambio;private ValorarRefrigeranteRequest? envioCosto;
+    private PrecioResponse? Precio=>precios.FirstOrDefault(p=>p.Id==costoPrecio);
+    private IEnumerable<PrecioResponse> PreciosOperacion=>precios.Where(p=>p.RefrigeranteId==operaciones.FirstOrDefault(o=>o.Id==operacionId)?.RefrigeranteId&&p.VigenteDesde<=Hoy);
+    private decimal? Total=>gramos is >0 and <=999999999&&Precio is not null?gramos*Precio.PrecioPorGramo:null;
+    private decimal? TotalClp=>Precio?.Moneda=="CLP"?Total:Total*cambios.FirstOrDefault(c=>c.Id==costoCambio&&c.Moneda==Precio?.Moneda)?.ClpPorUnidad;
+    private static string N(decimal d)=>decimal.Round(d,8,MidpointRounding.AwayFromZero).ToString("N8",System.Globalization.CultureInfo.GetCultureInfo("es-CL")).TrimEnd('0').TrimEnd(',');
+    private void LimpiarSeleccion(){costoPrecio=0;costoCambio=0;gramos=0;}private void LimpiarCambio()=>costoCambio=0;
+    protected override async Task OnInitializedAsync()=>await Cargar();
+    private async Task Cargar()
+    {
+        if(Sesion.Entorno?.Modo!="PostgreSQL")return;
+        try{precios=await Api.PreciosAsync();cambios=await Api.CambiosAsync();costos=await Api.CostosAsync();if(EsAdmin){operaciones=await Api.OperacionesValorablesAsync();gases=await Api.RefrigerantesAsync();}}catch(Exception ex){error=Formato.Error(ex);}
+    }
+    private async Task Ejecutar(Func<Task> accion,string texto)
+    {
+        if(ocupado)return;ocupado=true;error=null;mensaje=null;
+        try{await accion();await Cargar();mensaje=texto;}catch(Exception ex){error=Formato.Error(ex);}finally{ocupado=false;}
+    }
+    private Task GuardarCambio()=>Ejecutar(async()=>{
+        var dto=new CambioRequest{Moneda=cambioMoneda,ClpPorUnidad=cambioValor,FechaValor=cambioFecha};
+        dto=dto with{SolicitudId=envioCambio is not null&&envioCambio with{SolicitudId=Guid.Empty}==dto?envioCambio.SolicitudId:Guid.NewGuid()};envioCambio=dto;
+        await Api.CambioAsync(dto);envioCambio=null;cambioValor=0;
+    },"Valor manual de cambio registrado.");
+    private Task GuardarPrecio()=>Ejecutar(async()=>{
+        var dto=new PrecioRequest{RefrigeranteId=precioGas,PrecioPorGramo=precioValor,Moneda=precioMoneda,VigenteDesde=precioFecha};
+        dto=dto with{SolicitudId=envioPrecio is not null&&envioPrecio with{SolicitudId=Guid.Empty}==dto?envioPrecio.SolicitudId:Guid.NewGuid()};envioPrecio=dto;
+        await Api.PrecioAsync(dto);envioPrecio=null;precioValor=0;
+    },"Precio registrado; se conservan los precios anteriores.");
+    private Task GuardarCosto()=>Ejecutar(async()=>{
+        var dto=new ValorarRefrigeranteRequest{OperacionId=operacionId,PrecioId=costoPrecio,Gramos=gramos,CambioId=Precio?.Moneda=="CLP"?null:costoCambio};
+        dto=dto with{SolicitudId=envioCosto is not null&&envioCosto with{SolicitudId=Guid.Empty}==dto?envioCosto.SolicitudId:Guid.NewGuid()};envioCosto=dto;
+        await Api.ValorarAsync(dto);envioCosto=null;gramos=0;
+    },"Valoración guardada con su precio y conversión aplicada.");
+}

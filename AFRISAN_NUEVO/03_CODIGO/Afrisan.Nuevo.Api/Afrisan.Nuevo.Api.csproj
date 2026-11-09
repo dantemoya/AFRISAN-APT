@@ -15,6 +15,15 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../../02_BASE_DATOS/07_Habilitar_Persistencia.sql" LogicalName="AFRISAN.Persistencia.sql" />
+    <EmbeddedResource Include="../../02_BASE_DATOS/08_Rectificacion_Pesajes.sql" LogicalName="AFRISAN.Rectificaciones.sql" />
+    <EmbeddedResource Include="../../02_BASE_DATOS/09_Mantenedores_Bajas.sql" LogicalName="AFRISAN.Mantenedores.sql" />
+    <EmbeddedResource Include="../../02_BASE_DATOS/10_Costos_Limites.sql" LogicalName="AFRISAN.CostosLimites.sql" />
     <EmbeddedResource Include="PowerBi/Plantilla/*" LogicalName="AFRISAN.PowerBI.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../PowerBI/AFRISAN.pbip" LogicalName="AFRISAN.Informe.AFRISAN.pbip" />
+    <EmbeddedResource Include="../PowerBI/AFRISAN.Report/**/*" Exclude="../PowerBI/AFRISAN.Report/.pbi/**/*;../PowerBI/AFRISAN.Report/definition.pbir">
+      <LogicalName>AFRISAN.Informe.AFRISAN.Report/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="../PowerBI/AFRISAN.Report/definition.pbir" LogicalName="AFRISAN.Informe.AFRISAN.Report/definition.pbir" />
+    <EmbeddedResource Include="../PowerBI/AFRISAN.SemanticModel/model.bim;../PowerBI/AFRISAN.SemanticModel/definition.pbism" LogicalName="AFRISAN.Informe.AFRISAN.SemanticModel/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

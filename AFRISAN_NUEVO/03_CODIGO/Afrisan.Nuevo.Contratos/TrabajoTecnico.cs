@@ -118,7 +118,7 @@ public sealed record TerminarTrabajoRequest
 {
     [StringLength(2000)] public string? Observacion { get; init; }
 }
-/// <summary>Datos locales de un borrador y sus fotos. No significan confirmación del servidor.</summary>
+/// <summary>Datos locales de un borrador. Los listados omiten las fotos; se cargan al abrirlo.</summary>
 public sealed record BorradorLocal
 {
     public bool Descartado { get; init; }

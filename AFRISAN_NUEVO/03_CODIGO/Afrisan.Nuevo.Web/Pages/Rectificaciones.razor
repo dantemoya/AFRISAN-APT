@@ -1,0 +1,117 @@
+@page "/ordenes/{Id:guid}/rectificaciones"
+@attribute [Authorize]
+@inject InventarioClient Api
+@inject SesionService Sesion
+
+<PageTitle>Rectificación de pesajes · AFRISAN</PageTitle>
+<a href="@($"ordenes/{Id}")" class="back-link">← Volver a la OT</a>
+<div class="page-heading"><div><h1>Rectificación de pesajes</h1><p>El registro original se conserva. El peso vigente cambia únicamente al aprobar el Autorizador.</p></div></div>
+@if (error is not null) { <div class="notice error" role="alert">@error</div> }
+@if (mensaje is not null) { <div class="notice success" role="status">@mensaje</div> }
+@if (cargando) { <p role="status">Consultando pesajes…</p> }
+else if (ot is not null)
+{
+    <section class="panel"><h2>Pesajes de @ot.Codigo</h2>
+        <div class="table-wrap"><table><thead><tr><th>Cilindro</th><th>Registro</th><th>Original</th><th>Vigente</th></tr></thead><tbody>
+        @foreach (var p in pesajes) { <tr><td>@p.Cilindro</td><td>@p.Tipo</td><td>@Formato.Gramos(p.PesoOriginalGr)</td><td>@Formato.Gramos(p.PesoVigenteGr)</td></tr> }
+        </tbody></table></div>
+        <p class="field-help">Las consultas de inventario y Power BI usan el peso vigente. Las fotos y los pesajes originales permanecen en el historial de la OT.</p>
+    </section>
+    @if (ot.Estado == "Cerrada") { <div class="notice info">OT cerrada: las rectificaciones están bloqueadas.</div> }
+    else if (Sesion.Sesion?.Rol is "Tecnico" or "Bodega")
+    {
+        <section class="panel mt"><h2>Solicitar corrección</h2>
+            <label for="rect-pesaje">Pesaje confirmado</label><select id="rect-pesaje" @bind="pesajeId" disabled="@ocupado"><option value="@Guid.Empty">Selecciona un pesaje</option>
+                @foreach (var p in pesajes) { <option value="@p.Id">@p.Cilindro · @p.Tipo · @Formato.Gramos(p.PesoVigenteGr)</option> }
+            </select>
+            <label for="rect-peso">Peso bruto correcto (g)</label><InputNumber id="rect-peso" @bind-Value="peso" min="0" step="1" disabled="@ocupado" />
+            <label for="rect-motivo">Motivo</label><textarea id="rect-motivo" @bind="motivo" minlength="5" maxlength="2000" disabled="@ocupado"></textarea>
+            <label for="rect-foto">Evidencia del peso correcto</label><InputFile id="rect-foto" @key="archivoKey" OnChange="CargarFoto" accept="image/jpeg,image/png,image/webp" capture="environment" disabled="@ocupado" />
+            @if (foto is not null) { <p>@foto.Nombre</p> }
+            <button class="btn primary mt" disabled="@(ocupado || foto is null || peso is null || pesajeId == Guid.Empty)" @onclick="Solicitar">Enviar al Autorizador</button>
+            <p class="field-help">Requiere conexión. Conserva estos datos si falla el envío y reintenta; la solicitud no se duplica.</p>
+        </section>
+    }
+    <section class="panel mt"><h2>Solicitudes y resoluciones</h2>
+        @if (solicitudes.Length == 0) { <p>Sin solicitudes de rectificación.</p> }
+        @foreach (var r in solicitudes)
+        {
+            <article class="operation-card" @key="r.Id"><h3>@r.Cilindro · @r.Tipo · @r.Estado</h3>
+                <p>@Formato.Gramos(r.PesoAnteriorGr) → @Formato.Gramos(r.PesoPropuestoGr)</p><p>@r.Motivo</p>
+                <p class="muted">Solicita @r.Solicitante · @r.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                <button class="btn secondary" disabled="@ocupado" @onclick="() => VerFoto(r.Id)">Ver evidencia de la corrección</button>
+                @if (r.Respuesta is not null) { <p><strong>@r.Revisor:</strong> @r.Respuesta</p> }
+                else if (Sesion.Sesion?.Rol == "Autorizador" && ot.Estado != "Cerrada")
+                {
+                    <label for="@($"respuesta-{r.Id}")">Motivo de aprobación o rechazo</label><textarea id="@($"respuesta-{r.Id}")" @bind="respuestas[r.Id]" maxlength="2000" disabled="@ocupado"></textarea>
+                    <div class="form-actions mt"><button class="btn primary" disabled="@ocupado" @onclick="() => Resolver(r.Id,true)">Aprobar peso propuesto</button><button class="btn secondary" disabled="@ocupado" @onclick="() => Resolver(r.Id,false)">Rechazar solicitud</button></div>
+                }
+            </article>
+        }
+    </section>
+    @if (fotoVisible is not null) { <section class="panel mt"><h2>Evidencia de rectificación</h2><div class="photo-grid"><figure><img src="@fotoVisible" alt="Evidencia del peso propuesto para rectificación" /></figure></div></section> }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private OtResponse? ot;
+    private PesajeRectificableResponse[] pesajes = [];
+    private RectificacionResponse[] solicitudes = [];
+    private readonly Dictionary<Guid,string> respuestas = [];
+    private Guid pesajeId, solicitudId = Guid.NewGuid(), archivoKey = Guid.NewGuid();
+    private long? peso;
+    private string motivo = "";
+    private FotoPesajeRequest? foto;
+    private SolicitarRectificacionRequest? envio;
+    private string? error, mensaje, fotoVisible;
+    private bool ocupado, cargando = true;
+    protected override async Task OnParametersSetAsync()
+    {
+        try { await Cargar(); }
+        catch (Exception ex) { error = Formato.Error(ex); }
+        finally { cargando = false; }
+    }
+    private async Task Cargar()
+    {
+        ot = await Api.OrdenAsync(Id);
+        pesajes = await Api.PesajesRectificablesAsync(Id);
+        solicitudes = await Api.RectificacionesAsync(Id);
+        foreach (var r in solicitudes) respuestas.TryAdd(r.Id, "");
+    }
+    private async Task Ejecutar(Func<Task> accion)
+    {
+        if (ocupado) return;
+        ocupado = true; error = null; mensaje = null;
+        try { await accion(); }
+        catch (Exception ex) { error = Formato.Error(ex); }
+        finally { ocupado = false; }
+    }
+    private Task CargarFoto(InputFileChangeEventArgs args) => Ejecutar(async () =>
+    {
+        var archivo = args.File;
+        if (archivo.ContentType is not ("image/png" or "image/jpeg" or "image/webp"))
+            throw new InvalidOperationException("Usa una foto JPEG, PNG o WebP de hasta 4 MiB.");
+        await using var lectura = archivo.OpenReadStream(4 * 1024 * 1024);
+        using var memoria = new MemoryStream(); await lectura.CopyToAsync(memoria);
+        foto = new() { Id = Guid.NewGuid(), Nombre = archivo.Name.Length > 150 ? archivo.Name[..150] : archivo.Name,
+            ContentType = archivo.ContentType, Base64 = Convert.ToBase64String(memoria.ToArray()) };
+    });
+    private Task Solicitar() => Ejecutar(async () =>
+    {
+        if (peso is null || foto is null || motivo.Trim().Length < 5 || pesajeId == Guid.Empty)
+            throw new InvalidOperationException("Selecciona el pesaje, escribe un peso, explica el motivo y adjunta su evidencia.");
+        var datos = new SolicitarRectificacionRequest { Id = solicitudId, PesajeId = pesajeId, PesoPropuestoGr = peso.Value, Motivo = motivo, Foto = foto };
+        // Si el usuario cambia el contenido después de un envío incierto, usar otra identidad.
+        if (envio is not null && envio != datos) datos = datos with { Id = Guid.NewGuid() };
+        envio = datos; solicitudId = datos.Id;
+        await Api.RectificarAsync(Id,datos);
+        solicitudId = Guid.NewGuid(); envio = null; foto = null; peso = null; motivo = ""; archivoKey = Guid.NewGuid();
+        await Cargar(); mensaje = "Solicitud recibida. El peso vigente se conserva hasta su aprobación.";
+    });
+    private Task Resolver(Guid solicitud,bool aprobar) => Ejecutar(async () =>
+    {
+        await Api.ResolverRectificacionAsync(Id,solicitud,new() { Aprobar = aprobar, Respuesta = respuestas[solicitud] });
+        await Cargar(); mensaje = aprobar ? "Rectificación aprobada; peso vigente actualizado." : "Solicitud rechazada; peso vigente conservado.";
+    });
+    private Task VerFoto(Guid solicitud) => Ejecutar(async () => { fotoVisible = await Api.FotoRectificacionAsync(Id,solicitud); });
+}

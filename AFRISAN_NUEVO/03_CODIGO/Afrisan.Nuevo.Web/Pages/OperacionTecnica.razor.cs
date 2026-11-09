@@ -37,7 +37,7 @@ public partial class OperacionTecnica : IAsyncDisposable
         try
         {
             ot = await Local.OrdenAsync(Id);
-            var local = (await Local.BorradoresAsync()).FirstOrDefault(b => b.OtId == Id && b.Datos.Id == OperacionId);
+            var local = await Local.BorradorAsync(OperacionId);
             var remoto = ot.Operaciones.FirstOrDefault(o => o.Id == OperacionId);
             if (remoto?.Estado == "Descartada") throw new InvalidOperationException("Este borrador fue descartado. Vuelve a la OT para registrar otro trabajo.");
             if (remoto?.Estado == "Registrada") { registrada = true; return; }

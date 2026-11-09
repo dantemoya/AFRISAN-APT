@@ -1,0 +1,84 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "visual_009",
+  "position": {
+    "x": 650,
+    "y": 285,
+    "z": 9,
+    "width": 606,
+    "height": 405,
+    "tabOrder": 9
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Gases"
+                    }
+                  },
+                  "Property": "Refrigerante"
+                }
+              },
+              "queryRef": "Gases.Refrigerante",
+              "nativeQueryRef": "Refrigerante"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Inventario"
+                    }
+                  },
+                  "Property": "Kg en cilindros instalados"
+                }
+              },
+              "queryRef": "Inventario.Kg en cilindros instalados",
+              "nativeQueryRef": "Kg en cilindros instalados"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Kg instalados por refrigerante · no equivale a consumo'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "13"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

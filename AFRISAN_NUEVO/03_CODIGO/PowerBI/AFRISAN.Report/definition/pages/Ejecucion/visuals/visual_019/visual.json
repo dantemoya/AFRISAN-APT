@@ -1,0 +1,150 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "visual_019",
+  "position": {
+    "x": 24,
+    "y": 415,
+    "z": 19,
+    "width": 1232,
+    "height": 275,
+    "tabOrder": 19
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Operaciones"
+                    }
+                  },
+                  "Property": "CilindroInstalado"
+                }
+              },
+              "queryRef": "Operaciones.CilindroInstalado",
+              "nativeQueryRef": "CilindroInstalado"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Operaciones"
+                    }
+                  },
+                  "Property": "CilindroRetirado"
+                }
+              },
+              "queryRef": "Operaciones.CilindroRetirado",
+              "nativeQueryRef": "CilindroRetirado"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Operaciones"
+                    }
+                  },
+                  "Property": "DiaConfirmacion"
+                }
+              },
+              "queryRef": "Operaciones.DiaConfirmacion",
+              "nativeQueryRef": "DiaConfirmacion"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Operaciones"
+                    }
+                  },
+                  "Property": "KgInstalados"
+                }
+              },
+              "queryRef": "Operaciones.KgInstalados",
+              "nativeQueryRef": "KgInstalados"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Operaciones"
+                    }
+                  },
+                  "Property": "KgRetirados"
+                }
+              },
+              "queryRef": "Operaciones.KgRetirados",
+              "nativeQueryRef": "KgRetirados"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Operaciones"
+                    }
+                  },
+                  "Property": "KgRecepcion"
+                }
+              },
+              "queryRef": "Operaciones.KgRecepcion",
+              "nativeQueryRef": "KgRecepcion"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Operaciones"
+                    }
+                  },
+                  "Property": "PendienteRecepcion"
+                }
+              },
+              "queryRef": "Operaciones.PendienteRecepcion",
+              "nativeQueryRef": "PendienteRecepcion"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Pesos de terreno y recepción (kg)'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "13"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

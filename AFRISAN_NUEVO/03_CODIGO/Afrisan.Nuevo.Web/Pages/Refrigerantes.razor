@@ -4,6 +4,7 @@
 @inject SesionService Sesion
 
 <PageTitle>Refrigerantes · AFRISAN</PageTitle>
+@if (Sesion.PuedeCatalogo && Sesion.Entorno?.Modo=="PostgreSQL") { <p><a class="btn secondary" href="mantenedores">Editar o activar/desactivar refrigerantes →</a></p> }
 <div class="page-heading"><div><span class="eyebrow">PN-01 / CATÁLOGO</span><h1>Refrigerantes</h1><p>Registra los tipos de gas antes de asociarlos a un cilindro.</p></div><a class="btn secondary" href="inventario">Consultar inventario</a></div>
 @if (error is not null) { <div class="notice error" role="alert">@error</div> }
 @if (mensaje is not null) { <div class="notice success" role="status">@mensaje</div> }

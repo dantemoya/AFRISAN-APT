@@ -8,6 +8,16 @@ public sealed partial class InventarioClient
     private static string OtRuta(Guid id) => $"ordenes-trabajo/{id}";
     public Task<OtResponse[]> OrdenesAsync() => ObtenerAsync<OtResponse[]>("ordenes-trabajo");
     public Task<OtResponse> OrdenAsync(Guid id) => ObtenerAsync<OtResponse>(OtRuta(id));
+    public Task<RectificacionResponse[]> RectificacionesAsync(Guid id) => ObtenerAsync<RectificacionResponse[]>(OtRuta(id) + "/rectificaciones");
+    public Task<PesajeRectificableResponse[]> PesajesRectificablesAsync(Guid id) => ObtenerAsync<PesajeRectificableResponse[]>(OtRuta(id) + "/rectificaciones/pesajes");
+    public Task<RectificacionResponse> RectificarAsync(Guid id,SolicitarRectificacionRequest dto) => EnviarAsync<RectificacionResponse>(OtRuta(id) + "/rectificaciones",dto);
+    public Task<RectificacionResponse> ResolverRectificacionAsync(Guid id,Guid solicitud,ResolverRectificacionRequest dto) => EnviarAsync<RectificacionResponse>(OtRuta(id) + $"/rectificaciones/{solicitud}/resolver",dto);
+    public async Task<string> FotoRectificacionAsync(Guid id,Guid solicitud)
+    {
+        using var respuesta = await http.GetAsync(OtRuta(id) + $"/rectificaciones/{solicitud}/foto");
+        await RevisarAsync(respuesta);
+        return $"data:{respuesta.Content.Headers.ContentType?.MediaType};base64," + Convert.ToBase64String(await respuesta.Content.ReadAsByteArrayAsync());
+    }
     public Task<OtResponse> CrearOtAsync(CrearOtRequest dto) => EnviarAsync<OtResponse>("ordenes-trabajo", dto);
     public Task<OtResponse> EntregarAsync(Guid id, EntregarCilindroRequest dto) => EnviarAsync<OtResponse>(OtRuta(id) + "/entregas", dto);
     public Task<CilindroResponse[]> DisponiblesOtAsync(Guid id) => ObtenerAsync<CilindroResponse[]>(OtRuta(id) + "/cilindros-disponibles");

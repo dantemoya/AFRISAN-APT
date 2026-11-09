@@ -1,0 +1,103 @@
+@page "/power-bi"
+@page "/power-bi/demo"
+@attribute [Authorize(Roles = RolesBi.Consulta)]
+@inject InventarioClient Api
+@inject SesionService Sesion
+@inject Microsoft.JSInterop.IJSRuntime JS
+@using Microsoft.JSInterop
+
+<PageTitle>Power BI · AFRISAN</PageTitle>
+<div class="page-heading">
+    <div><span class="eyebrow">INFORMACIÓN PARA GESTIÓN</span><h1>Power BI</h1><p>Informe de demostración con datos simulados.</p></div>
+    <button class="btn primary" @onclick="DescargarPlantilla" disabled="@descargando">@(descargando ? "Preparando plantilla…" : "Descargar plantilla para Desktop")</button>
+</div>
+<div class="notice info">Este espacio usa un informe público de demostración. Su contenido debe incluir únicamente datos simulados.</div>
+@if (error is not null) { <div class="notice error" role="alert">@error</div> }
+@if (mensaje is not null) { <div class="notice success" role="status">@mensaje</div> }
+<section class="panel bi-report" aria-labelledby="titulo-demo">
+    <div class="section-heading"><h2 id="titulo-demo">Informe de Power BI</h2><span class="stage-pill">@(cargando ? "CONSULTANDO" : config?.Configurado == true ? "ENLACE CONFIGURADO" : config is null ? "NO DISPONIBLE" : "PENDIENTE DE PUBLICACIÓN")</span></div>
+    @if (cargando)
+    {
+        <p role="status">Consultando el informe de demostración…</p>
+    }
+    else if (config?.UrlPublica is { } url)
+    {
+        <p class="muted">Demostración pública. Microsoft muestra el informe; sus filtros se aplican dentro de Power BI.</p>
+        <p><a class="btn secondary" href="@url" target="_blank" rel="noopener noreferrer">Abrir informe en Power BI ↗</a></p>
+        <iframe @key="url" title="Informe Power BI AFRISAN con datos simulados" src="@url" class="bi-frame" allowfullscreen="true" referrerpolicy="no-referrer"></iframe>
+        <p class="field-help">Si el informe no aparece o el enlace fue retirado en Microsoft, utiliza «Abrir informe en Power BI» y solicita al administrador que revise el enlace.</p>
+    }
+    else if (config is not null)
+    {
+        <div class="empty-state"><h3>Aún no hay un informe conectado</h3><p>La cuenta gratuita y el informe de Desktop pueden usarse para la demostración. Cuando exista un enlace público del informe, el administrador podrá conectarlo aquí.</p></div>
+    }
+    @if (!cargando) { <button class="btn secondary mt" @onclick="Cargar" disabled="@guardando">Actualizar conexión</button> }
+</section>
+@if (Sesion.Sesion?.Rol == "Administrador" && config is not null)
+{
+    <section class="panel mt" aria-labelledby="titulo-conexion">
+        <h2 id="titulo-conexion">Conectar informe público</h2>
+        <p>Pega el enlace de un informe de demostración ya publicado en Power BI. La configuración se comparte con Jefatura y se conserva al reiniciar AFRISAN.</p>
+        <label for="bi-demo-url">Enlace público del informe</label>
+        <input id="bi-demo-url" type="url" @bind="enlace" @bind:event="oninput" placeholder="https://app.powerbi.com/view?r=..." maxlength="4096" disabled="@guardando" />
+        <p class="field-help">Usa el enlace completo, no el código HTML del iframe ni un enlace de inserción privada.</p>
+        <div class="form-actions mt">
+            <button class="btn primary" @onclick="Guardar" disabled="@(guardando || cargando || string.IsNullOrWhiteSpace(enlace))">@(guardando ? "Guardando…" : "Guardar enlace")</button>
+            @if (config.Configurado) { <button class="btn secondary" @onclick="Quitar" disabled="@(guardando || cargando)">Quitar enlace de AFRISAN</button> }
+        </div>
+    </section>
+}
+<section class="panel mt" aria-labelledby="titulo-cuenta">
+    <h2 id="titulo-cuenta">Uso con cuenta gratuita</h2>
+    <p>Puedes crear y abrir el informe en Power BI Desktop sin contratar una licencia. Para mostrarlo en esta página se necesita un enlace público ya publicado.</p>
+    <p>La documentación actual de Microsoft indica que una cuenta gratuita no puede crear un código nuevo de «Publicar en la web». Los lectores de un enlace público existente no necesitan iniciar sesión en Microsoft.</p>
+    <p><a href="https://learn.microsoft.com/power-bi/fundamentals/end-user-features" target="_blank" rel="noopener noreferrer">Consultar las condiciones de la cuenta gratuita ↗</a></p>
+</section>
+
+@code {
+    private PowerBiDemoResponse? config;
+    private string enlace = "";
+    private string? error, mensaje;
+    private bool cargando = true, guardando, descargando;
+
+    protected override Task OnInitializedAsync() => Cargar();
+    private async Task Cargar()
+    {
+        cargando = true; error = null;
+        try { config = await Api.PowerBiDemoAsync(); enlace = config.UrlPublica ?? ""; }
+        catch (Exception ex) { error = Formato.Error(ex); }
+        finally { cargando = false; }
+    }
+    private Task Guardar() => Configurar(enlace);
+    private Task Quitar() => Configurar("");
+    private async Task Configurar(string valor)
+    {
+        if (guardando) return;
+        guardando = true; error = null; mensaje = null;
+        try
+        {
+            var normalizada = EnlacePowerBiPublico.Normalizar(valor);
+            config = await Api.ConfigurarPowerBiDemoAsync(normalizada ?? "");
+            enlace = config.UrlPublica ?? "";
+            mensaje = config.Configurado ? "Enlace guardado. Revisa el informe mostrado por Microsoft." : "Enlace retirado de AFRISAN.";
+        }
+        catch (System.ComponentModel.DataAnnotations.ValidationException ex) { error = ex.Message; }
+        catch (Exception ex) { error = Formato.Error(ex); }
+        finally { guardando = false; }
+    }
+    private async Task DescargarPlantilla()
+    {
+        if (descargando) return;
+        descargando = true; error = null; mensaje = null;
+        try
+        {
+            var bytes = await Api.PlantillaPowerBiDemoAsync();
+            using var stream = new MemoryStream(bytes);
+            using var referencia = new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("afrisanBi.descargar", "AFRISAN_PowerBI_Plantilla_Gratuita.zip", referencia);
+            mensaje = "Plantilla vacía descargada. Abre LEEME_DEMO.md para usarla en Power BI Desktop gratuito.";
+        }
+        catch (Exception ex) { error = Formato.Error(ex); }
+        finally { descargando = false; }
+    }
+}

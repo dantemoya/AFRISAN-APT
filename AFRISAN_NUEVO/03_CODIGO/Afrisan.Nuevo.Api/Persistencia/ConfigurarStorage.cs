@@ -16,6 +16,11 @@ public static class ConfigurarStorage
         foreach(var json in await unit.Query<string>("SELECT \"FotosBorrador\"::text AS \"Value\" FROM afrisan.\"OperacionTerreno\""))
             foreach(var photo in JsonSerializer.Deserialize<FotoArchivo[]>(json,new JsonSerializerOptions(JsonSerializerDefaults.Web))??[])
                 if(photo.Bucket=="servidor-privado")rows.Add(new(photo.Ruta,photo.ContentType,photo.Sha256,photo.Bytes));
+        foreach(var json in await unit.Query<string>("SELECT \"Evidencia\"::text AS \"Value\" FROM afrisan.\"RectificacionPesaje\""))
+        {
+            var photo=JsonSerializer.Deserialize<FotoArchivo>(json,new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            if(photo?.Bucket=="servidor-privado")rows.Add(new(photo.Ruta,photo.ContentType,photo.Sha256,photo.Bytes));
+        }
         return rows.GroupBy(r=>r.Ruta).Select(group=>{
             var first=group.First();if(group.Any(r=>r.Sha256!=first.Sha256||r.Mime!=first.Mime||r.Bytes!=first.Bytes))throw new ReglaInventarioException("Hay referencias incompatibles para un archivo local. No se activó Storage.",409);return first;
         }).ToArray();

@@ -31,3 +31,11 @@ Despachos pendientes uso o devolucion = CALCULATE(COUNTROWS(Despachos), KEEPFILT
 
 // Kg en cilindros instalados corresponde al pesaje neto al instalar, NO a consumo.
 // No sumar columnas de inventario para inferir existencias históricas.
+
+Costo refrigerante CLP = SUM(Costos[TotalClp])
+
+Gramos valorados = SUM(Costos[Gramos])
+
+Operaciones valoradas = DISTINCTCOUNT(Costos[OperacionId])
+
+Valoraciones sin conversion = COUNTROWS(FILTER(Costos, ISBLANK(Costos[TotalClp])))

@@ -25,19 +25,21 @@ public sealed class SesionService(HttpClient http, IJSRuntime js) : Authenticati
     {
         try
         {
+            Aplicar(null);
+            await MigrarSesionAsync();
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             Entorno = await http.GetFromJsonAsync<EntornoResponse>("entorno", timeout.Token);
             SinConexion = false;
-            var anterior = await js.InvokeAsync<string?>("sessionStorage.getItem", InstanciaKey);
-            if (anterior != Entorno?.Instancia) await js.InvokeVoidAsync("sessionStorage.removeItem", Key);
-            await js.InvokeVoidAsync("sessionStorage.setItem", InstanciaKey, Entorno?.Instancia);
-            await js.InvokeVoidAsync("sessionStorage.setItem", EntornoKey, JsonSerializer.Serialize(Entorno));
-            var guardada = await js.InvokeAsync<string?>("sessionStorage.getItem", Key);
+            var anterior = await js.InvokeAsync<string?>("localStorage.getItem", InstanciaKey);
+            if (anterior != Entorno?.Instancia) await js.InvokeVoidAsync("localStorage.removeItem", Key);
+            await js.InvokeVoidAsync("localStorage.setItem", InstanciaKey, Entorno?.Instancia);
+            await js.InvokeVoidAsync("localStorage.setItem", EntornoKey, JsonSerializer.Serialize(Entorno));
+            var guardada = await js.InvokeAsync<string?>("localStorage.getItem", Key);
             if (guardada is not null)
             {
                 var sesion = JsonSerializer.Deserialize<SesionResponse>(guardada);
                 if (sesion is not null && sesion.Vence > DateTimeOffset.UtcNow) Aplicar(sesion);
-                else await js.InvokeVoidAsync("sessionStorage.removeItem", Key);
+                else await js.InvokeVoidAsync("localStorage.removeItem", Key);
             }
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or JSException)
@@ -48,8 +50,8 @@ public sealed class SesionService(HttpClient http, IJSRuntime js) : Authenticati
             // Las autorizaciones del servidor siguen comprobando el JWT.
             try
             {
-                var guardada = await js.InvokeAsync<string?>("sessionStorage.getItem", Key);
-                var cache = await js.InvokeAsync<string?>("sessionStorage.getItem", EntornoKey);
+                var guardada = await js.InvokeAsync<string?>("localStorage.getItem", Key);
+                var cache = await js.InvokeAsync<string?>("localStorage.getItem", EntornoKey);
                 var local = guardada is null ? null : JsonSerializer.Deserialize<SesionResponse>(guardada);
                 if (local is not null && local.Vence > DateTimeOffset.UtcNow && !string.IsNullOrWhiteSpace(local.Usuario))
                 {
@@ -63,14 +65,28 @@ public sealed class SesionService(HttpClient http, IJSRuntime js) : Authenticati
 
     public async Task IngresarAsync(SesionResponse sesion)
     {
-        await js.InvokeVoidAsync("sessionStorage.setItem", Key, JsonSerializer.Serialize(sesion));
+        await js.InvokeVoidAsync("localStorage.setItem", Key, JsonSerializer.Serialize(sesion));
         Aplicar(sesion);
     }
 
     public async Task SalirAsync()
     {
+        await js.InvokeVoidAsync("localStorage.removeItem", Key);
         await js.InvokeVoidAsync("sessionStorage.removeItem", Key);
         Aplicar(null);
+    }
+
+    private async Task MigrarSesionAsync()
+    {
+        // Compatibilidad con pestañas de la versión anterior. La caducidad del JWT se conserva.
+        foreach (var key in new[] { Key, InstanciaKey, EntornoKey })
+        {
+            var anterior = await js.InvokeAsync<string?>("sessionStorage.getItem", key);
+            var actual = await js.InvokeAsync<string?>("localStorage.getItem", key);
+            if (actual is null && anterior is not null)
+                await js.InvokeVoidAsync("localStorage.setItem", key, anterior);
+            await js.InvokeVoidAsync("sessionStorage.removeItem", key);
+        }
     }
 
     private void Aplicar(SesionResponse? sesion)

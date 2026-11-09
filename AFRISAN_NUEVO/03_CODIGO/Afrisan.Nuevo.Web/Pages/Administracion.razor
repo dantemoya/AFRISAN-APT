@@ -1,7 +1,9 @@
 @page "/administracion"
 @attribute [Authorize(Roles = "Administrador")]
 @inject InventarioClient Api
+@inject SesionService Sesion
 <PageTitle>Administración · AFRISAN</PageTitle>
+<p><a class="btn secondary" href="mantenedores">Editar o activar/desactivar mantenedores →</a></p>
 <div class="page-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Usuarios, clientes y sucursales</h1><p>Prepara las cuentas de trabajo y los destinos de las órdenes.</p></div></div>
 @if(error is not null){<div class="notice error" role="alert">@error</div>}
 @if(mensaje is not null){<div class="notice success" role="status">@mensaje</div>}
@@ -25,7 +27,46 @@
 <label>Dirección</label><InputText @bind-Value="sucursal.Direccion" maxlength="400"/>
 <div class="form-actions"><button class="btn primary" type="submit">Crear sucursal</button></div></fieldset></EditForm></section>
 </div>
-<section class="panel mt"><h2>Cuentas de trabajo</h2><div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th></tr></thead><tbody>@foreach(var u in usuarios){<tr><td>@u.Nombre @u.Apellido</td><td>@u.Correo</td><td>@u.Rol</td><td>@(u.Activo?"Activo":"Inactivo")</td></tr>}</tbody></table></div></section>
+<section class="panel mt"><h2>Cuentas de trabajo</h2>
+<div class="table-wrap"><table>
+    <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var u in usuarios)
+    {
+        <tr>
+            <td>@u.Nombre @u.Apellido</td><td>@u.Correo</td><td>@u.Rol</td><td>@EstadoCuenta(u)</td>
+            <td>
+                @if (EsPropia(u)) { <small>Tu cuenta</small> }
+                else { <button class="btn subtle" type="button" disabled="@ocupado" @onclick="() => Seleccionar(u)">Gestionar</button> }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table></div>
+@if (seleccionado is not null)
+{
+    <div class="mt">
+        <h3>@seleccionado.Nombre @seleccionado.Apellido · @seleccionado.Correo</h3>
+        <p class="muted">Estado: @EstadoCuenta(seleccionado). Cada cambio cierra las sesiones abiertas de esta cuenta.</p>
+        <fieldset disabled="@ocupado">
+            <div class="form-actions">
+                <button class="btn @(seleccionado.Activo ? "subtle" : "primary")" type="button" @onclick="CambiarEstado">@(seleccionado.Activo ? "Desactivar cuenta" : "Activar cuenta")</button>
+            </div>
+            <label for="rol-usuario">Rol</label>
+            <select id="rol-usuario" @bind="rolNuevo">@foreach (var rol in Roles.Todos) { <option value="@rol">@rol</option> }</select>
+            <div class="form-actions">
+                <button class="btn primary" type="button" disabled="@(rolNuevo == seleccionado.Rol)" @onclick="CambiarRol">Cambiar rol</button>
+            </div>
+            <label for="clave-usuario">Nueva contraseña (12 caracteres como mínimo)</label>
+            <input id="clave-usuario" type="password" autocomplete="new-password" maxlength="128" @bind="claveNueva" @bind:event="oninput" />
+            <div class="form-actions">
+                <button class="btn primary" type="button" disabled="@(claveNueva.Length < 12)" @onclick="RestablecerClave">Restablecer contraseña</button>
+                <button class="btn subtle" type="button" @onclick="() => seleccionado = null">Cerrar</button>
+            </div>
+        </fieldset>
+    </div>
+}
+</section>
 <section class="panel mt"><h2>Sucursales registradas</h2><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Sucursal</th><th>Dirección</th></tr></thead><tbody>@foreach(var s in sucursales){<tr><td>@s.Cliente</td><td>@s.Nombre</td><td>@s.Direccion</td></tr>}</tbody></table></div></section>
 @code {
  private UsuarioForm usuario=new();private ClienteForm cliente=new();private SucursalForm sucursal=new();
@@ -37,6 +78,33 @@
  private Task CrearUsuario()=>Ejecutar(async()=>{await Api.CrearUsuarioAsync(new(){Nombre=usuario.Nombre,Apellido=usuario.Apellido,Correo=usuario.Correo,Rol=usuario.Rol,Password=usuario.Password});usuario=new();},"Usuario creado.");
  private Task CrearCliente()=>Ejecutar(async()=>{await Api.CrearClienteAsync(new(){Rut=cliente.Rut,Nombre=cliente.Nombre});cliente=new();},"Cliente creado.");
  private Task CrearSucursal()=>Ejecutar(async()=>{await Api.CrearSucursalAsync(new(){ClienteId=sucursal.ClienteId,Nombre=sucursal.Nombre,Direccion=sucursal.Direccion});sucursal=new();},"Sucursal creada.");
+
+ private UsuarioResponse? seleccionado;
+ private string rolNuevo = "", claveNueva = "";
+ private bool EsPropia(UsuarioResponse u) => string.Equals(u.Correo, Sesion.Sesion?.Usuario, StringComparison.OrdinalIgnoreCase);
+ private static string EstadoCuenta(UsuarioResponse u) => !u.Activo ? "Inactivo" : u.Bloqueado ? "Bloqueado temporalmente" : "Activo";
+ private void Seleccionar(UsuarioResponse u) { seleccionado = u; rolNuevo = u.Rol; claveNueva = ""; error = null; mensaje = null; }
+ private Task Gestionar(Func<int, Task<UsuarioResponse>> accion, string exito)
+ {
+     if (seleccionado is null) return Task.CompletedTask;
+     var id = seleccionado.Id;
+     return Ejecutar(async () => { seleccionado = await accion(id); rolNuevo = seleccionado.Rol; claveNueva = ""; }, exito);
+ }
+ private Task CambiarEstado()
+ {
+     var activar = seleccionado is { Activo: false };
+     return Gestionar(id => Api.CambiarEstadoUsuarioAsync(id, activar), activar ? "Cuenta activada." : "Cuenta desactivada. Sus sesiones abiertas se cerraron.");
+ }
+ private Task CambiarRol()
+ {
+     var rol = rolNuevo;
+     return Gestionar(id => Api.CambiarRolUsuarioAsync(id, rol), $"Rol cambiado a {rol}. Sus sesiones abiertas se cerraron.");
+ }
+ private Task RestablecerClave()
+ {
+     var clave = claveNueva;
+     return Gestionar(id => Api.RestablecerClaveUsuarioAsync(id, clave), "Contraseña restablecida y bloqueo eliminado. Sus sesiones abiertas se cerraron.");
+ }
  private sealed class UsuarioForm {
   [Required,StringLength(100)] public string Nombre{get;set;}="";
   [Required,StringLength(100)] public string Apellido{get;set;}="";

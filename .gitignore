@@ -16,3 +16,6 @@ Thumbs.db
 .env
 .env.*
 appsettings.Development.local.json
+.local/
+node_modules/
+.pbi/

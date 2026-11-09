@@ -20,5 +20,5 @@ if ($tenantBi) {
     & dotnet user-secrets remove 'PowerBi:TenantId' --project $proyectoBi
 }
 if ($LASTEXITCODE -ne 0) { throw 'No se pudo actualizar TenantId.' }
-Write-Host 'Power BI configurado. Reinicia la API y abre /power-bi con Jefatura o Administrador.'
+Write-Host 'Power BI privado configurado. Reinicia la API y abre /power-bi/operativo con Jefatura o Administrador.'
 Write-Host 'Microsoft verificara la cuenta y permisos. La configuracion no publica ni comparte el informe.'

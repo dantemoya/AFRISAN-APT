@@ -14,6 +14,12 @@ public sealed partial class InventarioClient(HttpClient http, SesionService sesi
     public Task<ClienteResponse> CrearClienteAsync(CrearClienteRequest dto)=>EnviarAsync<ClienteResponse>("clientes",dto);
     public Task<SucursalResponse> CrearSucursalAsync(CrearSucursalRequest dto)=>EnviarAsync<SucursalResponse>("sucursales",dto);
     public Task<UsuarioResponse> CrearUsuarioAsync(CrearUsuarioRequest dto)=>EnviarAsync<UsuarioResponse>("usuarios",dto);
+    public Task<UsuarioResponse> CambiarEstadoUsuarioAsync(int id, bool activo) =>
+        ActualizarAsync<UsuarioResponse>($"usuarios/{id}/estado", new CambiarEstadoUsuarioRequest { Activo = activo });
+    public Task<UsuarioResponse> CambiarRolUsuarioAsync(int id, string rol) =>
+        ActualizarAsync<UsuarioResponse>($"usuarios/{id}/rol", new CambiarRolUsuarioRequest { Rol = rol });
+    public Task<UsuarioResponse> RestablecerClaveUsuarioAsync(int id, string password) =>
+        ActualizarAsync<UsuarioResponse>($"usuarios/{id}/clave", new RestablecerClaveRequest { Password = password });
     public Task<RefrigeranteResponse[]> RefrigerantesAsync() => ObtenerAsync<RefrigeranteResponse[]>("refrigerantes");
     public Task<CilindroResponse[]> CilindrosAsync() => ObtenerAsync<CilindroResponse[]>("cilindros");
     public Task<CilindroResponse> CilindroAsync(string codigo) => ObtenerAsync<CilindroResponse>($"cilindros/{Uri.EscapeDataString(codigo)}");
@@ -41,6 +47,12 @@ public sealed partial class InventarioClient(HttpClient http, SesionService sesi
         using var respuesta = await http.PostAsJsonAsync(ruta, dto);
         await RevisarAsync(respuesta);
         return await respuesta.Content.ReadFromJsonAsync<T>() ?? throw new InvalidOperationException("No se pudo interpretar la respuesta. Actualiza antes de repetir la operación.");
+    }
+    private async Task<T> ActualizarAsync<T>(string ruta, object dto)
+    {
+        using var respuesta = await http.PutAsJsonAsync(ruta, dto);
+        await RevisarAsync(respuesta);
+        return await respuesta.Content.ReadFromJsonAsync<T>() ?? throw new InvalidOperationException("No se pudo confirmar el cambio. Actualiza antes de repetirlo.");
     }
     private async Task RevisarAsync(HttpResponseMessage respuesta)
     {

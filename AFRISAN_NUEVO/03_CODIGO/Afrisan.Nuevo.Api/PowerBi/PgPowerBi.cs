@@ -4,9 +4,9 @@ using Afrisan.Nuevo.Contratos;
 namespace Afrisan.Nuevo.Api.PowerBi;
 
 public sealed record BiDatos(DateTimeOffset GeneradoUtc, BiInventario[] Inventario, BiOrden[] Ordenes,
-    BiDetalle[] Detalle, BiOperacion[] Operaciones, BiDespacho[] Despachos, BiIncidencia[] Incidencias);
+    BiDetalle[] Detalle, BiOperacion[] Operaciones, BiDespacho[] Despachos, BiIncidencia[] Incidencias, BiCosto[]? Costos=null);
 
-public sealed class PgPowerBi(PgDatabase database)
+public sealed partial class PgPowerBi(PgDatabase database)
 {
     // Un corte consistente; no se consulta Storage ni se amplían permisos de PostgreSQL.
     public async Task<BiDatos> Datos(int actor)
@@ -29,7 +29,7 @@ public sealed class PgPowerBi(PgDatabase database)
               c."Id_Tecnico" AS "TecnicoId",t."Nombre"||' '||t."Apellido" AS "Tecnico",
               (p."PesoBrutoGr"-c."TaraGr")/1000.0 AS "KgSegunUltimoPesaje",p."Fecha" AS "FechaPesaje"
             FROM afrisan."Cilindros" c JOIN afrisan."Refrigerantes" r USING("Id_Refrigerante")
-            LEFT JOIN afrisan."Pesaje" p ON p."Id_Pesaje"=c."Id_UltimoPesaje"
+            LEFT JOIN afrisan."PesajeVigente" p ON p."Id_Pesaje"=c."Id_UltimoPesaje"
             LEFT JOIN afrisan."Sucursales" s USING("Id_Sucursal")
             LEFT JOIN afrisan."Usuario" t ON t."Id_Usuario"=c."Id_Tecnico"
             ORDER BY c."Id_Cilindro"
@@ -61,11 +61,11 @@ public sealed class PgPowerBi(PgDatabase database)
             FROM afrisan."OperacionTerreno" op
             JOIN afrisan."Cilindros" ci ON ci."Id_Cilindro"=op."Id_Instalado"
             JOIN afrisan."Refrigerantes" g ON g."Id_Refrigerante"=ci."Id_Refrigerante"
-            JOIN afrisan."Pesaje" pi ON pi."Id_Pesaje"=op."Id_PesajeInstalado"
+            JOIN afrisan."PesajeVigente" pi ON pi."Id_Pesaje"=op."Id_PesajeInstalado"
             LEFT JOIN afrisan."Cilindros" cr ON cr."Id_Cilindro"=op."Id_Retirado"
-            LEFT JOIN afrisan."Pesaje" pr ON pr."Id_Pesaje"=op."Id_PesajeRetirado"
+            LEFT JOIN afrisan."PesajeVigente" pr ON pr."Id_Pesaje"=op."Id_PesajeRetirado"
             LEFT JOIN afrisan."RecepcionBodega" rb ON rb."Id_Operacion"=op."Id_Operacion"
-            LEFT JOIN afrisan."Pesaje" pb ON pb."Id_Pesaje"=rb."Id_Pesaje"
+            LEFT JOIN afrisan."PesajeVigente" pb ON pb."Id_Pesaje"=rb."Id_Pesaje"
             WHERE op."Estado"='Registrada' ORDER BY op."Id_Operacion"
             """);
         var despachos = await Read<BiDespacho>("""
@@ -76,9 +76,9 @@ public sealed class PgPowerBi(PgDatabase database)
               rb."Fecha" AS "FechaDevolucion",(pb."PesoBrutoGr"-c."TaraGr")/1000.0 AS "KgDevueltos"
             FROM afrisan."Despacho" d JOIN afrisan."Cilindros" c USING("Id_Cilindro")
             JOIN afrisan."Refrigerantes" g USING("Id_Refrigerante")
-            JOIN afrisan."Pesaje" p ON p."Id_Pesaje"=d."Id_Pesaje"
+            JOIN afrisan."PesajeVigente" p ON p."Id_Pesaje"=d."Id_Pesaje"
             LEFT JOIN afrisan."RecepcionBodega" rb ON rb."Id_DespachoSinUso"=d."Id_Despacho"
-            LEFT JOIN afrisan."Pesaje" pb ON pb."Id_Pesaje"=rb."Id_Pesaje" ORDER BY d."Id_Despacho"
+            LEFT JOIN afrisan."PesajeVigente" pb ON pb."Id_Pesaje"=rb."Id_Pesaje" ORDER BY d."Id_Despacho"
             """);
         var incidencias = await Read<BiIncidencia>("""
             SELECT "Id_Incidencia" AS "IncidenciaId","Id_OrdenTrabajo" AS "OtId","Tipo","Fecha",
@@ -86,7 +86,16 @@ public sealed class PgPowerBi(PgDatabase database)
               ("FechaRevision" IS NULL) AS "Abierta","FechaRevision"
             FROM afrisan."Incidencia" ORDER BY "Id_Incidencia"
             """);
-        return new(generado,inventario,ordenes,detalle,operaciones,despachos,incidencias);
+        var costos=await Read<BiCosto>("""
+            SELECT c."Id_Costos" AS "CostoId",c."Id_Operacion" AS "OperacionId",op."Id_OrdenTrabajo" AS "OtId",
+              ci."Id_Refrigerante" AS "RefrigeranteId",r."CodigoRefrigerante" AS "Refrigerante",c."Cantidad" AS "Gramos",
+              c."TarifaUnitaria" AS "PrecioPorGramo",c."Moneda",c."PrecioTotal" AS "Total",c."FactorClp",c."TotalClp",
+              c."FechaValoracion",(c."FechaValoracion" AT TIME ZONE 'America/Santiago')::date AS "DiaValoracion",tc."FechaValor" AS "FechaCambio"
+            FROM afrisan."Costos" c JOIN afrisan."OperacionTerreno" op USING("Id_Operacion")
+            JOIN afrisan."Cilindros" ci ON ci."Id_Cilindro"=op."Id_Instalado" JOIN afrisan."Refrigerantes" r USING("Id_Refrigerante")
+            LEFT JOIN afrisan."TiposCambio" tc USING("Id_Cambio") WHERE c."Concepto"='Refrigerante' AND c."Unidad"='g' ORDER BY c."Id_Costos"
+            """);
+        return new(generado,inventario,ordenes,detalle,operaciones,despachos,incidencias,costos);
     }
 
     public static BiResumenResponse Resumen(BiDatos d, DateOnly? desde, DateOnly? hasta,

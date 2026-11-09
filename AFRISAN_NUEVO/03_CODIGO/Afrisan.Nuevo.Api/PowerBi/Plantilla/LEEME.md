@@ -1,8 +1,31 @@
 # AFRISAN · Paquete para Power BI Desktop
 
-Este ZIP contiene un corte real de la base, seis CSV UTF-8, Power Query,
+Este ZIP contiene un corte real de la base, siete CSV UTF-8, Power Query,
 medidas DAX y un tema. No es un archivo PBIX ni un informe ya publicado.
 Manifiesto.json indica cuándo se obtuvo y cuántas filas contiene.
+
+## Abrir el proyecto preparado (recomendado)
+
+1. Descomprimir todo el ZIP y abrir `Informe/AFRISAN.pbip` en Power BI Desktop.
+2. En Transformar datos > Editar parámetros, cambiar `CarpetaAfrisan` a la
+   carpeta que contiene los siete CSV de este paquete (no la carpeta Informe).
+3. Actualizar y revisar las cinco páginas: Operación actual, Inventario y
+   custodia, Ejecución y pesajes, OT e incidencias y Valoración de refrigerante.
+   El proyecto contiene siete fuentes, tres dimensiones, catorce relaciones de
+   dirección única y dieciocho medidas. No crear relaciones automáticas adicionales.
+4. Guardar como `AFRISAN_Operativo.pbix` y publicar en el área privada de la empresa.
+   Obtener ReportId para `Configurar-PowerBI.ps1`. La cuenta y los permisos
+   de Microsoft se configuran en Power BI, no se incluyen en este paquete.
+
+El proyecto fue validado contra los esquemas oficiales PBIP/PBIR y el modelo
+TMSL pudo deserializarse con la biblioteca oficial de Microsoft. Su revisión
+visual, actualización real y guardado como PBIX en Desktop siguen pendientes.
+Los pesos exportados incluyen las rectificaciones aprobadas; el original y
+la evidencia se conservan en AFRISAN. Inventario representa el estado actual.
+El filtro de día de ejecución afecta las operaciones; el de creación, las OT
+y su seguimiento. No representan una reconstrucción del inventario histórico.
+
+## Crear un informe desde cero (alternativa)
 
 ## Crear el informe
 
@@ -12,7 +35,7 @@ Manifiesto.json indica cuándo se obtuvo y cuántas filas contiene.
    crear un parámetro de texto llamado `CarpetaAfrisan` con esa ruta.
 3. Crear una consulta en blanco llamada `Afrisan`. En Editor avanzado pegar
    el contenido de Afrisan.pq. La consulta devuelve un registro de tablas.
-4. Crear seis consultas en blanco con estos nombres y fórmulas:
+4. Crear siete consultas en blanco con estos nombres y fórmulas:
 
    | Nombre | Fórmula en la barra de fórmulas |
    | --- | --- |
@@ -22,9 +45,10 @@ Manifiesto.json indica cuándo se obtuvo y cuántas filas contiene.
    | Operaciones | `= Afrisan[Operaciones]` |
    | Despachos | `= Afrisan[Despachos]` |
    | Incidencias | `= Afrisan[Incidencias]` |
+   | Costos | `= Afrisan[Costos]` |
 
 5. Cerrar y aplicar. En Modelo crear relaciones de `Ordenes[OtId]` (1) a
-   `DetalleOT[OtId]`, `Operaciones[OtId]`, `Despachos[OtId]`, `Incidencias[OtId]`
+   `DetalleOT[OtId]`, `Operaciones[OtId]`, `Despachos[OtId]`, `Incidencias[OtId]`, `Costos[OtId]`
    (*), todas en dirección única desde Ordenes. No crear relaciones adicionales
    automáticamente: Inventario es una foto del estado actual y queda independiente.
 6. Crear por separado las medidas de Medidas.dax. No sumar identificadores.
@@ -69,7 +93,7 @@ OT, confirmación de operación, despacho o registro de incidencia. No usar un
 ## Actualizar y publicar después
 
 La actualización inicial es MANUAL: descargar otro paquete en AFRISAN,
-descomprimir reemplazando los seis CSV juntos y pulsar Actualizar en Desktop.
+descomprimir reemplazando los siete CSV juntos y pulsar Actualizar en Desktop.
 No existe sincronización automática ni conexión directa desde Power BI a Supabase.
 No introducir contraseñas de PostgreSQL, claves Storage o tokens de AFRISAN en M.
 

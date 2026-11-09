@@ -19,6 +19,8 @@ public static class PgEndpoints
             return sesion is null?Results.Problem(statusCode:401,title:"No se pudo iniciar sesión",detail:"Credenciales incorrectas, cuenta inactiva o temporalmente bloqueada."):Results.Ok(sesion);
         });
         var datos=api.MapGroup("").RequireAuthorization();
+        datos.MapGestionCatalogos();
+        datos.MapCostosLimites();
         datos.MapGet("/refrigerantes",async(PgInventario repo)=>await repo.Refrigerantes()).RequireAuthorization(p=>p.RequireRole(Roles.Lectura.Split(',')));
         datos.MapGet("/refrigerantes/{id:long}",async(long id,PgInventario repo)=>(await repo.Refrigerantes()).FirstOrDefault(r=>r.Id==id)??throw new ReglaInventarioException("Refrigerante no encontrado.",404)).RequireAuthorization(p=>p.RequireRole(Roles.Lectura.Split(',')));
         datos.MapPost("/refrigerantes",async(CrearRefrigeranteRequest dto,PgInventario repo,ClaimsPrincipal user)=>{var row=await repo.CrearRefrigerante(dto,PgDatabase.Actor(user));return TypedResults.Created($"/api/v1/refrigerantes/{row.Id}",row);}).RequireAuthorization(p=>p.RequireRole(Roles.Catalogo.Split(',')));
@@ -51,8 +53,33 @@ public static class PgEndpoints
         static async Task<IResult> Photo(Guid id,Guid? operation,Guid photo,PgTrabajo repo,ClaimsPrincipal user,HttpContext context) {var f=await repo.LeerFoto(id,operation,photo,user);context.Response.Headers.CacheControl="no-store";context.Response.Headers.XContentTypeOptions="nosniff";return Results.File(f.Bytes,f.Mime);}
         ot.MapGet("/{id:guid}/entregas/{entrega:guid}/foto",async(Guid id,Guid entrega,PgTrabajo repo,ClaimsPrincipal user,HttpContext ctx)=>await Photo(id,null,entrega,repo,user,ctx));
         ot.MapGet("/{id:guid}/operaciones/{operacion:guid}/fotos/{foto:guid}",async(Guid id,Guid operacion,Guid foto,PgTrabajo repo,ClaimsPrincipal user,HttpContext ctx)=>await Photo(id,operacion,foto,repo,user,ctx));
+        var rectificaciones=ot.MapGroup("/{id:guid}/rectificaciones");
+        rectificaciones.MapGet("",async(Guid id,PgRectificaciones repo,ClaimsPrincipal user)=>await repo.Listar(id,user));
+        rectificaciones.MapGet("/pesajes",async(Guid id,PgRectificaciones repo,ClaimsPrincipal user)=>await repo.Pesajes(id,user));
+        rectificaciones.MapPost("",async(Guid id,SolicitarRectificacionRequest dto,PgRectificaciones repo,ClaimsPrincipal user)=>await repo.Solicitar(id,dto,user))
+            .RequireAuthorization(p=>p.RequireRole("Tecnico","Bodega"));
+        rectificaciones.MapPost("/{solicitud:guid}/resolver",async(Guid id,Guid solicitud,ResolverRectificacionRequest dto,PgRectificaciones repo,ClaimsPrincipal user)=>await repo.Resolver(id,solicitud,dto,user))
+            .RequireAuthorization(p=>p.RequireRole("Autorizador"));
+        rectificaciones.MapGet("/{solicitud:guid}/foto",async(Guid id,Guid solicitud,PgRectificaciones repo,ClaimsPrincipal user,HttpContext ctx)=>{
+            var f=await repo.Foto(id,solicitud,user);
+            ctx.Response.Headers.CacheControl="no-store";
+            ctx.Response.Headers.XContentTypeOptions="nosniff";
+            return Results.File(f.Bytes,f.Mime);
+        });
         datos.MapGet("/usuarios",async(PgUsuarios repo)=>await repo.Listar()).RequireAuthorization(p=>p.RequireRole("Administrador"));
         datos.MapPost("/usuarios",async(CrearUsuarioRequest dto,PgUsuarios repo,ClaimsPrincipal user)=>await repo.Crear(dto,PgDatabase.Actor(user))).RequireAuthorization(p=>p.RequireRole("Administrador"));
+        datos.MapPut("/usuarios/{id:int}/estado",
+                async (int id, CambiarEstadoUsuarioRequest dto, PgUsuarios repo, ClaimsPrincipal user) =>
+                    await repo.CambiarEstado(id, dto.Activo, PgDatabase.Actor(user)))
+            .RequireAuthorization(p => p.RequireRole("Administrador"));
+        datos.MapPut("/usuarios/{id:int}/rol",
+                async (int id, CambiarRolUsuarioRequest dto, PgUsuarios repo, ClaimsPrincipal user) =>
+                    await repo.CambiarRol(id, dto.Rol, PgDatabase.Actor(user)))
+            .RequireAuthorization(p => p.RequireRole("Administrador"));
+        datos.MapPut("/usuarios/{id:int}/clave",
+                async (int id, RestablecerClaveRequest dto, PgUsuarios repo, ClaimsPrincipal user) =>
+                    await repo.RestablecerClave(id, dto.Password, PgDatabase.Actor(user)))
+            .RequireAuthorization(p => p.RequireRole("Administrador"));
         datos.MapGet("/tecnicos",async(PgUsuarios repo)=>(await repo.Listar()).Where(u=>u.Activo&&u.Rol=="Tecnico").Select(u=>new CuentaDemoResponse($"{u.Nombre} {u.Apellido}",u.Correo,u.Rol)).ToArray()).RequireAuthorization(p=>p.RequireRole("Administrador","Autorizador"));
         datos.MapGet("/clientes",async(PgDatabase db)=>{await using var u=await db.Open();return await u.Query<ClienteResponse>("SELECT \"Id_Cliente\" AS \"Id\",\"RutCliente\" AS \"Rut\",\"NombreEmpresa\" AS \"Nombre\" FROM afrisan.\"Cliente\" WHERE \"Activo\" ORDER BY \"NombreEmpresa\"");}).RequireAuthorization(p=>p.RequireRole(Roles.Lectura.Split(',')));
         datos.MapPost("/clientes",async(CrearClienteRequest dto,PgDatabase db,ClaimsPrincipal user)=>{await using var u=await db.Open(PgDatabase.Actor(user));var c=await u.One<ClienteResponse>("INSERT INTO afrisan.\"Cliente\"(\"RutCliente\",\"NombreEmpresa\") VALUES(@p0,@p1) RETURNING \"Id_Cliente\" AS \"Id\",\"RutCliente\" AS \"Rut\",\"NombreEmpresa\" AS \"Nombre\"",dto.Rut.Trim(),dto.Nombre.Trim());await u.Commit();return c;}).RequireAuthorization(p=>p.RequireRole("Administrador"));

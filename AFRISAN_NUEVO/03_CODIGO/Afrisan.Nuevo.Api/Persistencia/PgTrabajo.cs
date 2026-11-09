@@ -95,7 +95,7 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
     }
     public async Task<OperacionResponse> Guardar(Guid id,GuardarOperacionRequest dto,ClaimsPrincipal user)
     {
-        Rol(user,"Tecnico");await using var u=await database.Open(PgDatabase.Actor(user));var o=await Acceder(u,id,user);Editable(o);
+        Rol(user,"Tecnico");await using var u=await database.Open(PgDatabase.Actor(user));var o=await Acceder(u,id,user);
         if(dto.Instancia!=settings.Instancia||dto.Id==Guid.Empty||dto.Tipo is not("Agregado" or "Reemplazo")) throw new ReglaInventarioException("El borrador no corresponde a esta instalación o no tiene un identificador válido.",409);
         if(dto.Tipo=="Agregado"&&(dto.CodigoRetirado is not null||dto.PesoRetiradoGr is not null)) throw new ReglaInventarioException("Un agregado no lleva cilindro retirado.");
         var clean=dto with{Version=0,CodigoInstalado=PgInventario.Null(dto.CodigoInstalado)?.ToUpperInvariant(),CodigoRetirado=PgInventario.Null(dto.CodigoRetirado)?.ToUpperInvariant()};
@@ -103,12 +103,14 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         if(clean.CodigoRetirado is not null&&!await u.One<bool>("SELECT EXISTS(SELECT 1 FROM afrisan.\"RetiroPrevisto\" d JOIN afrisan.\"Cilindros\" c USING(\"Id_Cilindro\") WHERE d.\"Id_OrdenTrabajo\"=@p0 AND c.\"CilindroQR\"=@p1) AS \"Value\"",o.Id,clean.CodigoRetirado)) throw new ReglaInventarioException("El retirado no está en el pedido.");
         var op=(await u.Query<OperacionRow>(OpSql+" WHERE \"Id_Operacion\"=@p0",dto.Id)).SingleOrDefault();
         if(op is null) {
+            Editable(o);
             if(dto.Version!=0) throw new ReglaInventarioException("La versión de alta debe ser cero.",409);
             await u.Exec("INSERT INTO afrisan.\"OperacionTerreno\"(\"Id_Operacion\",\"Id_OrdenTrabajo\",\"Tipo\",\"Id_Tecnico\",\"DatosBorrador\") VALUES(@p0,@p1,@p2,@p3,@p4::jsonb)",dto.Id,o.Id,dto.Tipo,PgDatabase.Actor(user),Write(clean));
         } else {
             if(op.OtId!=o.Id) throw new ReglaInventarioException("Ese UUID pertenece a otra OT.",409);
             if(op.Estado=="Descartada") throw new ReglaInventarioException("Borrador descartado.",409);
             if(Read<GuardarOperacionRequest>(op.Datos)==clean) return await VerOperacion(u,op);
+            Editable(o);
             if(op.Estado!="Borrador") throw new ReglaInventarioException("El trabajo confirmado no se sobrescribe.",409);
             Version(op,dto.Version);var previous=Read<GuardarOperacionRequest>(op.Datos);var files=Read<FotoArchivo[]>(op.Fotos);
             if(files.Any(f=>f.Grupo=="Retirado")&&clean.CodigoRetirado!=previous.CodigoRetirado||files.Any(f=>f.Grupo=="Instalado")&&clean.CodigoInstalado!=previous.CodigoInstalado) throw new ReglaInventarioException("Quita las fotos del borrador antes de cambiar el cilindro.",409);
@@ -138,10 +140,11 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
     public async Task<OperacionResponse> QuitarFoto(Guid id,Guid operacion,Guid foto,int version,ClaimsPrincipal user)
     {
         Rol(user,"Tecnico");await using var u=await database.Open(PgDatabase.Actor(user));var o=await Acceder(u,id,user);Editable(o);
-        var op=await Operacion(u,o.Id,operacion);Version(op,version);
+        var op=await Operacion(u,o.Id,operacion);
         if(op.Estado!="Borrador") throw new ReglaInventarioException("Las evidencias confirmadas no se eliminan.",409);
         var files=Read<FotoArchivo[]>(op.Fotos);
         if(!files.Any(f=>f.Id==foto)) return await VerOperacion(u,op);
+        Version(op,version);
         await u.Exec("UPDATE afrisan.\"OperacionTerreno\" SET \"FotosBorrador\"=@p1::jsonb,\"Version\"=\"Version\"+1 WHERE \"Id_Operacion\"=@p0",operacion,Write(files.Where(f=>f.Id!=foto).ToArray()));
         var result=await VerOperacion(u,await Operacion(u,o.Id,operacion));await u.Commit();return result;
     }

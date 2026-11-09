@@ -30,17 +30,23 @@ public static class PowerBiPaquete
             }
             Csv("Inventario",d.Inventario); Csv("Ordenes",d.Ordenes); Csv("DetalleOT",d.Detalle);
             Csv("Operaciones",d.Operaciones); Csv("Despachos",d.Despachos); Csv("Incidencias",d.Incidencias);
+            Csv("Costos",d.Costos??[]);
             Texto("Manifiesto.json",JsonSerializer.Serialize(new {
                 version=1,generadoUtc=d.GeneradoUtc,zonaFechas="America/Santiago",
                 alcance="Corte completo de datos operativos. Los filtros de la vista previa no limitan este paquete.",
                 filas=new {Inventario=d.Inventario.Length,Ordenes=d.Ordenes.Length,DetalleOT=d.Detalle.Length,
-                    Operaciones=d.Operaciones.Length,Despachos=d.Despachos.Length,Incidencias=d.Incidencias.Length}
+                    Operaciones=d.Operaciones.Length,Despachos=d.Despachos.Length,Incidencias=d.Incidencias.Length,Costos=d.Costos?.Length??0}
             },new JsonSerializerOptions{WriteIndented=true}));
             var assembly = typeof(PowerBiPaquete).Assembly;
             foreach(var recurso in assembly.GetManifestResourceNames().Where(n=>n.StartsWith("AFRISAN.PowerBI.",StringComparison.Ordinal)))
             {
                 using var reader = new StreamReader(assembly.GetManifestResourceStream(recurso)!);
                 Texto(recurso["AFRISAN.PowerBI.".Length..],reader.ReadToEnd());
+            }
+            foreach(var recurso in assembly.GetManifestResourceNames().Where(n=>n.StartsWith("AFRISAN.Informe.",StringComparison.Ordinal)))
+            {
+                using var reader = new StreamReader(assembly.GetManifestResourceStream(recurso)!);
+                Texto("Informe/"+recurso["AFRISAN.Informe.".Length..].Replace('\\','/'),reader.ReadToEnd());
             }
         }
         return output.ToArray();

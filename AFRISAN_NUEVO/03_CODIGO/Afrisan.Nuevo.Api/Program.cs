@@ -21,7 +21,26 @@ if (args.Contains("--preparar-persistencia"))
     catch (Exception ex) { Console.Error.WriteLine(ex is Npgsql.PostgresException pg ? $"No se pudo preparar PostgreSQL (SQLSTATE {pg.SqlState})." : "No se pudo preparar la persistencia. Revisa conexión, certificado y permisos del propietario."); Environment.ExitCode=1; }
     return;
 }
+if (args.Contains("--actualizar-rectificaciones"))
+{
+    try { await PrepararPersistencia.ActualizarRectificaciones(builder.Configuration); }
+    catch { Console.Error.WriteLine("No se pudo aplicar la actualización 08. Revisa la conexión de propietario y sus permisos."); Environment.ExitCode=1; }
+    return;
+}
+if (args.Contains("--actualizar-costos-limites"))
+{
+    try { await PrepararPersistencia.ActualizarCostosLimites(builder.Configuration); }
+    catch { Console.Error.WriteLine("No se pudo aplicar la actualización 10. Revisa la conexión de propietario y sus permisos."); Environment.ExitCode=1; }
+    return;
+}
+if (args.Contains("--actualizar-mantenedores"))
+{
+    try { await PrepararPersistencia.ActualizarMantenedores(builder.Configuration); }
+    catch { Console.Error.WriteLine("No se pudo aplicar la actualización 09. Revisa la conexión de propietario y sus permisos."); Environment.ExitCode=1; }
+    return;
+}
 var persistente = !string.Equals(builder.Configuration["Persistencia:Modo"], "Memoria", StringComparison.OrdinalIgnoreCase);
+builder.Services.AddSingleton<PowerBiDemo>();
 if (!persistente && !builder.Environment.IsDevelopment())
     throw new InvalidOperationException("El modo Memoria solo está disponible en Development.");
 
@@ -35,7 +54,12 @@ if (persistente)
     builder.Services.AddSingleton<PgDatabase>();
     builder.Services.AddSingleton<PgUsuarios>();
     builder.Services.AddSingleton<PgInventario>();
+    builder.Services.AddSingleton<PgMantenedores>();
+    builder.Services.AddSingleton<PgBajas>();
+    builder.Services.AddSingleton<PgCostos>();
+    builder.Services.AddSingleton<PgLimites>();
     builder.Services.AddSingleton<PgTrabajo>();
+    builder.Services.AddSingleton<PgRectificaciones>();
     builder.Services.AddSingleton<PgPowerBi>();
     builder.Services.AddSingleton(PowerBiOptions.Load(builder.Configuration));
     builder.Services.AddSingleton<FotosPrivadas>();
@@ -152,5 +176,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 if(persistente) { app.MapPersistencia(); app.MapPowerBi(); }
 else {app.MapInventario();app.MapTrabajo();}
+app.MapPowerBiDemo();
 app.Logger.LogInformation(persistente?"AFRISAN: PostgreSQL, usuarios persistidos y evidencias privadas.":"AFRISAN: modo explícito de revisión en memoria.");
 app.Run();

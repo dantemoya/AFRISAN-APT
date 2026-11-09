@@ -1,5 +1,24 @@
 # Power BI operativo de AFRISAN
 
+**Decisión vigente del 08/11/2026:** usar la cuenta gratuita y datos simulados.
+La pantalla principal `/power-bi` corresponde ahora al [módulo gratuito](POWER_BI_GRATUITO.md),
+con configuración de un enlace público existente por Administrador y consulta
+por Jefatura. La generación de datos simulados quedó para después. La cuenta
+gratuita actual no permite crear un código público nuevo según la documentación
+Microsoft; no se declara publicado ni enlazado un informe real.
+
+El módulo operativo descrito abajo se conserva en **`/power-bi/operativo`**,
+con sus endpoints y controles de acceso. La demostración pública no usa sus
+exportaciones de datos reales.
+
+Actualización **08/11/2026**: el resumen filtra y agrega en SQL; inventario y
+exportaciones usan los pesos vigentes de las rectificaciones aprobadas. La
+descarga incluye el [proyecto PBIP de cinco páginas](PowerBI/README.md), con
+modelo, visuales y medidas preparados. Falta revisión visual/actualización en
+Desktop, guardado PBIX, publicación y configuración del ReportId real. Esta
+actualización prevalece sobre las instrucciones de construcción manual de abajo.
+Requiere aplicar la migración 08 antes de desplegar la API nueva.
+
 Preparación del **02/11/2026**, solicitada por Dante. El usuario confirmó que
 todavía no tiene un informe publicado. Las emisiones quedan fuera del alcance.
 
@@ -11,7 +30,7 @@ todavía no tiene un informe publicado. Las emisiones quedan fuera del alcance.
   estado, kilos en cilindros instalados, retirados pendientes e incidencias.
 - Filtros por fechas, sucursal, refrigerante y técnico; gráficos de barras,
   estados vacíos, carga, errores y botón para actualizar.
-- Descarga autenticada de un ZIP con seis CSV, consulta Power Query, medidas
+- Descarga autenticada de un ZIP con siete CSV, consulta Power Query, medidas
   DAX, tema AFRISAN, manifiesto del corte e instrucciones para crear el PBIX.
 - Espacio para insertar un informe **privado** cuando se publique. La API
   construye su URL con ReportId/TenantId GUID y dominio Microsoft fijo.

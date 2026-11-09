@@ -1,0 +1,75 @@
+@page "/bajas-cilindros"
+@attribute [Authorize(Roles = "Administrador")]
+@inject InventarioClient Api
+@inject SesionService Sesion
+
+<PageTitle>Bajas de cilindros · AFRISAN</PageTitle>
+<div class="page-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Bajas de cilindros</h1><p>Clasifica un envase como Chatarra o Inactivo, conservando su identificación, pesos e historial.</p></div><a class="btn secondary" href="inventario">Consultar inventario</a></div>
+@if(error is not null){<div class="notice error" role="alert">@error</div>}
+@if(mensaje is not null){<div class="notice success" role="status">@mensaje</div>}
+@if(Sesion.Entorno?.Modo!="PostgreSQL") { <div class="notice info">Las bajas requieren la instalación persistente de AFRISAN.</div> }
+else
+{
+    <section class="panel"><h2>Registrar baja administrativa</h2>
+        <p class="muted">Solo se admiten envases en Bodega, sin reserva ni custodia. Chatarra no acredita entrega a una empresa de disposición ni recepción de un certificado.</p>
+        @if(cargando){<p role="status">Consultando cilindros y bajas…</p>}
+        <EditForm Model="form" OnValidSubmit="Guardar"><DataAnnotationsValidator/><ValidationSummary/>
+            <fieldset disabled="@(ocupado||cargando)">
+                <label for="baja-codigo">Cilindro</label><InputSelect id="baja-codigo" @bind-Value="form.Codigo"><option value="">Selecciona un cilindro en Bodega</option>
+                    @foreach(var c in cilindros.Where(c=>c.Ubicacion=="Bodega"&&!bajas.Any(b=>b.CilindroId==c.Id))) { <option value="@c.Codigo">@c.Codigo · @c.RefrigeranteCodigo · @Formato.Estado(c.Estado)</option> }
+                </InputSelect>
+                <label for="baja-estado">Estado de destino</label><InputSelect id="baja-estado" @bind-Value="form.EstadoDestino"><option value="Chatarra">Chatarra</option><option value="Inactivo">Inactivo</option></InputSelect>
+                <label for="baja-motivo">Motivo de la baja</label><InputTextArea id="baja-motivo" @bind-Value="form.Motivo" minlength="5" maxlength="2000" rows="3" />
+                <div class="form-actions"><button type="submit" class="btn primary">Registrar baja</button></div>
+            </fieldset>
+        </EditForm>
+    </section>
+    <section class="panel mt"><div class="panel-heading"><h2>Historial de bajas</h2><button class="btn secondary" disabled="@(ocupado||cargando)" @onclick="Cargar">Actualizar</button></div>
+        @if(bajas.Length==0&&!cargando){<p>No hay bajas registradas.</p>}
+        else
+        {
+            <div class="table-wrap"><table><thead><tr><th>Cilindro</th><th>Clasificación</th><th>Motivo</th><th>Registro</th></tr></thead><tbody>
+                @foreach(var b in bajas) { <tr @key="b.Id"><td><a href="@($"cilindros/{b.Codigo}")">@b.Codigo</a><small class="cell-note">@b.Refrigerante</small></td><td>@b.EstadoDestino</td><td>@b.Motivo</td><td>@b.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")<small class="cell-note">@b.Usuario</small></td></tr> }
+            </tbody></table></div>
+        }
+    </section>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name="codigo")] public string? Codigo {get;set;}
+    private CilindroResponse[] cilindros=[];
+    private BajaCilindroResponse[] bajas=[];
+    private BajaForm form=new();
+    private Guid id=Guid.NewGuid();
+    private BajaCilindroRequest? ultimoEnvio;
+    private string? ultimoCodigo,error,mensaje;
+    private bool ocupado,cargando;
+    protected override async Task OnInitializedAsync(){if(!string.IsNullOrWhiteSpace(Codigo))form.Codigo=Codigo;await Cargar();}
+    private async Task Cargar()
+    {
+        if(Sesion.Entorno?.Modo!="PostgreSQL")return;
+        cargando=true;
+        try{cilindros=await Api.CilindrosAsync();bajas=await Api.BajasAsync();}catch(Exception ex){error=Formato.Error(ex);}finally{cargando=false;}
+    }
+    private async Task Guardar()
+    {
+        if(ocupado)return;ocupado=true;error=null;mensaje=null;
+        try
+        {
+            var datos=new BajaCilindroRequest{Id=id,EstadoDestino=form.EstadoDestino,Motivo=form.Motivo.Trim()};
+            if(ultimoEnvio is not null&&(ultimoCodigo!=form.Codigo||ultimoEnvio.EstadoDestino!=datos.EstadoDestino||ultimoEnvio.Motivo!=datos.Motivo))
+                datos=datos with{Id=Guid.NewGuid()};
+            id=datos.Id;ultimoEnvio=datos;ultimoCodigo=form.Codigo;
+            var baja=await Api.BajaAsync(form.Codigo,datos);
+            form=new();id=Guid.NewGuid();ultimoEnvio=null;ultimoCodigo=null;await Cargar();
+            mensaje=$"Baja registrada para {baja.Codigo}: {baja.EstadoDestino}. Se conserva su historial.";
+        }
+        catch(Exception ex){error=Formato.Error(ex);}finally{ocupado=false;}
+    }
+    private sealed class BajaForm
+    {
+        [System.ComponentModel.DataAnnotations.Required] public string Codigo{get;set;}="";
+        public string EstadoDestino{get;set;}="Chatarra";
+        [System.ComponentModel.DataAnnotations.Required,System.ComponentModel.DataAnnotations.StringLength(2000,MinimumLength=5)] public string Motivo{get;set;}="";
+    }
+}

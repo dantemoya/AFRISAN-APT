@@ -1,0 +1,84 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "visual_017",
+  "position": {
+    "x": 24,
+    "y": 145,
+    "z": 17,
+    "width": 780,
+    "height": 245,
+    "tabOrder": 17
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Operaciones"
+                    }
+                  },
+                  "Property": "DiaConfirmacion"
+                }
+              },
+              "queryRef": "Operaciones.DiaConfirmacion",
+              "nativeQueryRef": "DiaConfirmacion"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Inventario"
+                    }
+                  },
+                  "Property": "Kg en cilindros instalados"
+                }
+              },
+              "queryRef": "Inventario.Kg en cilindros instalados",
+              "nativeQueryRef": "Kg en cilindros instalados"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Kg netos de cilindros instalados por día'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "13"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

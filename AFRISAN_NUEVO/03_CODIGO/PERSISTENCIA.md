@@ -1,5 +1,16 @@
 # Persistencia de AFRISAN
 
+Incremento **08/11/2026**: [mantenedores y bajas](MANTENEDORES_Y_BAJAS.md), migración
+aditiva 09 posterior a 07/08. `--actualizar-mantenedores` aplica únicamente 09
+con la conexión de propietario existente; no rota contraseñas ni crea usuarios.
+La preparación inicial incorpora 07–09. No se modificó Supabase en este incremento.
+
+Actualización **08/11/2026**: [rectificación de pesajes y pruebas de módulos](../04_SEGUIMIENTO/MODULOS_2026_11_08/README.md).
+La API nueva necesita `08_Rectificacion_Pesajes.sql` después de 07. Para una base
+existente: `dotnet run --project Afrisan.Nuevo.Api -- --actualizar-rectificaciones`.
+Usa la conexión de propietario configurada y no cambia cuentas ni contraseñas.
+Las pruebas se ejecutaron aisladas; 08 no se aplicó a Supabase en esta sesión.
+
 Actualización: **02/11/2026**. Implementación preparada y probada; actualización
 07 aplicada en Supabase tras autorización explícita de Dante. La conexión de
 ejecución restringida está verificada. El usuario creó su administrador por
@@ -17,6 +28,13 @@ responde 401. Ya se puede entrar con la cuenta real creada por el usuario.
   comprobación de usuario/rol/versión en cada solicitud y bloqueo persistido.
 - Creación inicial de administrador solo desde terminal y solo cuando no existen
   usuarios. Los usuarios de trabajo se crean desde Administración.
+- Gestión de cuentas desde Administración (08/11/2026): activar o desactivar,
+  cambiar el rol y restablecer la contraseña (`PUT /api/v1/usuarios/{id}/estado`,
+  `/rol` y `/clave`, solo para Administrador). Cada cambio renueva
+  `VersionSeguridad`, por lo que las sesiones abiertas de esa cuenta dejan de ser
+  válidas en la siguiente solicitud. El Administrador no puede modificar su propia
+  cuenta, y un técnico con OT abiertas o cilindros en custodia no se desactiva ni
+  cambia de rol. Comprobaciones en `04_SEGUIMIENTO/USUARIOS_2026_11_08`.
 - Clientes/sucursales por ID, refrigerantes, cilindros y pesaje inicial atómico.
 - OT, reservas, retiro con peso/foto, borradores/versiones, evidencias,
   confirmación, recepción, incidencias, revisiones y cierre.

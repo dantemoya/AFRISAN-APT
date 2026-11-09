@@ -1,0 +1,85 @@
+@page "/limites"
+@attribute [Authorize(Roles = RolesControl.Limites)]
+@inject InventarioClient Api
+@inject SesionService Sesion
+
+<PageTitle>Límites por sucursal · AFRISAN</PageTitle>
+<div class="page-heading"><div><span class="eyebrow">CONTROL POR GAS</span><h1>Límites por sucursal</h1><p>Gramos netos instalados en operaciones confirmadas, separados por gas y sucursal.</p></div></div>
+@if(error is not null){<div class="notice error" role="alert">@error</div>}
+@if(mensaje is not null){<div class="notice success" role="status">@mensaje</div>}
+@if(Sesion.Entorno?.Modo!="PostgreSQL"){<div class="notice info">Este módulo requiere la instalación persistente de AFRISAN.</div>}
+else
+{
+    <section class="panel"><h2>Avance semanal y mensual</h2><p class="muted">Semanas de lunes a domingo y meses calendario en America/Santiago, por fecha de confirmación. Los pesos incluyen rectificaciones aprobadas. El avance expresa gas instalado.</p>
+        <form @onsubmit="Cargar" @onsubmit:preventDefault><label for="limite-fecha">Fecha del período a consultar</label><input id="limite-fecha" type="date" required max="@Hoy.ToString("yyyy-MM-dd")" @bind="fecha" /><button class="btn secondary mt" type="submit" disabled="@ocupado">Consultar períodos</button></form>
+        <div class="table-wrap mt"><table><thead><tr><th>Sucursal / gas</th><th>Período</th><th>Límite</th><th>Instalado</th><th>Exceso</th><th>Medición</th></tr></thead><tbody>
+            @foreach(var a in avances)
+            {
+                <tr><td>@a.Sucursal<small class="cell-note">@a.Refrigerante</small></td><td>@a.Periodicidad<small class="cell-note">@a.Inicio.ToString("dd/MM/yyyy") – @a.Fin.ToString("dd/MM/yyyy") · v@(a.Version)</small></td><td>@N(a.GrLimite) g</td><td>@N(a.GrInstalados) g<small class="cell-note">@a.Operaciones operaciones</small></td><td>@N(a.GrExceso) g</td><td><button class="btn secondary" disabled="@ocupado" @onclick="()=>Medir(a)">Guardar medición</button></td></tr>
+            }
+        </tbody></table></div>@if(avances.Length==0){<p>No hay límites por gas vigentes al inicio de estos períodos. Define la vigencia desde su lunes o primer día del mes.</p>}
+        <label for="limite-observacion">Observación para la próxima medición (opcional)</label><textarea id="limite-observacion" maxlength="2000" @bind="observacion"></textarea>
+        <p class="field-help">Cada medición conserva los gramos, operaciones y versión del límite de ese momento. Si llegan operaciones o rectificaciones después, puedes guardar otra medición.</p>
+    </section>
+    @if(PuedeEditar)
+    {
+        <section class="panel mt"><h2>Definir o modificar un límite</h2><p class="muted">La vigencia debe comenzar el lunes para una semana o el primer día para un mes. Jefatura puede bloquear o habilitar cambios de Bodega.</p>
+            <form @onsubmit="Guardar" @onsubmit:preventDefault><fieldset disabled="@ocupado">
+                <label for="limite-sucursal">Sucursal</label><select id="limite-sucursal" required @bind="sucursalId" @bind:after="Seleccionar"><option value="0">Selecciona una sucursal</option>@foreach(var s in sucursales.Where(s=>s.Activo&&s.ClienteActivo)){<option value="@s.Id">@s.Cliente · @s.Nombre</option>}</select>
+                <label for="limite-gas">Gas</label><select id="limite-gas" required @bind="gasId" @bind:after="Seleccionar"><option value="0">Selecciona un gas</option>@foreach(var g in gases.Where(g=>g.Activo)){<option value="@g.Id">@g.Codigo · @g.Nombre</option>}</select>
+                <label for="limite-periodicidad">Periodicidad</label><select id="limite-periodicidad" @bind="periodicidad" @bind:after="Seleccionar"><option>Semana</option><option>Mes</option></select>
+                <label for="limite-gramos">Gramos del límite</label><input id="limite-gramos" type="number" min="1" step="1" required @bind="grLimite" />
+                <label for="limite-vigencia">Vigente desde</label><input id="limite-vigencia" type="date" required @bind="vigencia" />
+                @if(actual is not null){<p>Versión @actual.Version · @(actual.Bloqueado?"Edición de Bodega bloqueada":"Edición de Bodega habilitada")</p>}
+                <button class="btn primary mt" type="submit" disabled="@(actual?.Bloqueado==true&&!EsJefatura)">Guardar límite</button>
+            </fieldset></form>
+            @if(EsJefatura&&actual is not null){<button class="btn secondary mt" disabled="@ocupado" @onclick="Bloquear">@(actual.Bloqueado?"Habilitar edición de Bodega":"Bloquear edición de Bodega")</button>}
+        </section>
+    }
+    <section class="panel mt"><h2>Mediciones y revisión de excesos</h2><div class="table-wrap"><table><thead><tr><th>Sucursal / gas</th><th>Período</th><th>Instalado / límite</th><th>Exceso</th><th>Revisión de Jefatura</th></tr></thead><tbody>
+        @foreach(var m in mediciones)
+        {
+            <tr><td>@m.Sucursal<small class="cell-note">@(m.Refrigerante??"Límite general anterior")</small></td><td>@m.Inicio.ToString("dd/MM/yyyy") – @m.Fin.ToString("dd/MM/yyyy")<small class="cell-note">Versión @m.Version · medición #@m.Id</small></td><td>@N(m.GrInstalados) / @N(m.GrLimite) g<small class="cell-note">@m.Observaciones</small></td><td>@N(m.GrExceso) g</td><td>@(m.Conclusion??(m.GrExceso>0?"Pendiente":"Sin exceso"))
+                @if(EsJefatura&&m.GrExceso>0&&m.Conclusion is null){<button class="btn secondary" disabled="@ocupado" @onclick="()=>ElegirRevision(m)">Revisar exceso</button>}
+            </td></tr>
+        }
+    </tbody></table></div>@if(mediciones.Length==0){<p>No hay mediciones guardadas.</p>}
+    </section>
+    @if(revision is not null)
+    {
+        <section class="panel mt"><h2>Revisar medición #@revision.Id</h2><p>@revision.Sucursal · @revision.Refrigerante · exceso @N(revision.GrExceso) g</p><form @onsubmit="Revisar" @onsubmit:preventDefault><fieldset disabled="@ocupado"><label for="exceso-conclusion">Conclusión</label><textarea id="exceso-conclusion" required minlength="5" maxlength="2000" @bind="conclusion"></textarea><button class="btn primary mt" type="submit">Guardar conclusión</button><button class="btn secondary mt" type="button" @onclick="()=>revision=null">Cancelar</button></fieldset></form></section>
+    }
+    @if(definiciones.Any(d=>d.RefrigeranteId is null)){<div class="notice info mt">Existen límites generales anteriores. Se conserva su historial; crea las nuevas definiciones por gas para aplicar la regla aprobada.</div>}
+}
+
+@code {
+    private LimiteResponse[] definiciones=[];private AvanceLimiteResponse[] avances=[];private MedicionResponse[] mediciones=[];private SucursalMantenedorResponse[] sucursales=[];private RefrigeranteMantenedorResponse[] gases=[];
+    private static DateOnly Hoy=>DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTimeOffset.UtcNow,"America/Santiago").DateTime);
+    private DateOnly fecha=Hoy,vigencia=new(Hoy.Year,Hoy.Month,1);private string periodicidad="Mes",observacion="",conclusion="";private int sucursalId;private long gasId,grLimite;private bool ocupado;private string? error,mensaje;private LimiteResponse? actual;private MedicionResponse? revision;private MedirLimiteRequest? envio;
+    private bool EsJefatura=>Sesion.Sesion?.Rol=="Jefatura";private bool PuedeEditar=>EsJefatura||Sesion.Sesion?.Rol=="Bodega";
+    private static string N(long n)=>n.ToString("N0",System.Globalization.CultureInfo.GetCultureInfo("es-CL"));
+    protected override async Task OnInitializedAsync()=>await Cargar();
+    private async Task Cargar()
+    {
+        if(Sesion.Entorno?.Modo!="PostgreSQL")return;
+        try{definiciones=await Api.DefinicionesLimiteAsync();avances=await Api.AvancesLimiteAsync(fecha);mediciones=await Api.MedicionesLimiteAsync();if(PuedeEditar){sucursales=await Api.SucursalesLimiteAsync();gases=await Api.RefrigerantesLimiteAsync();}}catch(Exception ex){error=Formato.Error(ex);}
+    }
+    private void Seleccionar()
+    {
+        actual=definiciones.FirstOrDefault(d=>d.SucursalId==sucursalId&&d.RefrigeranteId==gasId&&d.Periodicidad==periodicidad);
+        grLimite=actual?.GrLimite??0;vigencia=actual?.VigenteDesde??(periodicidad=="Mes"?new(Hoy.Year,Hoy.Month,1):Hoy.AddDays(-((int)Hoy.DayOfWeek+6)%7));
+    }
+    private async Task Ejecutar(Func<Task> accion,string texto)
+    {
+        if(ocupado)return;ocupado=true;error=null;mensaje=null;
+        try{await accion();await Cargar();mensaje=texto;}catch(Exception ex){error=Formato.Error(ex);}finally{ocupado=false;}
+    }
+    private Task Guardar()=>Ejecutar(async()=>{actual=await Api.DefinirLimiteAsync(new(){SucursalId=sucursalId,RefrigeranteId=gasId,Periodicidad=periodicidad,GrLimite=grLimite,VigenteDesde=vigencia,Version=actual?.Version??0});},"Límite guardado con una versión en el historial.");
+    private Task Bloquear()=>Ejecutar(async()=>{if(actual is not null)actual=await Api.BloquearLimiteAsync(actual.Id,new(){Version=actual.Version,Bloqueado=!actual.Bloqueado});},"Permiso de edición de Bodega actualizado.");
+    private Task Medir(AvanceLimiteResponse a)=>Ejecutar(async()=>{
+        var dto=new MedirLimiteRequest{LimiteId=a.LimiteId,Fecha=fecha,Observaciones=observacion};dto=dto with{SolicitudId=envio is not null&&envio with{SolicitudId=Guid.Empty}==dto?envio.SolicitudId:Guid.NewGuid()};envio=dto;
+        await Api.MedirLimiteAsync(dto);envio=null;observacion="";
+    },"Medición guardada con las operaciones y pesos de este corte.");
+    private void ElegirRevision(MedicionResponse m){revision=m;conclusion="";}
+    private Task Revisar()=>Ejecutar(async()=>{if(revision is not null){await Api.RevisarExcesoAsync(revision.Id,new(){Conclusion=conclusion});revision=null;}},"Conclusión de Jefatura guardada.");
+}

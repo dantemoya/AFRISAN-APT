@@ -5,6 +5,19 @@ namespace Afrisan.Nuevo.Web.Services;
 
 public sealed partial class InventarioClient
 {
+    public Task<PowerBiDemoResponse> PowerBiDemoAsync() =>
+        ObtenerAsync<PowerBiDemoResponse>("power-bi/demo/configuracion");
+
+    public Task<PowerBiDemoResponse> ConfigurarPowerBiDemoAsync(string url) =>
+        ActualizarAsync<PowerBiDemoResponse>("power-bi/demo/configuracion", new ConfigurarPowerBiDemoRequest { UrlPublica = url });
+
+    public async Task<byte[]> PlantillaPowerBiDemoAsync()
+    {
+        using var respuesta = await http.GetAsync("power-bi/demo/plantilla");
+        await RevisarAsync(respuesta);
+        return await respuesta.Content.ReadAsByteArrayAsync();
+    }
+
     public Task<PowerBiConfiguracionResponse> PowerBiConfiguracionAsync() =>
         ObtenerAsync<PowerBiConfiguracionResponse>("power-bi/configuracion");
 

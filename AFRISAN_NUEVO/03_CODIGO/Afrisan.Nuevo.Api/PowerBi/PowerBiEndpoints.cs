@@ -18,7 +18,7 @@ public static class PowerBiEndpoints
         group.MapGet("/configuracion",(PowerBiOptions config)=>config.Publica());
         group.MapGet("/resumen",async(PgPowerBi repo,ClaimsPrincipal user,DateOnly? desde,DateOnly? hasta,
             int? sucursalId,long? refrigeranteId,int? tecnicoId)=>
-                PgPowerBi.Resumen(await repo.Datos(PgDatabase.Actor(user)),desde,hasta,sucursalId,refrigeranteId,tecnicoId));
+                await repo.ResumenSql(PgDatabase.Actor(user),desde,hasta,sucursalId,refrigeranteId,tecnicoId));
         group.MapGet("/paquete",async(PgPowerBi repo,ClaimsPrincipal user)=>{
             var datos=await repo.Datos(PgDatabase.Actor(user));
             return Results.File(PowerBiPaquete.Crear(datos),"application/zip",

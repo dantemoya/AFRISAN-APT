@@ -38,9 +38,11 @@ else
             }
         </section>
     </div>
+    <a class="btn secondary mt" href="@($"ordenes/{Id}/rectificaciones")">Revisar y rectificar pesajes confirmados</a>
     <button class="btn secondary mt" disabled="@ocupado" @onclick="Cargar">Actualizar estado de la OT</button>
     @if (EsAutorizador && ot.AprobacionBodega is null) { <div class="notice warning">La revisión de fotos y registro se habilita cuando Bodega confirma los cilindros, sus pesos y aprueba el trabajo.</div> }
     <section class="panel mt"><div class="panel-heading"><h2>Cambios y agregados</h2>@if (EsTecnico && Editable && ot.Entregas.Any(e => e.Estado == "EnProcesoDespacho")) { <a class="btn primary" href="@($"ordenes/{Id}/operacion/{Guid.NewGuid()}")">+ Registrar trabajo físico</a> }</div>
+        <p class="field-help">Se muestran los pesajes originales del trabajo. En «Revisar y rectificar pesajes confirmados» puedes comparar los originales con los pesos vigentes aprobados.</p>
         @if (ot.Operaciones.Length == 0) { <p class="muted">No hay operaciones recibidas por la API. Los borradores locales se muestran debajo.</p> }
         @foreach (var op in ot.Operaciones)
         {
@@ -68,7 +70,7 @@ else
     }
     @if ((EsTecnico || EsBodega) && ot.AprobacionBodega is null && ot.Estado != "Cerrada")
     {
-        <section class="panel mt"><h2>Incidencia o solicitud de rectificación</h2><div class="form-grid"><div><label for="incidencia-tipo">Tipo</label><select id="incidencia-tipo" @bind="tipoIncidencia"><option>Incidencia</option><option value="Rectificacion">Solicitud de rectificación</option></select></div><div><label for="incidencia-operacion">Trabajo relacionado (opcional)</label><select id="incidencia-operacion" @bind="operacionIncidencia"><option value="">Toda la OT</option>@foreach (var op in ot.Operaciones) { <option value="@op.Id">@op.Tipo · @op.CodigoInstalado</option> }</select></div></div><label for="incidencia-motivo">Hechos / motivo de corrección</label><textarea id="incidencia-motivo" @bind="motivoIncidencia" maxlength="2000"></textarea><button class="btn secondary mt" @onclick="Incidencia" disabled="@ocupado">Enviar para revisión</button><p class="field-help">Conserva el registro original. El Autorizador revisa; el técnico no sobrescribe ni borra los pesajes confirmados.</p></section>
+        <section class="panel mt"><h2>Incidencia o solicitud de rectificación</h2><div class="form-grid"><div><label for="incidencia-tipo">Tipo</label><select id="incidencia-tipo" @bind="tipoIncidencia"><option>Incidencia</option></select></div><div><label for="incidencia-operacion">Trabajo relacionado (opcional)</label><select id="incidencia-operacion" @bind="operacionIncidencia"><option value="">Toda la OT</option>@foreach (var op in ot.Operaciones) { <option value="@op.Id">@op.Tipo · @op.CodigoInstalado</option> }</select></div></div><label for="incidencia-motivo">Hechos / motivo de corrección</label><textarea id="incidencia-motivo" @bind="motivoIncidencia" maxlength="2000"></textarea><button class="btn secondary mt" @onclick="Incidencia" disabled="@ocupado">Enviar para revisión</button><p class="field-help">Conserva el registro original. El Autorizador revisa; el técnico no sobrescribe ni borra los pesajes confirmados.</p></section>
     }
     <section class="panel mt"><h2>Revisión de incidencias</h2>
         @foreach (var pendiente in incidenciasLocales.Where(i => i.OtId == Id && i.Pendiente)) { <div class="notice warning"><strong>@pendiente.Datos.Tipo guardada en este dispositivo</strong><p>@pendiente.Datos.Motivo</p><p>@(pendiente.Error ?? "Pendiente de enviar a la API. No equivale a una revisión del Autorizador.")</p></div> }

@@ -54,7 +54,95 @@ public sealed class PgUsuarios(PgDatabase database, PersistenciaOptions settings
     {
         await using var unit = await database.Open();
         return (await unit.Query<UsuarioRow>(Select + " ORDER BY u.\"Nombre\",u.\"Apellido\""))
-            .Select(u => new UsuarioResponse(u.Id,u.Nombre,u.Apellido,u.Correo,u.Rol,u.Activo)).ToArray();
+            .Select(Respuesta).ToArray();
+    }
+
+    private static UsuarioResponse Respuesta(UsuarioRow u) =>
+        new(u.Id, u.Nombre, u.Apellido, u.Correo, u.Rol, u.Activo, u.BloqueadoHasta > DateTimeOffset.UtcNow);
+
+    // Cada cambio renueva "VersionSeguridad": el JWT ya emitido deja de validarse en la siguiente solicitud.
+    private const long BloqueoAdministracion = 73420261108;
+
+    private async Task<(PgUnit Unit, UsuarioRow Usuario)> Preparar(int id, int actor)
+    {
+        if (id == actor)
+            throw new ReglaInventarioException("No puedes modificar tu propia cuenta desde Administración.", 409);
+        var unit = await database.Open(actor);
+        try
+        {
+            // Serializa los cambios de cuentas y vuelve a exigir un Administrador activo dentro de la transacción.
+            await unit.Query<long>("SELECT 1::bigint AS \"Value\" FROM pg_advisory_xact_lock(@p0)", BloqueoAdministracion);
+            await unit.Query<int>("SELECT afrisan.actor(ARRAY['Administrador']) AS \"Value\"");
+            var usuario = (await unit.Query<UsuarioRow>(Select + " WHERE u.\"Id_Usuario\"=@p0 FOR UPDATE OF u", id)).SingleOrDefault()
+                ?? throw new ReglaInventarioException("Usuario no encontrado.", 404);
+            return (unit, usuario);
+        }
+        catch
+        {
+            await unit.DisposeAsync();
+            throw;
+        }
+    }
+
+    // Un técnico inactivo o con otro rol ya no puede operar sus OT ni devolver los cilindros que tiene.
+    private static async Task SinTrabajoAbierto(PgUnit unit, UsuarioRow usuario)
+    {
+        if (usuario.Rol != "Tecnico") return;
+        var pendiente = await unit.One<bool>("""
+            SELECT EXISTS(SELECT 1 FROM afrisan."OrdenTrabajo" WHERE "Id_Tecnico"=@p0 AND "Estado"<>'Cerrada')
+                OR EXISTS(SELECT 1 FROM afrisan."CustodiaActual" WHERE "Id_Tecnico"=@p0) AS "Value"
+            """, usuario.Id);
+        if (pendiente)
+            throw new ReglaInventarioException("El técnico tiene OT abiertas o cilindros en custodia. Ciérralas antes de desactivarlo o cambiar su rol.", 409);
+    }
+
+    public async Task<UsuarioResponse> CambiarEstado(int id, bool activo, int actor)
+    {
+        var (unit, usuario) = await Preparar(id, actor);
+        await using (unit)
+        {
+            if (usuario.Activo == activo) return Respuesta(usuario);
+            if (!activo) await SinTrabajoAbierto(unit, usuario);
+            await unit.Exec("""
+                UPDATE afrisan."Usuario" SET "Activo"=@p1,"IntentosFallidos"=0,"BloqueadoHasta"=NULL,"VersionSeguridad"=gen_random_uuid()
+                WHERE "Id_Usuario"=@p0
+                """, id, activo);
+            await unit.Commit();
+            return Respuesta(usuario with { Activo = activo, BloqueadoHasta = null });
+        }
+    }
+
+    public async Task<UsuarioResponse> CambiarRol(int id, string rol, int actor)
+    {
+        if (!Roles.Todos.Contains(rol)) throw new ReglaInventarioException("Rol inválido.");
+        var (unit, usuario) = await Preparar(id, actor);
+        await using (unit)
+        {
+            if (usuario.Rol == rol) return Respuesta(usuario);
+            await SinTrabajoAbierto(unit, usuario);
+            await unit.Exec("""
+                UPDATE afrisan."Usuario" SET "Id_Rol"=(SELECT "Id_Rol" FROM afrisan."Rol" WHERE "Nombre_Rol"=@p1),"VersionSeguridad"=gen_random_uuid()
+                WHERE "Id_Usuario"=@p0
+                """, id, rol);
+            await unit.Commit();
+            return Respuesta(usuario with { Rol = rol });
+        }
+    }
+
+    public async Task<UsuarioResponse> RestablecerClave(int id, string password, int actor)
+    {
+        if (password.Length is < 12 or > 128)
+            throw new ReglaInventarioException("La contraseña debe tener entre 12 y 128 caracteres.");
+        var (unit, usuario) = await Preparar(id, actor);
+        await using (unit)
+        {
+            await unit.Exec("""
+                UPDATE afrisan."Usuario" SET "Clave_Usuario"=@p1,"IntentosFallidos"=0,"BloqueadoHasta"=NULL,"VersionSeguridad"=gen_random_uuid()
+                WHERE "Id_Usuario"=@p0
+                """, id, hasher.HashPassword(usuario.Correo, password));
+            await unit.Commit();
+            return Respuesta(usuario with { BloqueadoHasta = null });
+        }
     }
     public async Task<UsuarioResponse> Crear(CrearUsuarioRequest request, int? actor, bool inicial = false)
     {

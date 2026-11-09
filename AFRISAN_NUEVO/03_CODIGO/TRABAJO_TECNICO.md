@@ -1,5 +1,12 @@
 # Entrega de trabajo técnico · 20 de octubre de 2026
 
+Actualización del **08/11/2026**: [sesión offline, sincronización y rectificación
+de pesajes](../04_SEGUIMIENTO/MODULOS_2026_11_08/README.md). Se probaron en navegador
+la reapertura sin red y los reintentos con respuestas perdidas; las fotos ya
+recibidas no se reenvían. P05 tiene una pantalla de solicitudes con aprobación
+del Autorizador y conserva el peso original. Esta actualización corresponde al
+modo PostgreSQL y prevalece sobre las referencias históricas de abajo.
+
 Actualización del 25/10: [retiro del Técnico con foto y aprobación previa de Bodega](../04_SEGUIMIENTO/FLUJO_TERRENO_2026_10_25/README.md).
 Esta versión prevalece sobre el despacho por Bodega y el envío directo al
 Autorizador descritos abajo. Incluye tres pruebas HTTP completas y una OT

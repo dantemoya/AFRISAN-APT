@@ -14,7 +14,7 @@ public sealed class PgInventario(PgDatabase database)
     internal const string PesajesSql = """
         SELECT p."Id_Pesaje" AS "Id",p."Id_Cilindro" AS "CilindroId",p."Tipo",p."PesoBrutoGr" AS "Peso",
           p."Fecha",u."Correo_Usuario" AS "Usuario",p."Observacion"
-        FROM afrisan."Pesaje" p JOIN afrisan."Usuario" u USING("Id_Usuario")
+        FROM afrisan."PesajeVigente" p JOIN afrisan."Usuario" u USING("Id_Usuario")
         """;
     internal static async Task<CilindroResponse[]> Map(PgUnit unit, CilindroRow[] rows)
     {

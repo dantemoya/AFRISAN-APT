@@ -1,0 +1,920 @@
+{
+  "name": "AFRISAN",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "es-CL",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "tables": [
+      {
+        "name": "Inventario",
+        "columns": [
+          {
+            "name": "CilindroId",
+            "dataType": "string",
+            "sourceColumn": "CilindroId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Codigo",
+            "dataType": "string",
+            "sourceColumn": "Codigo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "RefrigeranteId",
+            "dataType": "string",
+            "sourceColumn": "RefrigeranteId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Refrigerante",
+            "dataType": "string",
+            "sourceColumn": "Refrigerante",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Estado",
+            "dataType": "string",
+            "sourceColumn": "Estado",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Ubicacion",
+            "dataType": "string",
+            "sourceColumn": "Ubicacion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SucursalId",
+            "dataType": "string",
+            "sourceColumn": "SucursalId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Sucursal",
+            "dataType": "string",
+            "sourceColumn": "Sucursal",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TecnicoId",
+            "dataType": "string",
+            "sourceColumn": "TecnicoId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Tecnico",
+            "dataType": "string",
+            "sourceColumn": "Tecnico",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "KgSegunUltimoPesaje",
+            "dataType": "double",
+            "sourceColumn": "KgSegunUltimoPesaje",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FechaPesaje",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaPesaje",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Inventario",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "Afrisan[Inventario]"
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Cilindros registrados",
+            "expression": "COUNTROWS(Inventario)",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Cilindros sin pesaje",
+            "expression": "COUNTROWS(FILTER(Inventario, ISBLANK(Inventario[KgSegunUltimoPesaje])))",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Cilindros disponibles bodega",
+            "expression": "CALCULATE(COUNTROWS(Inventario), Inventario[Ubicacion] = \"Bodega\", Inventario[Estado] = \"Disponible\")",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "OT registradas",
+            "expression": "CALCULATE(DISTINCTCOUNT(Ordenes[OtId]), TREATAS(VALUES(DetalleOT[OtId]), Ordenes[OtId]))",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "OT abiertas",
+            "expression": "CALCULATE(DISTINCTCOUNT(Ordenes[OtId]), TREATAS(VALUES(DetalleOT[OtId]), Ordenes[OtId]), KEEPFILTERS(Ordenes[Estado] <> \"Cerrada\"))",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "OT cerradas",
+            "expression": "CALCULATE(DISTINCTCOUNT(Ordenes[OtId]), TREATAS(VALUES(DetalleOT[OtId]), Ordenes[OtId]), KEEPFILTERS(Ordenes[Estado] = \"Cerrada\"))",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Kg solicitados",
+            "expression": "SUM(DetalleOT[KgSolicitados])",
+            "formatString": "#,0.00",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Kg autorizados",
+            "expression": "SUM(DetalleOT[KgAutorizados])",
+            "formatString": "#,0.00",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Operaciones confirmadas",
+            "expression": "COUNTROWS(Operaciones)",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Kg en cilindros instalados",
+            "expression": "SUM(Operaciones[KgInstalados])",
+            "formatString": "#,0.00",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Kg en cilindros retirados",
+            "expression": "SUM(Operaciones[KgRetirados])",
+            "formatString": "#,0.00",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Retirados pendientes recepcion",
+            "expression": "CALCULATE(COUNTROWS(Operaciones), KEEPFILTERS(Operaciones[PendienteRecepcion] = TRUE()))",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Incidencias abiertas",
+            "expression": "CALCULATE(COUNTROWS(Incidencias), TREATAS(VALUES(DetalleOT[OtId]), Incidencias[OtId]), KEEPFILTERS(Incidencias[Abierta] = TRUE()))",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Despachos pendientes uso o devolucion",
+            "expression": "CALCULATE(COUNTROWS(Despachos), KEEPFILTERS(Despachos[Estado] = \"EnProcesoDespacho\"))",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Costo refrigerante CLP",
+            "expression": "SUM(Costos[TotalClp])",
+            "formatString": "#,0.00######",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Gramos valorados",
+            "expression": "SUM(Costos[Gramos])",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Operaciones valoradas",
+            "expression": "DISTINCTCOUNT(Costos[OperacionId])",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Valoraciones sin conversion",
+            "expression": "COUNTROWS(FILTER(Costos, ISBLANK(Costos[TotalClp])))",
+            "formatString": "#,0",
+            "displayFolder": "Indicadores operativos"
+          }
+        ]
+      },
+      {
+        "name": "Ordenes",
+        "columns": [
+          {
+            "name": "OtId",
+            "dataType": "string",
+            "sourceColumn": "OtId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Codigo",
+            "dataType": "string",
+            "sourceColumn": "Codigo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "SucursalId",
+            "dataType": "string",
+            "sourceColumn": "SucursalId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Sucursal",
+            "dataType": "string",
+            "sourceColumn": "Sucursal",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "TecnicoId",
+            "dataType": "string",
+            "sourceColumn": "TecnicoId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Tecnico",
+            "dataType": "string",
+            "sourceColumn": "Tecnico",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Estado",
+            "dataType": "string",
+            "sourceColumn": "Estado",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FechaCreacion",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaCreacion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DiaCreacion",
+            "dataType": "dateTime",
+            "sourceColumn": "DiaCreacion",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "name": "FechaCierre",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaCierre",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Ordenes",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "Afrisan[Ordenes]"
+            }
+          }
+        ]
+      },
+      {
+        "name": "DetalleOT",
+        "columns": [
+          {
+            "name": "OtId",
+            "dataType": "string",
+            "sourceColumn": "OtId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "RefrigeranteId",
+            "dataType": "string",
+            "sourceColumn": "RefrigeranteId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Refrigerante",
+            "dataType": "string",
+            "sourceColumn": "Refrigerante",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "KgSolicitados",
+            "dataType": "double",
+            "sourceColumn": "KgSolicitados",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "KgAutorizados",
+            "dataType": "double",
+            "sourceColumn": "KgAutorizados",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "DetalleOT",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "Afrisan[DetalleOT]"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Operaciones",
+        "columns": [
+          {
+            "name": "OperacionId",
+            "dataType": "string",
+            "sourceColumn": "OperacionId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "OtId",
+            "dataType": "string",
+            "sourceColumn": "OtId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Tipo",
+            "dataType": "string",
+            "sourceColumn": "Tipo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "RefrigeranteId",
+            "dataType": "string",
+            "sourceColumn": "RefrigeranteId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Refrigerante",
+            "dataType": "string",
+            "sourceColumn": "Refrigerante",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "CilindroInstalado",
+            "dataType": "string",
+            "sourceColumn": "CilindroInstalado",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "CilindroRetirado",
+            "dataType": "string",
+            "sourceColumn": "CilindroRetirado",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FechaConfirmacion",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaConfirmacion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DiaConfirmacion",
+            "dataType": "dateTime",
+            "sourceColumn": "DiaConfirmacion",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "name": "KgInstalados",
+            "dataType": "double",
+            "sourceColumn": "KgInstalados",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "KgRetirados",
+            "dataType": "double",
+            "sourceColumn": "KgRetirados",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FechaRecepcion",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaRecepcion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "KgRecepcion",
+            "dataType": "double",
+            "sourceColumn": "KgRecepcion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "PendienteRecepcion",
+            "dataType": "boolean",
+            "sourceColumn": "PendienteRecepcion",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Operaciones",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "Afrisan[Operaciones]"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Despachos",
+        "columns": [
+          {
+            "name": "DespachoId",
+            "dataType": "string",
+            "sourceColumn": "DespachoId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "OtId",
+            "dataType": "string",
+            "sourceColumn": "OtId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Cilindro",
+            "dataType": "string",
+            "sourceColumn": "Cilindro",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "RefrigeranteId",
+            "dataType": "string",
+            "sourceColumn": "RefrigeranteId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Refrigerante",
+            "dataType": "string",
+            "sourceColumn": "Refrigerante",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Fecha",
+            "dataType": "dateTime",
+            "sourceColumn": "Fecha",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Dia",
+            "dataType": "dateTime",
+            "sourceColumn": "Dia",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "name": "KgDespachados",
+            "dataType": "double",
+            "sourceColumn": "KgDespachados",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Estado",
+            "dataType": "string",
+            "sourceColumn": "Estado",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FechaDevolucion",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaDevolucion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "KgDevueltos",
+            "dataType": "double",
+            "sourceColumn": "KgDevueltos",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Despachos",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "Afrisan[Despachos]"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Incidencias",
+        "columns": [
+          {
+            "name": "IncidenciaId",
+            "dataType": "string",
+            "sourceColumn": "IncidenciaId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "OtId",
+            "dataType": "string",
+            "sourceColumn": "OtId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Tipo",
+            "dataType": "string",
+            "sourceColumn": "Tipo",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Fecha",
+            "dataType": "dateTime",
+            "sourceColumn": "Fecha",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Dia",
+            "dataType": "dateTime",
+            "sourceColumn": "Dia",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "name": "Abierta",
+            "dataType": "boolean",
+            "sourceColumn": "Abierta",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "FechaRevision",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaRevision",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Incidencias",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "Afrisan[Incidencias]"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Costos",
+        "columns": [
+          {
+            "name": "CostoId",
+            "dataType": "string",
+            "sourceColumn": "CostoId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "OperacionId",
+            "dataType": "string",
+            "sourceColumn": "OperacionId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "OtId",
+            "dataType": "string",
+            "sourceColumn": "OtId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "RefrigeranteId",
+            "dataType": "string",
+            "sourceColumn": "RefrigeranteId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Refrigerante",
+            "dataType": "string",
+            "sourceColumn": "Refrigerante",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Gramos",
+            "dataType": "double",
+            "sourceColumn": "Gramos",
+            "summarizeBy": "none",
+            "formatString": "#,0.######"
+          },
+          {
+            "name": "PrecioPorGramo",
+            "dataType": "double",
+            "sourceColumn": "PrecioPorGramo",
+            "summarizeBy": "none",
+            "formatString": "#,0.00000000"
+          },
+          {
+            "name": "Moneda",
+            "dataType": "string",
+            "sourceColumn": "Moneda",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Total",
+            "dataType": "double",
+            "sourceColumn": "Total",
+            "summarizeBy": "none",
+            "formatString": "#,0.00000000"
+          },
+          {
+            "name": "FactorClp",
+            "dataType": "double",
+            "sourceColumn": "FactorClp",
+            "summarizeBy": "none",
+            "formatString": "#,0.00000000"
+          },
+          {
+            "name": "TotalClp",
+            "dataType": "double",
+            "sourceColumn": "TotalClp",
+            "summarizeBy": "none",
+            "formatString": "#,0.00000000"
+          },
+          {
+            "name": "FechaValoracion",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaValoracion",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "DiaValoracion",
+            "dataType": "dateTime",
+            "sourceColumn": "DiaValoracion",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "name": "FechaCambio",
+            "dataType": "dateTime",
+            "sourceColumn": "FechaCambio",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Costos",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "Afrisan[Costos]"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Sucursales",
+        "columns": [
+          {
+            "name": "SucursalId",
+            "dataType": "string",
+            "sourceColumn": "SucursalId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Sucursal",
+            "dataType": "string",
+            "sourceColumn": "Sucursal",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Sucursales",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Todos = Table.Combine({Table.SelectColumns(Afrisan[Ordenes], {\"SucursalId\", \"Sucursal\"}), Table.SelectColumns(Afrisan[Inventario], {\"SucursalId\", \"Sucursal\"})}), Valid = Table.SelectRows(Todos, each [SucursalId] <> null), Unicos = Table.Distinct(Valid, {\"SucursalId\"}) in Unicos"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Tecnicos",
+        "columns": [
+          {
+            "name": "TecnicoId",
+            "dataType": "string",
+            "sourceColumn": "TecnicoId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Tecnico",
+            "dataType": "string",
+            "sourceColumn": "Tecnico",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Tecnicos",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Todos = Table.Combine({Table.SelectColumns(Afrisan[Ordenes], {\"TecnicoId\", \"Tecnico\"}), Table.SelectColumns(Afrisan[Inventario], {\"TecnicoId\", \"Tecnico\"})}), Valid = Table.SelectRows(Todos, each [TecnicoId] <> null), Unicos = Table.Distinct(Valid, {\"TecnicoId\"}) in Unicos"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Gases",
+        "columns": [
+          {
+            "name": "RefrigeranteId",
+            "dataType": "string",
+            "sourceColumn": "RefrigeranteId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Refrigerante",
+            "dataType": "string",
+            "sourceColumn": "Refrigerante",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Gases",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let Todos = Table.Combine({Table.SelectColumns(Afrisan[DetalleOT], {\"RefrigeranteId\", \"Refrigerante\"}), Table.SelectColumns(Afrisan[Inventario], {\"RefrigeranteId\", \"Refrigerante\"})}), Valid = Table.SelectRows(Todos, each [RefrigeranteId] <> null), Unicos = Table.Distinct(Valid, {\"RefrigeranteId\"}) in Unicos"
+            }
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "DetalleOT_Ordenes",
+        "fromTable": "DetalleOT",
+        "fromColumn": "OtId",
+        "toTable": "Ordenes",
+        "toColumn": "OtId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Operaciones_Ordenes",
+        "fromTable": "Operaciones",
+        "fromColumn": "OtId",
+        "toTable": "Ordenes",
+        "toColumn": "OtId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Despachos_Ordenes",
+        "fromTable": "Despachos",
+        "fromColumn": "OtId",
+        "toTable": "Ordenes",
+        "toColumn": "OtId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Incidencias_Ordenes",
+        "fromTable": "Incidencias",
+        "fromColumn": "OtId",
+        "toTable": "Ordenes",
+        "toColumn": "OtId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Costos_Ordenes",
+        "fromTable": "Costos",
+        "fromColumn": "OtId",
+        "toTable": "Ordenes",
+        "toColumn": "OtId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Ordenes_Sucursales",
+        "fromTable": "Ordenes",
+        "fromColumn": "SucursalId",
+        "toTable": "Sucursales",
+        "toColumn": "SucursalId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Ordenes_Tecnicos",
+        "fromTable": "Ordenes",
+        "fromColumn": "TecnicoId",
+        "toTable": "Tecnicos",
+        "toColumn": "TecnicoId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Inventario_Sucursales",
+        "fromTable": "Inventario",
+        "fromColumn": "SucursalId",
+        "toTable": "Sucursales",
+        "toColumn": "SucursalId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Inventario_Tecnicos",
+        "fromTable": "Inventario",
+        "fromColumn": "TecnicoId",
+        "toTable": "Tecnicos",
+        "toColumn": "TecnicoId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Inventario_Gases",
+        "fromTable": "Inventario",
+        "fromColumn": "RefrigeranteId",
+        "toTable": "Gases",
+        "toColumn": "RefrigeranteId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "DetalleOT_Gases",
+        "fromTable": "DetalleOT",
+        "fromColumn": "RefrigeranteId",
+        "toTable": "Gases",
+        "toColumn": "RefrigeranteId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Operaciones_Gases",
+        "fromTable": "Operaciones",
+        "fromColumn": "RefrigeranteId",
+        "toTable": "Gases",
+        "toColumn": "RefrigeranteId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Despachos_Gases",
+        "fromTable": "Despachos",
+        "fromColumn": "RefrigeranteId",
+        "toTable": "Gases",
+        "toColumn": "RefrigeranteId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Costos_Gases",
+        "fromTable": "Costos",
+        "fromColumn": "RefrigeranteId",
+        "toTable": "Gases",
+        "toColumn": "RefrigeranteId",
+        "fromCardinality": "many",
+        "toCardinality": "one",
+        "crossFilteringBehavior": "oneDirection"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "CarpetaAfrisan",
+        "kind": "m",
+        "expression": "\"D:\\\\Afrisan_REPO_OFICIAL\\\\AFRISAN_NUEVO\\\\03_CODIGO\\\\PowerBI\\\\DatosVacios\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+      },
+      {
+        "name": "Afrisan",
+        "kind": "m",
+        "expression": "// Power BI Desktop: crear parámetro de texto CarpetaAfrisan y consulta en blanco Afrisan.\n// Pegar este contenido en su Editor avanzado. La carpeta contiene el ZIP descomprimido.\nlet\n    Carpeta = Text.TrimEnd(CarpetaAfrisan, {\"\\\", \"/\"}) & \"\\\",\n    Leer = (Nombre as text, Tipos as list) as table =>\n        let\n            Cabecera = Table.PromoteHeaders(\n                Csv.Document(Binary.Buffer(File.Contents(Carpeta & Nombre & \".csv\")),\n                    [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n                [PromoteAllScalars=true]),\n            Nulos = Table.ReplaceValue(Cabecera,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Cabecera))\n        in Table.TransformColumnTypes(Nulos, Tipos, \"en-US\"),\n    Inventario = Leer(\"Inventario\", {\n        {\"CilindroId\",type text},{\"Codigo\",type text},{\"RefrigeranteId\",type text},\n        {\"Refrigerante\",type text},{\"Estado\",type text},{\"Ubicacion\",type text},\n        {\"SucursalId\",type text},{\"Sucursal\",type text},{\"TecnicoId\",type text},{\"Tecnico\",type text},\n        {\"KgSegunUltimoPesaje\",type number},{\"FechaPesaje\",type datetime}}),\n    Ordenes = Leer(\"Ordenes\", {\n        {\"OtId\",type text},{\"Codigo\",type text},{\"SucursalId\",type text},{\"Sucursal\",type text},\n        {\"TecnicoId\",type text},{\"Tecnico\",type text},{\"Estado\",type text},\n        {\"FechaCreacion\",type datetime},{\"DiaCreacion\",type date},{\"FechaCierre\",type datetime}}),\n    DetalleOT = Leer(\"DetalleOT\", {\n        {\"OtId\",type text},{\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"KgSolicitados\",type number},{\"KgAutorizados\",type number}}),\n    Operaciones = Leer(\"Operaciones\", {\n        {\"OperacionId\",type text},{\"OtId\",type text},{\"Tipo\",type text},\n        {\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"CilindroInstalado\",type text},{\"CilindroRetirado\",type text},\n        {\"FechaConfirmacion\",type datetime},{\"DiaConfirmacion\",type date},\n        {\"KgInstalados\",type number},{\"KgRetirados\",type number},\n        {\"FechaRecepcion\",type datetime},{\"KgRecepcion\",type number},{\"PendienteRecepcion\",type logical}}),\n    Despachos = Leer(\"Despachos\", {\n        {\"DespachoId\",type text},{\"OtId\",type text},{\"Cilindro\",type text},\n        {\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"Fecha\",type datetime},{\"Dia\",type date},{\"KgDespachados\",type number},\n        {\"Estado\",type text},{\"FechaDevolucion\",type datetime},{\"KgDevueltos\",type number}}),\n    Incidencias = Leer(\"Incidencias\", {\n        {\"IncidenciaId\",type text},{\"OtId\",type text},{\"Tipo\",type text},\n        {\"Fecha\",type datetime},{\"Dia\",type date},{\"Abierta\",type logical},{\"FechaRevision\",type datetime}}),\n    Costos = Leer(\"Costos\", {\n        {\"CostoId\",type text},{\"OperacionId\",type text},{\"OtId\",type text},{\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"Gramos\",type number},{\"PrecioPorGramo\",type number},{\"Moneda\",type text},{\"Total\",type number},\n        {\"FactorClp\",type number},{\"TotalClp\",type number},{\"FechaValoracion\",type datetime},{\"DiaValoracion\",type date},{\"FechaCambio\",type date}})\nin\n    [Inventario=Inventario, Ordenes=Ordenes, DetalleOT=DetalleOT,\n     Operaciones=Operaciones, Despachos=Despachos, Incidencias=Incidencias, Costos=Costos]\n"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"CarpetaAfrisan\",\"Afrisan\",\"Inventario\",\"Ordenes\",\"DetalleOT\",\"Operaciones\",\"Despachos\",\"Incidencias\",\"Costos\",\"Sucursales\",\"Tecnicos\",\"Gases\"]"
+      }
+    ]
+  }
+}

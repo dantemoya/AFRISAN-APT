@@ -14,7 +14,25 @@ public sealed record CrearSucursalRequest
     [Required, StringLength(200)] public string Nombre { get; init; } = "";
     [Required, StringLength(400)] public string Direccion { get; init; } = "";
 }
-public sealed record UsuarioResponse(int Id, string Nombre, string Apellido, string Correo, string Rol, bool Activo);
+public sealed record UsuarioResponse(int Id, string Nombre, string Apellido, string Correo, string Rol, bool Activo, bool Bloqueado = false);
+
+/// <summary>Activa o desactiva una cuenta. Desactivar cierra sus sesiones abiertas.</summary>
+public sealed record CambiarEstadoUsuarioRequest
+{
+    public bool Activo { get; init; }
+}
+
+/// <summary>Cambia el rol de una cuenta. Cierra sus sesiones abiertas.</summary>
+public sealed record CambiarRolUsuarioRequest
+{
+    [Required] public string Rol { get; init; } = "";
+}
+
+/// <summary>Contraseña nueva definida por el Administrador. Quita el bloqueo y cierra las sesiones abiertas.</summary>
+public sealed record RestablecerClaveRequest
+{
+    [Required, StringLength(128, MinimumLength = 12)] public string Password { get; init; } = "";
+}
 public sealed record CrearUsuarioRequest
 {
     [Required, StringLength(100)] public string Nombre { get; init; } = "";

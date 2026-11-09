@@ -14,8 +14,15 @@
                 <NavLink href="refrigerantes"><span aria-hidden="true">◈</span> Refrigerantes</NavLink>
             </AuthorizeView>
             <NavLink href="identificar"><span aria-hidden="true">⌕</span> Identificar cilindro</NavLink>
-            @if(Sesion.Entorno?.Modo=="PostgreSQL") { <AuthorizeView Roles="@RolesBi.Consulta"><NavLink href="power-bi"><span aria-hidden="true">▥</span> Power BI</NavLink></AuthorizeView> }
+            <AuthorizeView Roles="@RolesBi.Consulta"><NavLink href="power-bi"><span aria-hidden="true">▥</span> Power BI</NavLink></AuthorizeView>
             @if(Sesion.Entorno?.Modo=="PostgreSQL") { <AuthorizeView Roles="Administrador"><NavLink href="administracion">Administración</NavLink></AuthorizeView> }
+            @if(Sesion.Entorno?.Modo=="PostgreSQL")
+            {
+                <AuthorizeView Roles="@Roles.Catalogo"><NavLink href="mantenedores">Mantenedores</NavLink></AuthorizeView>
+                <AuthorizeView Roles="Administrador"><NavLink href="bajas-cilindros">Bajas de cilindros</NavLink></AuthorizeView>
+                <AuthorizeView Roles="@RolesControl.Costos"><NavLink href="costos">Precios y costos</NavLink></AuthorizeView>
+                <AuthorizeView Roles="@RolesControl.Limites"><NavLink href="limites">Límites por sucursal</NavLink></AuthorizeView>
+            }
         </nav>
         <div class="sidebar-bottom"><span class="status-dot"></span> Entorno de revisión<small>Inventario y trabajo técnico</small></div>
     </aside>

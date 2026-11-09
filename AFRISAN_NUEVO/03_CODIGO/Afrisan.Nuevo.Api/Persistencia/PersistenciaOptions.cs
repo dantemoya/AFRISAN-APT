@@ -46,6 +46,35 @@ public sealed class PersistenciaOptions
 
 public static class PrepararPersistencia
 {
+    public static async Task ActualizarCostosLimites(IConfiguration config)
+    {
+        var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Falta la conexión de propietario.");
+        var parsed=new NpgsqlConnectionStringBuilder(owner){SslMode=SslMode.VerifyFull,IncludeErrorDetail=false,PersistSecurityInfo=false};
+        await using var connection=new NpgsqlConnection(parsed.ConnectionString);await connection.OpenAsync();
+        using var stream=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.CostosLimites.sql")!;
+        await using var cmd=new NpgsqlCommand(await new StreamReader(stream).ReadToEndAsync(),connection);await cmd.ExecuteNonQueryAsync();
+        Console.WriteLine("Actualización 10 aplicada. Precios y conversiones requieren valores ingresados por el usuario.");
+    }
+    public static async Task ActualizarMantenedores(IConfiguration config)
+    {
+        var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Falta la conexión de propietario.");
+        var parsed=new NpgsqlConnectionStringBuilder(owner){SslMode=SslMode.VerifyFull,IncludeErrorDetail=false,PersistSecurityInfo=false};
+        await using var connection=new NpgsqlConnection(parsed.ConnectionString);await connection.OpenAsync();
+        using var stream=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.Mantenedores.sql")!;
+        var sql=await new StreamReader(stream).ReadToEndAsync();
+        await using var cmd=new NpgsqlCommand(sql,connection);await cmd.ExecuteNonQueryAsync();
+        Console.WriteLine("Actualización 09 aplicada. No se eliminan catálogos, cilindros ni historia.");
+    }
+    public static async Task ActualizarRectificaciones(IConfiguration config)
+    {
+        var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Falta la conexión de propietario.");
+        var parsed=new NpgsqlConnectionStringBuilder(owner){SslMode=SslMode.VerifyFull,IncludeErrorDetail=false,PersistSecurityInfo=false};
+        await using var connection=new NpgsqlConnection(parsed.ConnectionString);await connection.OpenAsync();
+        using var stream=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.Rectificaciones.sql")!;
+        var sql=await new StreamReader(stream).ReadToEndAsync();
+        await using var cmd=new NpgsqlCommand(sql,connection);await cmd.ExecuteNonQueryAsync();
+        Console.WriteLine("Actualización 08 aplicada. Se conservan los pesajes, usuarios, sesiones y datos existentes.");
+    }
     public static async Task Ejecutar(IConfiguration config)
     {
         var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Primero ejecuta Configurar-Supabase.ps1.");
@@ -53,6 +82,12 @@ public static class PrepararPersistencia
         await using var connection=new NpgsqlConnection(parsed.ConnectionString);await connection.OpenAsync();
         using var stream=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.Persistencia.sql")!;
         var sql=await new StreamReader(stream).ReadToEndAsync();
+        using var rectificaciones=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.Rectificaciones.sql")!;
+        sql += "\n" + await new StreamReader(rectificaciones).ReadToEndAsync();
+        using var mantenedores=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.Mantenedores.sql")!;
+        sql += "\n" + await new StreamReader(mantenedores).ReadToEndAsync();
+        using var costosLimites=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.CostosLimites.sql")!;
+        sql += "\n" + await new StreamReader(costosLimites).ReadToEndAsync();
         sql=string.Join('\n',sql.Split('\n').Where(l=>l.Trim() is not("BEGIN;" or "COMMIT;")));
         var previous=config.GetConnectionString("AfrisanRuntime");
         var saved=string.IsNullOrWhiteSpace(previous)?null:new NpgsqlConnectionStringBuilder(previous);
@@ -82,7 +117,7 @@ public static class PrepararPersistencia
         if(string.IsNullOrWhiteSpace(config["Persistencia:JwtKey"])) SaveSecret("Persistencia","JwtKey",Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)));
         if(string.IsNullOrWhiteSpace(config["Persistencia:FotosPath"])) SaveSecret("Persistencia","FotosPath",Path.Combine(root,".local","evidencias"));
         SaveSecret("Persistencia","Modo","PostgreSQL");
-        Console.WriteLine("Actualización 07 aplicada sin borrar datos. Conexión restringida y firma estable guardadas en User Secrets.");
+        Console.WriteLine("Actualizaciones 07 a 10 aplicadas sin borrar datos. Conexión restringida y firma estable guardadas en User Secrets.");
         Console.WriteLine("El siguiente paso es crear el administrador inicial con --crear-administrador.");
     }
     public static string Repositorio()

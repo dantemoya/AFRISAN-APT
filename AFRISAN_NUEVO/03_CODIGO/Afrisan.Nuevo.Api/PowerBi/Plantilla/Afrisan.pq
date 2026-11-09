@@ -36,7 +36,11 @@ let
         {"Estado",type text},{"FechaDevolucion",type datetimezone},{"KgDevueltos",type number}}),
     Incidencias = Leer("Incidencias", {
         {"IncidenciaId",type text},{"OtId",type text},{"Tipo",type text},
-        {"Fecha",type datetimezone},{"Dia",type date},{"Abierta",type logical},{"FechaRevision",type datetimezone}})
+        {"Fecha",type datetimezone},{"Dia",type date},{"Abierta",type logical},{"FechaRevision",type datetimezone}}),
+    Costos = Leer("Costos", {
+        {"CostoId",type text},{"OperacionId",type text},{"OtId",type text},{"RefrigeranteId",type text},{"Refrigerante",type text},
+        {"Gramos",type number},{"PrecioPorGramo",type number},{"Moneda",type text},{"Total",type number},
+        {"FactorClp",type number},{"TotalClp",type number},{"FechaValoracion",type datetimezone},{"DiaValoracion",type date},{"FechaCambio",type date}})
 in
     [Inventario=Inventario, Ordenes=Ordenes, DetalleOT=DetalleOT,
-     Operaciones=Operaciones, Despachos=Despachos, Incidencias=Incidencias]
+     Operaciones=Operaciones, Despachos=Despachos, Incidencias=Incidencias, Costos=Costos]

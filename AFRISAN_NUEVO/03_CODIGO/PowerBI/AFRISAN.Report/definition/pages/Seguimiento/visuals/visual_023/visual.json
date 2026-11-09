@@ -1,0 +1,136 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "visual_023",
+  "position": {
+    "x": 24,
+    "y": 145,
+    "z": 23,
+    "width": 780,
+    "height": 265,
+    "tabOrder": 23
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Ordenes"
+                    }
+                  },
+                  "Property": "Codigo"
+                }
+              },
+              "queryRef": "Ordenes.Codigo",
+              "nativeQueryRef": "Codigo"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Ordenes"
+                    }
+                  },
+                  "Property": "Sucursal"
+                }
+              },
+              "queryRef": "Ordenes.Sucursal",
+              "nativeQueryRef": "Sucursal"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Ordenes"
+                    }
+                  },
+                  "Property": "Tecnico"
+                }
+              },
+              "queryRef": "Ordenes.Tecnico",
+              "nativeQueryRef": "Tecnico"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Ordenes"
+                    }
+                  },
+                  "Property": "Estado"
+                }
+              },
+              "queryRef": "Ordenes.Estado",
+              "nativeQueryRef": "Estado"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Ordenes"
+                    }
+                  },
+                  "Property": "DiaCreacion"
+                }
+              },
+              "queryRef": "Ordenes.DiaCreacion",
+              "nativeQueryRef": "DiaCreacion"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Ordenes"
+                    }
+                  },
+                  "Property": "FechaCierre"
+                }
+              },
+              "queryRef": "Ordenes.FechaCierre",
+              "nativeQueryRef": "FechaCierre"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Órdenes de trabajo por fecha de creación'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "13"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

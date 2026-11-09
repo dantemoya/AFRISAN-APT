@@ -1,4 +1,4 @@
-@page "/power-bi"
+@page "/power-bi/operativo"
 @attribute [Authorize(Roles = RolesBi.Consulta)]
 @inject InventarioClient Api
 @inject SesionService Sesion
@@ -7,6 +7,7 @@
 @using System.Globalization
 
 <PageTitle>Power BI · AFRISAN</PageTitle>
+<p><a class="btn secondary" href="power-bi/demo">Abrir demostración con datos simulados →</a></p>
 <div class="page-heading">
     <div><span class="eyebrow">INFORMACIÓN PARA GESTIÓN</span><h1>Power BI</h1><p>Inventario, órdenes y trabajo en terreno.</p></div>
     <button class="btn primary" disabled="@(cargando || descargando || !persistente)" @onclick="Descargar">@(descargando ? "Preparando paquete…" : "Descargar paquete Power BI")</button>
@@ -31,8 +32,8 @@ else
         else if(cargando){<p role="status">Consultando configuración…</p>}
         else
         {
-            <p>El módulo está preparado. Falta crear y publicar el informe en Power BI.</p>
-            <ol class="bi-steps"><li>Descarga el paquete y descomprímelo en una carpeta privada.</li><li>Abre Power BI Desktop y sigue LEEME.md: incluye consultas, medidas y tema AFRISAN.</li><li>Publica el informe y configura su identificador en el servidor para verlo aquí.</li></ol>
+            <p>El paquete incluye el proyecto editable del informe con cuatro páginas. Falta revisarlo en Power BI Desktop y publicarlo.</p>
+            <ol class="bi-steps"><li>Descarga el paquete y descomprímelo en una carpeta privada.</li><li>Abre Informe/AFRISAN.pbip en Power BI Desktop y sigue LEEME.md para conectar los CSV, actualizar y guardar el PBIX.</li><li>Publica el informe y configura su identificador en el servidor para verlo aquí.</li></ol>
             <p class="muted">El paquete incluye los registros completos al momento de descargarlo. Su actualización es manual.</p>
         }
     </section>
