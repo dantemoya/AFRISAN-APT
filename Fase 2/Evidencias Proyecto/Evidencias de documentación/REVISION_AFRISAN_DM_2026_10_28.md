@@ -34,7 +34,7 @@ Véase el detalle de las correcciones aplicadas en [`CONTROL_CORRECCIONES_2026_1
    - [`01_Plan_de_Trabajo_y_Backlog_Fase_2_Afrisan_DM.xlsx`](01_Plan_de_Trabajo_y_Backlog_Fase_2_Afrisan_DM.xlsx)
    - [`02_Informe_de_Avance_Fase_2_Afrisan_DM.docx`](02_Informe_de_Avance_Fase_2_Afrisan_DM.docx)
    - [`03_Monitoreo_y_Ajustes_Afrisan_DM.docx`](03_Monitoreo_y_Ajustes_Afrisan_DM.docx)
-   - [`04_Informe_de_Cierre_Documental_Fase_2_Afrisan_DM.docx`](04_Informe_de_Cierre_Documental_Fase_2_Afrisan_DM.docx)
+   - [`04_Informe_Final_Fase_2_Afrisan_DM.docx`](04_Informe_Final_Fase_2_Afrisan_DM.docx)
    - [`05_Evidencias_y_Pendientes_Afrisan_DM.xlsx`](05_Evidencias_y_Pendientes_Afrisan_DM.xlsx)
    - [`ANEXOS/01_Arquitectura_y_Modelo_de_Datos_Afrisan_DM.docx`](ANEXOS/01_Arquitectura_y_Modelo_de_Datos_Afrisan_DM.docx)
 3. ** Guías y Pautas Oficiales (`Fase 1/Evidencias Grupales/` y `Fase 2/Evidencias Grupales/`):**
