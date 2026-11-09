@@ -1,0 +1,24 @@
+# API AFRISAN (ASP.NET Core 8) para producción. El contexto de construcción es la raíz del repositorio:
+#   docker build -f AFRISAN_NUEVO/03_CODIGO/Despliegue/Dockerfile.api -t afrisan-api .
+# Los secretos (conexión afrisan_api, clave JWT, Storage, CORS) se entregan como variables de
+# entorno del hosting; nunca se copian a la imagen. Ver AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md.
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS compilacion
+WORKDIR /src
+# La API incluye como recursos los SQL 07 a 10 y el proyecto de Power BI.
+COPY AFRISAN_NUEVO/02_BASE_DATOS/ AFRISAN_NUEVO/02_BASE_DATOS/
+COPY AFRISAN_NUEVO/03_CODIGO/ AFRISAN_NUEVO/03_CODIGO/
+RUN dotnet publish AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api/Afrisan.Nuevo.Api.csproj -c Release -o /app --nologo
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=compilacion /app ./
+# Carpeta privada de respaldo para fotos; con Supabase Storage configurado no se usa.
+RUN mkdir -p /datos/evidencias && chown -R app:app /datos
+# El proxy del hosting termina TLS e informa el esquema original (HTTPS y HSTS en Program.cs).
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    ASPNETCORE_HTTP_PORTS=8080 \
+    ASPNETCORE_FORWARDEDHEADERS_ENABLED=true \
+    Persistencia__FotosPath=/datos/evidencias
+USER app
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "Afrisan.Nuevo.Api.dll"]

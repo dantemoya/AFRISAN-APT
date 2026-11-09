@@ -1,0 +1,50 @@
+# Construye y publica en GitHub Container Registry las imágenes de la API y de la web.
+# Se ejecuta a mano (Actions › Imágenes de contenedor › Run workflow). Solo usa el
+# GITHUB_TOKEN automático: los secretos de producción se cargan en el hosting, no aquí.
+name: Imágenes de contenedor
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "URL pública de la API, con HTTPS y terminada en /api/v1/"
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  imagenes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Imagen de la API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: AFRISAN_NUEVO/03_CODIGO/Despliegue/Dockerfile.api
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/afrisan-api:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/afrisan-api:latest
+
+      - name: Imagen de la web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: AFRISAN_NUEVO/03_CODIGO/Despliegue/Dockerfile.web
+          push: true
+          build-args: |
+            API_BASE_URL=${{ inputs.api_base_url }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/afrisan-web:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/afrisan-web:latest

@@ -1,0 +1,20 @@
+# Web AFRISAN (Blazor WebAssembly) servida por nginx. El contexto de construcción es la raíz del repositorio:
+#   docker build -f AFRISAN_NUEVO/03_CODIGO/Despliegue/Dockerfile.web \
+#     --build-arg API_BASE_URL=https://<api>/api/v1/ -t afrisan-web .
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS compilacion
+ARG API_BASE_URL
+WORKDIR /src
+COPY AFRISAN_NUEVO/03_CODIGO/ AFRISAN_NUEVO/03_CODIGO/
+# La dirección de la API se fija ANTES de publicar: el service worker guarda cada archivo
+# con su hash de integridad, así que appsettings.json no se puede reescribir después.
+RUN case "$API_BASE_URL" in \
+      https://*/) ;; \
+      *) echo "Indica --build-arg API_BASE_URL=https://<api>/api/v1/ (HTTPS y terminada en /)"; exit 1 ;; \
+    esac; \
+    printf '{\n  "ApiBaseUrl": "%s"\n}\n' "$API_BASE_URL" > AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Web/wwwroot/appsettings.json
+RUN dotnet publish AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Web/Afrisan.Nuevo.Web.csproj -c Release -o /publicado --nologo
+
+FROM nginx:1.27-alpine
+COPY AFRISAN_NUEVO/03_CODIGO/Despliegue/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=compilacion /publicado/wwwroot /usr/share/nginx/html
+EXPOSE 8080
