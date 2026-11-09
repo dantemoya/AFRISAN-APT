@@ -3,6 +3,7 @@
 @inject SesionService Sesion
 @inject InventarioClient Api
 @inject NavigationManager Nav
+@inject HttpClient Http
 
 <PageTitle>Acceso · AFRISAN</PageTitle>
 <div class="access-shell">
@@ -40,7 +41,7 @@
     private bool ocupado;
     private string? error;
     private void Elegir(CuentaDemoResponse cuenta) { form.Email = cuenta.Email; form.Password = Sesion.Entorno!.PasswordDemo; error = null; }
-    private async Task Recargar() { await Sesion.InicializarAsync(); error = Sesion.Entorno is null ? "La API sigue sin responder en http://localhost:5181." : null; }
+    private async Task Recargar() { await Sesion.InicializarAsync(); error = Sesion.Entorno is null ? $"La API sigue sin responder en {Http.BaseAddress}." : null; }
     private async Task Ingresar()
     {
         if (ocupado) return;

@@ -1,0 +1,26 @@
+# Convenciones de formato del repositorio AFRISAN.
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,xml,csproj,slnx,props,targets,pbip,pbir,pbism,bim}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{cs,razor}]
+# Guía de lectura: el código nuevo se mantiene bajo 160 caracteres por línea.
+max_line_length = 160
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = when_multiline:suggestion
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+dotnet_sort_system_directives_first = true
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_diagnostic.CA2007.severity = none

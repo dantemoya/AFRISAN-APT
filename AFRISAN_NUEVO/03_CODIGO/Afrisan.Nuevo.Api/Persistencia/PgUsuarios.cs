@@ -11,6 +11,8 @@ public sealed class PgUsuarios(PgDatabase database, PersistenciaOptions settings
     public const string Issuer = "AFRISAN.Nuevo.Api";
     public const string Audience = "AFRISAN.Nuevo.Web";
     private readonly PasswordHasher<string> hasher = new();
+    private static readonly string HashReferencia =
+        new PasswordHasher<string>().HashPassword("", Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(16)));
     private const string Select = """
         SELECT u."Id_Usuario" AS "Id",u."Nombre",u."Apellido",u."Correo_Usuario" AS "Correo",
           u."Clave_Usuario" AS "Hash",r."Nombre_Rol" AS "Rol",u."Activo",u."IntentosFallidos" AS "Intentos",
@@ -26,7 +28,12 @@ public sealed class PgUsuarios(PgDatabase database, PersistenciaOptions settings
     {
         await using var unit = await database.Open();
         var user = (await unit.Query<UsuarioRow>(Select + " WHERE lower(btrim(u.\"Correo_Usuario\"))=@p0 FOR UPDATE OF u", request.Email.Trim().ToLowerInvariant())).SingleOrDefault();
-        if (user is null || !user.Activo || user.BloqueadoHasta > DateTimeOffset.UtcNow) return null;
+        if (user is null || !user.Activo || user.BloqueadoHasta > DateTimeOffset.UtcNow)
+        {
+            // Mismo costo que una contraseña incorrecta: el tiempo de respuesta no revela qué correos existen.
+            hasher.VerifyHashedPassword("", HashReferencia, request.Password);
+            return null;
+        }
         PasswordVerificationResult valid;
         try { valid = hasher.VerifyHashedPassword(user.Correo, user.Hash, request.Password); }
         catch (FormatException) { valid = PasswordVerificationResult.Failed; }

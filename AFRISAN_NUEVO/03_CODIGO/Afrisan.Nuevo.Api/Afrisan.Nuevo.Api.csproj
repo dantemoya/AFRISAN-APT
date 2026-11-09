@@ -7,11 +7,15 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Afrisan.Nuevo.Contratos/Afrisan.Nuevo.Contratos.csproj" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.33" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageReference Include="QRCoder" Version="1.8.0" />
+    <PackageReference Include="QRCoder" Version="1.8.1" />
     <PackageReference Include="Npgsql" Version="8.0.9" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Las pruebas xUnit acceden a los almacenes en memoria y a Program para las pruebas HTTP. -->
+    <InternalsVisibleTo Include="Afrisan.Nuevo.Pruebas" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="../../02_BASE_DATOS/07_Habilitar_Persistencia.sql" LogicalName="AFRISAN.Persistencia.sql" />

@@ -17,7 +17,7 @@ public static class PgEndpoints
         api.MapPost("/sesiones",async(LoginRequest request,PgUsuarios usuarios)=>{
             var sesion=await usuarios.Login(request);
             return sesion is null?Results.Problem(statusCode:401,title:"No se pudo iniciar sesión",detail:"Credenciales incorrectas, cuenta inactiva o temporalmente bloqueada."):Results.Ok(sesion);
-        });
+        }).RequireRateLimiting(Seguridad.PoliticaLogin);
         var datos=api.MapGroup("").RequireAuthorization();
         datos.MapGestionCatalogos();
         datos.MapCostosLimites();

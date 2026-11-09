@@ -21,22 +21,27 @@ if (args.Contains("--preparar-persistencia"))
     catch (Exception ex) { Console.Error.WriteLine(ex is Npgsql.PostgresException pg ? $"No se pudo preparar PostgreSQL (SQLSTATE {pg.SqlState})." : "No se pudo preparar la persistencia. Revisa conexión, certificado y permisos del propietario."); Environment.ExitCode=1; }
     return;
 }
+// Cada script 08-10 se ejecuta en una sola transacción (BEGIN/COMMIT): un fallo no deja cambios parciales.
+// Se informa el SQLSTATE para diagnosticar sin mostrar la cadena de conexión.
+static string FalloActualizacion(Exception ex, string script) => ex is Npgsql.PostgresException pg
+    ? $"No se pudo aplicar la actualización {script} (SQLSTATE {pg.SqlState}). Revisa la conexión de propietario y sus permisos."
+    : $"No se pudo aplicar la actualización {script}. Revisa la conexión de propietario y sus permisos.";
 if (args.Contains("--actualizar-rectificaciones"))
 {
     try { await PrepararPersistencia.ActualizarRectificaciones(builder.Configuration); }
-    catch { Console.Error.WriteLine("No se pudo aplicar la actualización 08. Revisa la conexión de propietario y sus permisos."); Environment.ExitCode=1; }
+    catch (Exception ex) { Console.Error.WriteLine(FalloActualizacion(ex, "08")); Environment.ExitCode=1; }
     return;
 }
 if (args.Contains("--actualizar-costos-limites"))
 {
     try { await PrepararPersistencia.ActualizarCostosLimites(builder.Configuration); }
-    catch { Console.Error.WriteLine("No se pudo aplicar la actualización 10. Revisa la conexión de propietario y sus permisos."); Environment.ExitCode=1; }
+    catch (Exception ex) { Console.Error.WriteLine(FalloActualizacion(ex, "10")); Environment.ExitCode=1; }
     return;
 }
 if (args.Contains("--actualizar-mantenedores"))
 {
     try { await PrepararPersistencia.ActualizarMantenedores(builder.Configuration); }
-    catch { Console.Error.WriteLine("No se pudo aplicar la actualización 09. Revisa la conexión de propietario y sus permisos."); Environment.ExitCode=1; }
+    catch (Exception ex) { Console.Error.WriteLine(FalloActualizacion(ex, "09")); Environment.ExitCode=1; }
     return;
 }
 var persistente = !string.Equals(builder.Configuration["Persistencia:Modo"], "Memoria", StringComparison.OrdinalIgnoreCase);
@@ -101,6 +106,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() is { Length: > 0 } cfgOrigins ? cfgOrigins : ["http://localhost:5286"];
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddLimiteLogin(Seguridad.LoginPorMinuto(builder.Configuration, builder.Environment));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
 {
@@ -169,9 +175,21 @@ if(persistente)
     }
 }
 app.UseExceptionHandler();
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    // La documentación interactiva solo se publica en desarrollo (OWASP A05).
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    // Fuera de desarrollo se exige HTTPS. Detrás de un proxy que termina TLS,
+    // definir ASPNETCORE_FORWARDEDHEADERS_ENABLED=true (ver DESPLIEGUE.md).
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 if(persistente) { app.MapPersistencia(); app.MapPowerBi(); }
@@ -179,3 +197,6 @@ else {app.MapInventario();app.MapTrabajo();}
 app.MapPowerBiDemo();
 app.Logger.LogInformation(persistente?"AFRISAN: PostgreSQL, usuarios persistidos y evidencias privadas.":"AFRISAN: modo explícito de revisión en memoria.");
 app.Run();
+
+// Permite que las pruebas de integración (WebApplicationFactory) inicien la API.
+public partial class Program;

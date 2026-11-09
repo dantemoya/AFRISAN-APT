@@ -19,3 +19,6 @@ appsettings.Development.local.json
 .local/
 node_modules/
 .pbi/
+
+# Resultados de dotnet test
+TestResults/

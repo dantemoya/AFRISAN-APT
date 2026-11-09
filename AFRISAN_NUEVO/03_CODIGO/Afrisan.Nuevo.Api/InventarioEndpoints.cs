@@ -12,7 +12,8 @@ public static class InventarioEndpoints
         app.MapGet("/health/ready", () => TypedResults.Ok(new { modo = "Revision", almacenamiento = "Memoria", supabase = false }));
         var api = app.MapGroup("/api/v1").AddEndpointFilter<ValidarInventarioFilter>();
         api.MapGet("/entorno", (SesionesDemo sesiones) => TypedResults.Ok(new EntornoResponse(sesiones.Instancia, "Memoria", SesionesDemo.Password, sesiones.Cuentas)));
-        api.MapPost("/sesiones", Login).Produces<SesionResponse>().ProducesProblem(401);
+        api.MapPost("/sesiones", Login).Produces<SesionResponse>().ProducesProblem(401).ProducesProblem(429)
+            .RequireRateLimiting(Seguridad.PoliticaLogin);
 
         var datos = api.MapGroup("").RequireAuthorization();
         datos.MapGet("/refrigerantes", (InventarioStore store) => TypedResults.Ok(store.Refrigerantes()))

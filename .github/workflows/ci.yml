@@ -1,0 +1,43 @@
+# Integración continua de AFRISAN: compila la solución y ejecuta las pruebas xUnit.
+# Las baterías .mjs sobre PostgreSQL embebido se ejecutan localmente
+# (AFRISAN_NUEVO/04_SEGUIMIENTO/MODULOS_2026_11_08/Validar-Modulos.ps1).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compilar-y-probar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # El SDK 10 abre los archivos .slnx; el runtime 8 ejecuta la aplicación y las pruebas.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restaurar
+        run: dotnet restore AFRISAN.slnx
+
+      - name: Compilar
+        run: dotnet build AFRISAN.slnx --no-restore -c Release
+
+      - name: Pruebas xUnit con cobertura
+        run: dotnet test AFRISAN.slnx --no-build -c Release --collect:"XPlat Code Coverage" --results-directory TestResults --logger "trx;LogFileName=resultados.trx"
+
+      - name: Guardar resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-pruebas
+          path: TestResults/
