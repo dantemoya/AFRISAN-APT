@@ -1,12 +1,32 @@
 # AFRISAN · Código Fuente de la Solución Vigente (`Afrisan.Nuevo.slnx`)
 
-Corte de implementación: **02/11/2026** · Responsable: **Dante Moya**.
+Corte de implementación: **08/11/2026** · Responsable: **Dante Moya**.
+
+Documentos de uso y operación: [manual de usuario por rol](MANUAL_USUARIO.md) y
+[guía de despliegue](DESPLIEGUE.md), que incluye las migraciones `08` a `10`,
+las variables de entorno, las imágenes Docker de [`Despliegue/`](Despliegue) y las
+comprobaciones con HTTPS. Datos ficticios para Power BI: [`PowerBI/DatosSimulados`](PowerBI/DatosSimulados/README.md).
 
 Solución en **.NET 8** compuesta por **`Afrisan.Nuevo.Contratos`**, **`Afrisan.Nuevo.Api` (ASP.NET Core Web API)** y **`Afrisan.Nuevo.Web` (Blazor WebAssembly)**, conectada por defecto a **PostgreSQL 16 en Supabase** (esquema `afrisan`), **Supabase Storage privado** (bucket `afrisan-evidencias`) y módulo analítico **Power BI (`/power-bi`)**.
 
 ---
 
-## 1. Estado de los Módulos Implementados al `02/11/2026`
+## 1. Estado de los Módulos Implementados al `08/11/2026`
+
+Los módulos agregados el 08/11 están probados localmente. Requieren aplicar en
+Supabase las migraciones indicadas y desplegar.
+
+| Módulo (08/11) | Ruta | Migración | Guía y evidencia |
+| --- | --- | --- | --- |
+| Gestión de usuarios (activar, rol, contraseña) | `/administracion` | — | [`USUARIOS_2026_11_08`](../04_SEGUIMIENTO/USUARIOS_2026_11_08/README.md) (60) |
+| Correcciones de peso (P05) | `/ordenes/{id}/rectificaciones` | `08` | [`MODULOS_2026_11_08`](../04_SEGUIMIENTO/MODULOS_2026_11_08/README.md) (67) |
+| Mantenedores y bajas de cilindros | `/mantenedores`, `/bajas-cilindros` | `09` | [`MANTENEDORES_Y_BAJAS.md`](MANTENEDORES_Y_BAJAS.md) (126) |
+| Precios, costos y límites por gas | `/costos`, `/limites` | `10` | [`COSTOS_Y_LIMITES.md`](COSTOS_Y_LIMITES.md) (137) |
+| Power BI gratuito y vista operativa | `/power-bi`, `/power-bi/operativo` | — | [`POWER_BI_GRATUITO.md`](POWER_BI_GRATUITO.md) (26) · [`POWER_BI.md`](POWER_BI.md) (81) |
+| Seguridad de producción | API | — | [`DESPLIEGUE.md`](DESPLIEGUE.md) · decisión D-29 |
+| Pruebas xUnit e integración continua | `Afrisan.Nuevo.Pruebas` | — | `dotnet test` (409 pruebas) · `.github/workflows/ci.yml` |
+
+Módulos anteriores (corte del 02/11):
 
 | Módulo / Capa | Implementación activa | Guía y evidencia de verificación |
 | --- | --- | --- |
@@ -55,9 +75,26 @@ dotnet run --project Afrisan.Nuevo.Api --launch-profile http -- --verificar-powe
 
 ---
 
-## 4. Pendientes Funcionales Acordados para Cierre de Fase 2 / Fase 3
+## 4. Pendientes para el Cierre de Fase 2 / Fase 3
 
-- **`G04` / `G05`:** Ensayos adicionales con cámara física en terreno y desconexión prolongada de red en dispositivos móviles.
-- **`G06`:** Cómputo automático de límites semanales y mensuales por sucursal una vez ratificada la fórmula de masa aplicable y calendario con la contraparte.
-- **`G07`:** Integración con Defontana (sujeta a entrega de credenciales/contrato ERP) e interfaz de lotes y certificados Regener.
-- **`G08` (Publicación cloud):** Publicación del archivo `.pbix` en el servicio de Microsoft Power BI y configuración de `ReportId` / `TenantId`.
+- **Despliegue:** aplicar `08` a `10` en Supabase y publicar la API y la web con HTTPS ([`DESPLIEGUE.md`](DESPLIEGUE.md)).
+- **`G04` / `G05`:** ensayos con cámara física y sin red en un Android real, después del despliegue.
+- **`G06`:** validar con AFRISAN la regla de límites implementada (gramos netos instalados confirmados, calendario chileno).
+- **`G07`:** integración con Defontana (sujeta a credenciales o contrato del ERP) y certificados de disposición, diferidos.
+- **`G08`:** guardar el `.pbix` en Power BI Desktop, publicarlo y configurar `ReportId` / `TenantId`.
+- **`G09`:** sesión de aceptación con usuarios y revisión del [manual de usuario](MANUAL_USUARIO.md).
+- **Calidad:**
+  - ampliar xUnit hacia la meta del 80 % de cobertura (hoy 29 %);
+  - paginar el listado de OT, que hoy consulta el detalle de cada OT. Se difiere porque el modo sin conexión del técnico guarda la lista completa, y el cambio necesita las baterías de PostgreSQL.
+  - No se guarda en caché la verificación del bucket de Storage: la prueba de Storage exige detectar de inmediato un bucket que pasó a público.
+
+## 5. Pruebas
+
+```powershell
+dotnet test AFRISAN.slnx          # desde la raíz: 409 pruebas xUnit
+```
+
+`Afrisan.Nuevo.Pruebas` cubre el almacén en memoria (flujo completo de la OT),
+el inventario, los contratos, el resumen y el paquete de Power BI, las fechas en
+horario chileno y la API HTTP en modo memoria (401, 403, 400, bloqueo y límite de
+intentos). La capa PostgreSQL se valida con las baterías de `04_SEGUIMIENTO`.

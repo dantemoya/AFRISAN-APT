@@ -2,7 +2,7 @@
 
 Repositorio oficial del Proyecto Capstone (**PTY4614 — Duoc UC**) para la empresa **AFRISAN**.
 - **Integrante y responsable único actual:** **Dante Amaro Moya Negrete** (`da.moyan@duocuc.cl`).
-- **Corte documental y técnico:** **02 de noviembre de 2026**.
+- **Corte documental y técnico:** **08 de noviembre de 2026**.
 
 ---
 
@@ -12,30 +12,46 @@ El repositorio está organizado conforme a la estructura oficial exigida para la
 
 | Carpeta | Contenido principal |
 | --- | --- |
-| [`Fase 1/Evidencias Individuales`](<Fase 1/Evidencias Individuales>) | Autoevaluación de competencias (`1.1`), diario de reflexión (`1.2`) y autoevaluación de Fase 1 (`1.3`) de Dante Moya (`MOYA_DANTE_...`). |
-| [`Fase 1/Evidencias Grupales`](<Fase 1/Evidencias Grupales>) | Presentación de Fase 1 (`Presentación Proyecto.pptx`), pauta formativa (`1.4`) y guía de definición del proyecto (`1.5`) completa (Parte I + II). |
-| [`Fase 1/Documentación del proyecto`](<Fase 1/Documentación del proyecto>) | Acta de Constitución (`00`), Product Backlog (`01`), Sprint Backlog (`02`), Plan de Trabajo e Hitos de 7 columnas (`03`), Carta Gantt de 18 semanas (`04`), Informe Fase 1 (`05`), Plan de Comunicación (`06`), Entrevista (`07`), Matriz RACI (`08`), Retrospectivas (`09`), `Sprint 0/` y `Arquitectura/`. |
+| [`Fase 1/Evidencias Individuales`](<Fase 1/Evidencias Individuales>) | Autoevaluación de competencias (`1.1`), diario de reflexión (`1.2`) y autoevaluación de Fase 1 (`1.3`) de Dante Moya (`MOYA_DANTE_...`). Versiones originales en `Historico/`. |
+| [`Fase 1/Evidencias Grupales`](<Fase 1/Evidencias Grupales>) | Presentación de Fase 1 (`Presentación Proyecto.pptx`), pauta formativa (`1.4`), guía de definición del proyecto (`1.5`) y pauta sumativa (`1.6`). Versiones originales en `Historico/`. |
+| [`Fase 1/Documentación del proyecto`](<Fase 1/Documentación del proyecto>) | Acta de Constitución (`00`), Product Backlog (`01`), Sprint Backlog (`02`), Plan de Trabajo e Hitos de 7 columnas (`03`), Carta Gantt de 18 semanas (`04`), Informe Fase 1 (`05`), Plan de Comunicación (`06`), Entrevista (`07`), Matriz RACI (`08`), Retrospectivas (`09`), `Sprint 0/`, `Arquitectura/` y documentos originales en `Historico/`. |
 | [`Fase 2/Evidencias Individuales`](<Fase 2/Evidencias Individuales>) | Diario de reflexión individual de Fase 2 (`MOYA_DANTE_2.1_APT122_DiarioReflexionFase2.docx`). |
-| [`Fase 2/Evidencias Grupales`](<Fase 2/Evidencias Grupales>) | Guías del estudiante `2.4` y `2.6`, y pauta de evaluación sumativa de avance `2.5`. |
-| [`Fase 2/Evidencias Proyecto`](<Fase 2/Evidencias Proyecto>) | `Presentación Proyecto.pptx`, `Evidencias de documentación/` (`01` a `05` + `ANEXOS`), `Evidencias de sistema Aplicación/` y `Base de datos/`. |
+| [`Fase 2/Evidencias Grupales`](<Fase 2/Evidencias Grupales>) | Guías del estudiante `2.4` y `2.6`, y pautas sumativas `2.5` (avance) y `2.7` (final). |
+| [`Fase 2/Evidencias Proyecto`](<Fase 2/Evidencias Proyecto>) | `Presentación Proyecto.pptx`, `Evidencias de documentación/` (`01` a `05`, `ANEXOS/` y la entrega original del avance en `Entrega_Avance_2026_10_22/`), `Evidencias de sistema Aplicación/` y `Base de datos/`. |
 | [`Fase 3`](<Fase 3>) | Estructura preparada para `Evidencias Individuales/` (`3.1`) y `Evidencias Grupales/` (Presentación Final). |
 | [`AFRISAN_NUEVO`](AFRISAN_NUEVO/README.md) | Reglas de negocio (`01_NEGOCIO`), scripts SQL y esquema `afrisan` (`02_BASE_DATOS`), solución `.NET 8` (`03_CODIGO`) y evidencias de pruebas y seguimiento (`04_SEGUIMIENTO`). |
 
 ---
 
-## 2. Estado Técnico Vigente al `02/11/2026` (`AFRISAN_NUEVO`)
+## 2. Estado Técnico al `08/11/2026` (`AFRISAN_NUEVO`)
 
-1. **Arquitectura e implementación (`.NET 8`):**
-   - **Frontend:** `Afrisan.Nuevo.Web` (**Blazor WebAssembly**, puerto `5286`) con almacenamiento local de borradores y fotografías en `IndexedDB` (`TrabajoLocalService`) y lector de códigos QR.
-   - **Backend:** `Afrisan.Nuevo.Api` (**ASP.NET Core Web API**, puerto `5181`) con autenticación JWT, validación de versión de seguridad por petición, control de acceso por rol/OT y repositorios transaccionales (`PgInventario`, `PgTrabajo`, `PgUsuarios`, `PgPowerBi`).
-2. **Base de datos en nube (`PostgreSQL 16` en Supabase — `SUP-01` y `G02` completados):**
-   - Esquema único **`afrisan`** con **30 tablas y 8 vistas operativas sin emisiones de carbono** (`05_Crear_Afrisan_Sin_Emisiones.sql`, `06_Reemplazar_Esquemas_Por_Afrisan.sql` y `07_Habilitar_Persistencia.sql`).
-   - Conexión con TLS `VerifyFull`, rol restringido `afrisan_api` (sin `SUPERUSER` ni `BYPASSRLS`), **Row Level Security (RLS)** en las 30 tablas y **37 comprobaciones de persistencia y reinicio aprobadas**.
-3. **Usuarios reales y almacenamiento privado de fotografías (`G03` completado):**
-   - Cuentas reales con hash de contraseña en PostgreSQL y módulo `/administracion`.
-   - Fotografías de retiro, cilindro retirado e instalado almacenadas en el bucket privado **`afrisan-evidencias`** de **Supabase Storage** (`SupabaseFotos.cs`), verificando firma binaria, MIME, límite de 4 MiB y hash `SHA-256` (**55 comprobaciones aprobadas**).
-4. **Módulo Power BI (`/power-bi`, `G08` implementado en aplicación):**
-   - Vista previa operativa conectada a PostgreSQL para `Administrador` y `Jefatura`, filtros por período, sucursal, refrigerante y técnico, y descarga de paquete ZIP con 6 tablas CSV, script Power Query (`Afrisan.pq`), medidas DAX (`Medidas.dax`) y tema visual (**100 comprobaciones aprobadas**).
+1. **Arquitectura (`.NET 8`):** `Afrisan.Nuevo.Web` (Blazor WebAssembly), `Afrisan.Nuevo.Api` (ASP.NET Core), `Afrisan.Nuevo.Contratos` (DTO compartidos) y `Afrisan.Nuevo.Pruebas` (xUnit).
+2. **Base de datos (PostgreSQL 16 en Supabase):**
+   - **Instalado en Supabase:** esquema único `afrisan` con 30 tablas y 8 vistas (`05` + `07`), rol restringido `afrisan_api`, TLS `VerifyFull` y RLS en todas las tablas.
+   - **Probado en PostgreSQL local y pendiente de aplicar:** las migraciones `08` a `10`, que llevan el esquema a 32 tablas y 9 vistas.
+   - El detalle está en el [diccionario de datos](AFRISAN_NUEVO/02_BASE_DATOS/DICCIONARIO_ESQUEMA_AFRISAN.md).
+3. **Operación:**
+   - OT por reemplazo o agregado físico, con el retiro del técnico (peso y foto), la recepción y aprobación de Bodega y la revisión del Autorizador.
+   - Fotos en Supabase Storage privado.
+   - Borradores sin conexión en IndexedDB.
+4. **Módulos agregados el 08/11/2026:**
+   - gestión de usuarios;
+   - correcciones de peso con aprobación (P05);
+   - mantenedores de clientes, sucursales y refrigerantes;
+   - bajas de cilindros;
+   - precios y valoraciones en CLP, EUR, USD y UF;
+   - límites por sucursal y gas;
+   - Power BI gratuito (enlace público con datos simulados).
+
+   Sus reglas las definió el responsable del proyecto y falta validarlas con AFRISAN.
+5. **Seguridad:** fuera de desarrollo, la API exige HTTPS y HSTS, no publica Swagger y limita los intentos de inicio de sesión. Los paquetes están actualizados y `dotnet list package --vulnerable` no reporta hallazgos.
+6. **Pendiente:**
+   - despliegue público (ver la [guía](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md));
+   - pruebas en Android (G05) y aceptación con usuarios (G09);
+   - publicación del PBIX;
+   - Defontana y certificados, diferidos.
+
+Guía de uso por rol: [Manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUARIO.md).
 
 ---
 
@@ -46,3 +62,29 @@ El repositorio está organizado conforme a la estructura oficial exigida para la
    .\AFRISAN_NUEVO\03_CODIGO\Iniciar-Revision.ps1
    ```
 2. La API se levanta en `http://localhost:5181` y la aplicación Web en `http://localhost:5286/acceso`.
+
+---
+
+## 4. Pruebas y calidad
+
+| Tipo | Cómo ejecutar | Resultado al 08/11/2026 |
+| --- | --- | --- |
+| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 409 pruebas aprobadas; 29 % de cobertura de líneas (77 % a 100 % en la lógica en memoria, Power BI y seguridad) |
+| Integración sobre PostgreSQL embebido y navegador | `AFRISAN_NUEVO/04_SEGUIMIENTO/MODULOS_2026_11_08/Validar-Modulos.ps1` (requiere Node.js) | Resultados JSON fechados en `AFRISAN_NUEVO/04_SEGUIMIENTO/` |
+| Integración continua | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Compila y ejecuta xUnit en cada push a `main` |
+
+La capa PostgreSQL se prueba con las baterías de integración, no con xUnit. Por
+eso la cobertura de xUnit no llega todavía a la meta del 80 % del acta.
+
+---
+
+## 5. Historial del avance
+
+El repositorio se consolidó el 08/11/2026 en un solo commit (`c2cc46b`). El avance
+anterior se registró en carpetas con fecha:
+
+- **Validaciones y resultados:** `AFRISAN_NUEVO/04_SEGUIMIENTO/<TEMA>_<FECHA>/`, desde el 20/10/2026.
+- **Decisiones D-01 en adelante:** [`DECISIONES_Y_PENDIENTES.md`](AFRISAN_NUEVO/04_SEGUIMIENTO/DECISIONES_Y_PENDIENTES.md).
+- **Versiones originales de las entregas:** las carpetas `Historico/` y `Entrega_Avance_2026_10_22/`.
+
+Desde esa fecha cada avance se registra como un commit separado.
