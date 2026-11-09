@@ -32,6 +32,7 @@ function unzip(bytes){
  return result;
 }
 
+export {csv,unzip};
 export async function validarBi(etapa,c){
  const {api,check,admin,bodega,autorizador,tecnico,jefatura,base,db,environment,start,stop,child}=c;
  const resumen=()=>api('power-bi/resumen',admin);
@@ -85,6 +86,9 @@ export async function validarBi(etapa,c){
   const opCsv=csv(files['Operaciones.csv'])[0];
   check(Number(opCsv.KgInstalados)===4.6&&Number(opCsv.KgRecepcion)===0.75&&opCsv.PendienteRecepcion==='false','CSV mantiene pesajes de instalación y recepción diferenciados');
   check(['Afrisan.pq','Medidas.dax','Tema_AFRISAN.json','LEEME.md'].every(k=>files[k]?.length>0),'Paquete incluye Power Query, DAX, tema y guía');
+  check(['Informe/AFRISAN.pbip','Informe/AFRISAN.Report/definition.pbir','Informe/AFRISAN.Report/definition/report.json','Informe/AFRISAN.SemanticModel/model.bim'].every(k=>files[k]?.length>0),'Paquete incluye el proyecto PBIP completo con modelo e informe');
+  const proyecto=JSON.parse(files['Informe/AFRISAN.pbip']),modelo=JSON.parse(files['Informe/AFRISAN.SemanticModel/model.bim']);
+  check(proyecto.artifacts[0].report.path==='AFRISAN.Report'&&modelo.model.tables.length===10&&modelo.model.tables.some(t=>t.name==='Costos'&&t.columns.some(c=>c.name==='TotalClp')),'Referencias del proyecto exportado y diez tablas, incluida la conversión histórica de costos');
   check(files['Afrisan.pq'].includes('Table.ReplaceValue')&&JSON.parse(files['Tema_AFRISAN.json']).name==='AFRISAN operativo','Plantilla contempla nulos y tema JSON válido');
   check(!/sb_secret_|sb_publishable_|Clave_Usuario|Correo_Usuario|SHA256|BucketPrivado|RutaObjeto|Password=|Bearer /i.test(JSON.stringify(files)),'Exportación no contiene credenciales, correos ni referencias privadas de fotos');
   const auditoriaDespues=(await db.query('SELECT count(*)::int n FROM afrisan."Auditoria"')).rows[0].n;

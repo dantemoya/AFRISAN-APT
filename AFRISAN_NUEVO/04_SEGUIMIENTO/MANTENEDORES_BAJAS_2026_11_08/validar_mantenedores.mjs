@@ -1,0 +1,97 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {randomUUID} from 'node:crypto';
+
+export async function validarMantenedores(ctx){
+ const {api,check,admin,bodega,autorizador,tecnico,jefatura,photo,db,root,start,stop}=ctx;
+ const cliente=await api('clientes',admin,{rut:'MANT-PRUEBA',nombre:'Cliente mantenedor'});
+ const suc=await api('sucursales',admin,{clienteId:cliente.id,nombre:'Sucursal mantenedor',direccion:'Dirección inicial'});
+ const gas=await api('refrigerantes',admin,{codigo:'MANT-GAS',nombre:'Gas mantenedor'});
+ const clientes=()=>api('mantenedores/clientes',admin),sucursales=()=>api('mantenedores/sucursales',admin),gases=()=>api('mantenedores/refrigerantes',admin);
+ const c=async()=>(await clientes()).find(x=>x.id===cliente.id),s=async()=>(await sucursales()).find(x=>x.id===suc.id),g=async()=>(await gases()).find(x=>x.id===gas.id);
+ const pedido=()=>({idOperacion:randomUUID(),sucursalId:suc.id,sucursal:suc.nombre,direccion:suc.direccion,descripcion:'Alta contra catálogos inactivos',tecnicoEmail:'tecnico@example.invalid',detalle:[{refrigeranteId:gas.id,grSolicitados:2000,grAutorizados:2000}],cilindrosARetirar:[]});
+ for(const ruta of ['mantenedores/clientes','mantenedores/sucursales','mantenedores/refrigerantes','bajas-cilindros'])await api(ruta,null,undefined,'GET',401);
+ for(const token of [bodega,jefatura,autorizador,tecnico]){
+  await api('mantenedores/clientes',token,undefined,'GET',403);await api('mantenedores/sucursales',token,undefined,'GET',403);await api('bajas-cilindros',token,undefined,'GET',403);
+  await api(`clientes/${cliente.id}`,token,{rut:cliente.rut,nombre:'Sin permiso',version:1},'PUT',403);
+ }
+ for(const token of [autorizador,tecnico])await api('mantenedores/refrigerantes',token,undefined,'GET',403);
+ check(true,'Los mantenedores y las bajas rechazan acceso anónimo y roles no autorizados');
+ let actual=await c();
+ const editar={rut:'MANT-CORREGIDO',nombre:'Cliente corregido',version:actual.version};
+ actual=await api(`clientes/${cliente.id}`,admin,editar,'PUT');
+ check(actual.nombre==='Cliente corregido'&&actual.version===2,'Editar cliente conserva el identificador y aumenta la versión');
+ check((await api(`clientes/${cliente.id}`,admin,editar,'PUT')).version===2,'Reintento de edición no genera otro cambio');
+ await api(`clientes/${cliente.id}`,admin,{...editar,nombre:'Sesión antigua'},'PUT',409);
+ await api(`clientes/${cliente.id}`,admin,{...editar,nombre:'   ',version:actual.version},'PUT',400);
+ await api('clientes/999999',admin,{...editar,version:1},'PUT',404);
+ let branch=await api(`sucursales/${suc.id}`,admin,{nombre:'Sucursal corregida',direccion:'Dirección corregida',version:(await s()).version},'PUT');
+ check(branch.clienteId===cliente.id&&branch.direccion==='Dirección corregida','Editar sucursal conserva su cliente');
+ let refrigerante=await api(`refrigerantes/${gas.id}`,bodega,{codigo:' mant-corregido ',nombre:'Gas corregido',version:(await g()).version},'PUT');
+ check(refrigerante.codigo==='MANT-CORREGIDO'&&refrigerante.version===2,'Bodega edita el refrigerante y normaliza el código');
+ await api(`refrigerantes/${gas.id}`,tecnico,{codigo:'NO',nombre:'Sin permiso',version:refrigerante.version},'PUT',403);
+ await api(`refrigerantes/${gas.id}`,admin,{codigo:'OTRO',nombre:'Versión antigua',version:1},'PUT',409);
+ actual=await api(`clientes/${cliente.id}/estado`,admin,{activo:false,version:(await c()).version},'PUT');
+ check(!actual.activo&&!(await api('clientes',admin)).some(x=>x.id===cliente.id)&&!(await api('sucursales',admin)).some(x=>x.id===suc.id),'Cliente inactivo y sus sucursales se omiten de las nuevas selecciones');
+ check((await clientes()).some(x=>x.id===cliente.id)&&!(await s()).clienteActivo,'El mantenedor conserva el cliente y muestra su estado en las sucursales');
+ await api('ordenes-trabajo',autorizador,pedido(),'POST',409);
+ await api('cilindros',admin,{ubicacionInicial:'Sucursal',sucursalId:suc.id,refrigeranteId:gas.id,capacidadGr:10000,taraGr:1000,pesoInicialGr:2000},'POST',409);
+ await api('sucursales',admin,{clienteId:cliente.id,nombre:'Prohibida',direccion:'Prueba'},'POST',409);
+ branch=await api(`sucursales/${suc.id}/estado`,admin,{activo:false,version:(await s()).version},'PUT');
+ await api(`sucursales/${suc.id}/estado`,admin,{activo:true,version:branch.version},'PUT',409);
+ await api(`clientes/${cliente.id}/estado`,admin,{activo:true,version:actual.version},'PUT');
+ await api('ordenes-trabajo',autorizador,pedido(),'POST',409);
+ await api('cilindros',admin,{ubicacionInicial:'Sucursal',sucursalId:suc.id,refrigeranteId:gas.id,capacidadGr:10000,taraGr:1000,pesoInicialGr:2000},'POST',409);
+ branch=await api(`sucursales/${suc.id}/estado`,admin,{activo:true,version:branch.version},'PUT');
+ check(branch.activo&&branch.clienteActivo,'Reactivar cliente y sucursal recupera su disponibilidad');
+ refrigerante=await api(`refrigerantes/${gas.id}/estado`,jefatura,{activo:false,version:(await g()).version},'PUT');
+ check(!refrigerante.activo&&!(await api('refrigerantes',admin)).some(x=>x.id===gas.id),'Jefatura desactiva el gas sin eliminarlo del mantenedor');
+ await api('cilindros',admin,{ubicacionInicial:'Bodega',refrigeranteId:gas.id,capacidadGr:10000,taraGr:1000,pesoInicialGr:2000},'POST',409);
+ const invalido=pedido();await api('ordenes-trabajo',autorizador,invalido,'POST',409);
+ check(!(await api('ordenes-trabajo',admin)).some(x=>x.id===invalido.idOperacion),'Gas inactivo revierte la creación completa de la OT');
+ await api(`refrigerantes/${gas.id}/estado`,jefatura,{activo:true,version:refrigerante.version},'PUT');
+ const cilindro=async(ubicacion='Bodega')=>api('cilindros',admin,{ubicacionInicial:ubicacion,sucursalId:ubicacion==='Sucursal'?suc.id:null,refrigeranteId:gas.id,capacidadGr:10000,taraGr:1000,pesoInicialGr:3000});
+ const instalado=await cilindro('Sucursal');
+ await api(`clientes/${cliente.id}/estado`,admin,{activo:false,version:(await c()).version},'PUT',409);
+ await api(`sucursales/${suc.id}/estado`,admin,{activo:false,version:(await s()).version},'PUT',409);
+ const solicitud={id:randomUUID(),estadoDestino:'Chatarra',motivo:'Cilindro deteriorado registrado para revisión'};
+ await api(`cilindros/${instalado.codigo}/baja`,admin,solicitud,'POST',409);
+ check(true,'Se bloquean las bajas y desactivaciones que dejarían cilindros instalados sin destino activo');
+ const libre=await cilindro(),otro=await cilindro(),custodia=await cilindro();
+ const ot=await api('ordenes-trabajo',autorizador,{idOperacion:randomUUID(),sucursalId:suc.id,sucursal:branch.nombre,direccion:branch.direccion,descripcion:'OT de comprobación de mantenedores',tecnicoEmail:'tecnico@example.invalid',detalle:[{refrigeranteId:gas.id,grSolicitados:2000,grAutorizados:2000}],cilindrosARetirar:[]});
+ await api(`refrigerantes/${gas.id}/estado`,admin,{activo:false,version:(await g()).version},'PUT',409);
+ check(true,'Un gas con OT abierta no se desactiva');
+ await api(`ordenes-trabajo/${ot.id}/entregas`,tecnico,{idOperacion:randomUUID(),codigo:custodia.codigo,pesoBrutoGr:2800,foto:photo(171)});
+ await api(`cilindros/${custodia.codigo}/baja`,admin,{...solicitud,id:randomUUID()},'POST',409);
+ for(const token of [bodega,jefatura,autorizador,tecnico])await api(`cilindros/${libre.codigo}/baja`,token,solicitud,'POST',403);
+ await api(`cilindros/${libre.codigo}/baja`,admin,{...solicitud,id:'00000000-0000-0000-0000-000000000000'},'POST',400);
+ await api(`cilindros/${libre.codigo}/baja`,admin,{...solicitud,estadoDestino:'Disponible'},'POST',400);
+ await api(`cilindros/${libre.codigo}/baja`,admin,{...solicitud,motivo:'   '},'POST',400);
+ await api('cilindros/NO-EXISTE/baja',admin,solicitud,'POST',404);
+ const baja=await api(`cilindros/${libre.codigo}/baja`,admin,solicitud);
+ check(baja.estadoDestino==='Chatarra'&&baja.motivo===solicitud.motivo,'Administrador registra la baja con motivo, actor y fecha');
+ check((await api(`cilindros/${libre.codigo}/baja`,admin,solicitud)).id===baja.id,'Reintento de baja no duplica el registro');
+ await api(`cilindros/${libre.codigo}/baja`,admin,{...solicitud,motivo:'Otro motivo'},'POST',409);
+ await api(`cilindros/${otro.codigo}/baja`,admin,solicitud,'POST',409);
+ await api(`cilindros/${libre.codigo}/baja`,admin,{...solicitud,id:randomUUID()},'POST',409);
+ const inactivo=await api(`cilindros/${otro.codigo}/baja`,admin,{...solicitud,id:randomUUID(),estadoDestino:'Inactivo',motivo:'Retiro administrativo del cilindro de prueba'});
+ const ficha=await api(`cilindros/${libre.codigo}`,admin);
+ check(ficha.ubicacion==='FueraServicio'&&ficha.estado==='Chatarra'&&ficha.ultimoPesaje.pesoBrutoGr===3000,'Baja cambia la proyección de inventario y conserva los pesajes');
+ check((await api(`cilindros/${otro.codigo}`,admin)).estado==='Inactivo'&&inactivo.estadoDestino==='Inactivo','Se admite también la baja a Inactivo');
+ check(!(await api(`ordenes-trabajo/${ot.id}/cilindros-disponibles`,tecnico)).some(x=>x.id===libre.id||x.id===otro.id),'Los cilindros de baja quedan excluidos del despacho');
+ check((await api(`cilindros/${libre.codigo}/historial`,admin)).some(e=>e.descripcion.includes('FueraServicio / Chatarra')),'El historial del cilindro refleja la baja');
+ const historial=await api('bajas-cilindros',admin);
+ check(historial.some(b=>b.id===baja.id)&&historial.some(b=>b.id===inactivo.id),'Las bajas permanecen consultables por Administrador');
+ await stop();await db.exec('RESET ROLE');
+ const audit=(await db.query('SELECT count(*)::int n FROM afrisan."Auditoria" WHERE "Tabla" IN (\'Cliente\',\'Sucursales\',\'Refrigerantes\',\'BajaCilindro\')')).rows[0].n;
+ await db.exec(await fs.readFile(path.join(root,'AFRISAN_NUEVO/02_BASE_DATOS/09_Mantenedores_Bajas.sql'),'utf8'));
+ check((await db.query('SELECT count(*)::int n FROM afrisan."Auditoria" WHERE "Tabla" IN (\'Cliente\',\'Sucursales\',\'Refrigerantes\',\'BajaCilindro\')')).rows[0].n===audit,'Reaplicar la migración 09 conserva datos e historia sin escrituras de negocio');
+ check(audit>10,'Los mantenedores y las bajas tienen auditoría de cambios');
+ await db.exec('SET ROLE afrisan_api');await start();
+ check((await api('bajas-cilindros',admin)).some(b=>b.id===baja.id)&&(await c()).nombre==='Cliente corregido','Mantenedores, sesión y bajas sobreviven al reinicio');
+ // La prueba visual usa esta misma API aislada y perfiles nuevos de navegador.
+ if(process.env.AFRISAN_TEST_MANTENEDORES_UI==='1'){
+  const {validarPantallas}=await import('./validar_pantallas.mjs');
+  await validarPantallas({...ctx,cliente,suc,gas,libre,ot});
+ }
+}

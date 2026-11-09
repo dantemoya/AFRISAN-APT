@@ -1,0 +1,276 @@
+{
+  "fecha_utc": "2026-11-08T20:30:26.778Z",
+  "tipo": "API .NET 8 + PostgreSQL embebido aislado por TCP",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Administrador inicial creado con contraseña por stdin, sin cuentas demo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Entorno público sin cuentas ni contraseña de demostración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Peso inválido revierte el alta completa del cilindro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de creación de OT no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico ajeno no lista OT de otro usuario"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento del retiro no duplica despacho ni foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/entregas: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/operaciones/7727d07c-20c3-41d6-a5b0-498b1dfbe2c4/confirmar?version=1: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de foto conserva la versión y no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/operaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de eliminación después de respuesta perdida no exige la versión ya consumida"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Confirmación persiste pesajes, archivos y cambio físico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pesaje confirmado conserva el original antes de rectificar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 404"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La solicitud queda pendiente sin cambiar el pesaje"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de solicitud no duplica el historial"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones/ccbc59c8-01b3-4299-95d6-bfcf2b811b6b/resolver: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador puede rechazar conservando el peso vigente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Rechazo conserva el peso original"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Evidencia privada de rectificación íntegra y sin caché"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones/5048f847-ffcb-40f4-a08c-3a89fd48e735/foto: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/operaciones/7727d07c-20c3-41d6-a5b0-498b1dfbe2c4/fotos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/revision-autorizador: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/revision-autorizador: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Aprobación registra responsable, fecha y conclusión"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Resolución idempotente después de respuesta incierta"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones/5048f847-ffcb-40f4-a08c-3a89fd48e735/resolver: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Peso aprobado actualizado con el original inmutable"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Power BI usa el peso rectificado sin duplicar operaciones"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La aprobación no modifica la fila del pesaje original"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Rectificar el último peso de recepción actualiza la proyección de inventario a vacío"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Una segunda solicitud parte del peso vigente y conserva la cadena de correcciones"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Segunda rectificación actualiza la disponibilidad sin cambiar ubicación"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Recorrido Técnico → Bodega → Autorizador cerrado en PostgreSQL"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/rectificaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Historial de solicitudes rechazadas y aprobadas disponible tras el cierre"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/13c51ef4-3c14-4605-b040-59d6b839d300/operaciones/7727d07c-20c3-41d6-a5b0-498b1dfbe2c4/fotos/c13d04c8-5524-4902-9aa2-d62f51220278: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT y los pesos de terreno/recepción sobreviven al reinicio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad de instalación estable después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Inventario conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Fotografía privada íntegra después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bloqueo por intentos fallidos conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no es superusuario ni puede crear roles/bases o eludir RLS"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin permisos sobre costos fuera de este incremento"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no puede borrar ni editar auditoría"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El permiso para bloquear Pesaje no permite reescribirlo: el trigger lo rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "RLS permanece habilitado después de la actualización"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 67
+}

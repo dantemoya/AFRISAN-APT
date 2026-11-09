@@ -1,0 +1,556 @@
+{
+  "fecha_utc": "2026-11-09T00:35:40.790Z",
+  "tipo": "API .NET 8 + PostgreSQL embebido aislado por TCP",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Administrador inicial creado con contraseña por stdin, sin cuentas demo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Entorno público sin cuentas ni contraseña de demostración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Peso inválido revierte el alta completa del cilindro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de creación de OT no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/cdd05599-a107-4ae4-af5f-a7420503456c: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico ajeno no lista OT de otro usuario"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento del retiro no duplica despacho ni foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/cdd05599-a107-4ae4-af5f-a7420503456c/entregas: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/cdd05599-a107-4ae4-af5f-a7420503456c/operaciones/2d8580ed-8dd9-45d9-8945-765ce58576eb/confirmar?version=1: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de foto conserva la versión y no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT ordenes-trabajo/cdd05599-a107-4ae4-af5f-a7420503456c/operaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de eliminación después de respuesta perdida no exige la versión ya consumida"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Confirmación persiste pesajes, archivos y cambio físico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/cdd05599-a107-4ae4-af5f-a7420503456c/operaciones/2d8580ed-8dd9-45d9-8945-765ce58576eb/fotos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/cdd05599-a107-4ae4-af5f-a7420503456c/revision-autorizador: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Recorrido Técnico → Bodega → Autorizador cerrado en PostgreSQL"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/cdd05599-a107-4ae4-af5f-a7420503456c/operaciones/2d8580ed-8dd9-45d9-8945-765ce58576eb/fotos/140802fc-b248-449e-98fa-2fdcabc75e6c: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT y los pesos de terreno/recepción sobreviven al reinicio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad de instalación estable después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Inventario conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Fotografía privada íntegra después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bloqueo por intentos fallidos conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET costos: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET costos: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET costos: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET costos: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/precios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Precio CLP conserva identidad al reintentar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/precios: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Valoración exacta de gramos explícitos en CLP y CLP"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Respuesta perdida no duplica la valoración CLP"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento del cambio EUR no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/cambios: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Precio EUR conserva identidad al reintentar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/precios: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Valoración exacta de gramos explícitos en EUR y CLP"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Respuesta perdida no duplica la valoración EUR"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento del cambio USD no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/cambios: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Precio USD conserva identidad al reintentar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/precios: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Valoración exacta de gramos explícitos en USD y CLP"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Respuesta perdida no duplica la valoración USD"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento del cambio UF no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/cambios: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Precio UF conserva identidad al reintentar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/precios: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Valoración exacta de gramos explícitos en UF y CLP"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Respuesta perdida no duplica la valoración UF"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/precios: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/precios: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/precios: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/cambios: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos/cambios: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un nuevo cambio manual no revaloriza costos históricos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Corregir el precio el mismo día conserva la tarifa anterior"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La referencia instalada usa peso neto confirmado y no se cobra automáticamente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST costos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Errores de precio o cambio revierten la valoración completa"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET limites: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET limites: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET limites: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de límite no agrega una versión idéntica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/definiciones: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/definiciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/definiciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Límites semanal y mensual usan los mismos gramos netos con umbrales separados"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "No se mezclan gramos de gases distintos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "No se mezclan gramos entre sucursales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Medición conserva resultado y versión del límite aplicado"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de medición no duplica el corte"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/mediciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/mediciones/1/revision: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/mediciones/1/revision: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura conserva su conclusión sobre el exceso"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/mediciones/1/revision: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/mediciones/2/revision: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Una definición futura conserva el límite vigente del período actual"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Modificar por Jefatura agrega versión y bloquea Bodega"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST limites/definiciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT limites/1/bloqueo: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Habilitar por Jefatura permite un nuevo cambio de Bodega"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cambiar el límite no reescribe las mediciones y revisiones anteriores"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Segunda operación se cuenta exclusivamente en su gas"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Una rectificación pendiente no cambia el avance"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El avance usa el peso rectificado aprobado"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La rectificación posterior conserva el corte histórico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cada corte conserva las operaciones y gramos que lo compusieron"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El calendario separa semanas y meses por fecha chilena, incluso cerca de medianoche UTC"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Power BI exporta el paquete privado con las nuevas valoraciones"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CSV de Power BI conserva la moneda original y el equivalente histórico en CLP"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Plantilla gratuita añade costos con cabeceras y sin cifras reales o simuladas"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pantalla guarda el valor manual con decimales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pantalla conserva ocho decimales en precios UF por gramo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Calculadora muestra el resultado de gramos por precio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Guardar desde pantalla conserva la valoración por operación"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura consulta costos sin formularios de registro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega define un límite mensual por gas desde la pantalla"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pantalla guarda una medición con el peso rectificado vigente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura registra la conclusión de un exceso desde su pantalla"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Técnico no accede a /costos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Técnico no accede a /limites"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Límites se adapta al ancho móvil sin desbordar la página"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Las pantallas funcionan sin errores JavaScript"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad restringida no puede editar ni borrar PreciosRefrigerantes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad restringida no puede editar ni borrar TiposCambio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad restringida no puede editar ni borrar Costos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad restringida no puede editar ni borrar MedicionLimite"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad restringida no puede editar ni borrar LimiteSucursalHistorial"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tipos de cambio quedan auditados"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La vista de excesos identifica el gas de la medición"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reiniciar y repetir migración conserva precio y cambio históricos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Mediciones sobreviven al reinicio y repetición de la migración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no es superusuario ni puede crear roles/bases o eludir RLS"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Disposición y certificados siguen sin acceso desde la API"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no puede borrar ni editar auditoría"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El permiso para bloquear Pesaje no permite reescribirlo: el trigger lo rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "RLS permanece habilitado después de la actualización"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 137
+}

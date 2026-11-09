@@ -13,9 +13,16 @@ const db=await PGlite.create();
 const socket=new PGLiteSocketServer({db,host:'127.0.0.1',port:55432,maxConnections:1});
 const dll=process.env.AFRISAN_API_DLL||path.join(root,'AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api/bin/Debug/net8.0/Afrisan.Nuevo.Api.dll');
 const pruebaStorage=process.env.AFRISAN_TEST_STORAGE==='1';
-const pruebaBi=process.env.AFRISAN_TEST_POWERBI==='1';
-if(pruebaStorage&&pruebaBi)throw Error('Ejecutar Storage y Power BI por separado para conservar sus informes.');
+ const pruebaBi=process.env.AFRISAN_TEST_POWERBI==='1';
+const pruebaUsuarios=process.env.AFRISAN_TEST_USUARIOS==='1';
+const pruebaLocal=process.env.AFRISAN_TEST_LOCAL==='1';
+const pruebaRectificaciones=process.env.AFRISAN_TEST_RECTIFICACIONES==='1';
+const pruebaMantenedores=process.env.AFRISAN_TEST_MANTENEDORES==='1';
+const pruebaControl=process.env.AFRISAN_TEST_CONTROL==='1';
+if([pruebaStorage,pruebaBi,pruebaUsuarios,pruebaLocal,pruebaRectificaciones,pruebaMantenedores,pruebaControl].filter(Boolean).length>1)throw Error('Ejecutar las suites por separado para conservar sus informes.');
 const validarBi=pruebaBi?(await import('../POWER_BI_2026_11_02/validar_powerbi.mjs')).validarBi:null;
+const validarUsuarios=pruebaUsuarios?(await import('../USUARIOS_2026_11_08/validar_usuarios.mjs')).validarUsuarios:null;
+const validarRectificaciones=pruebaRectificaciones?(await import('../MODULOS_2026_11_08/validar_rectificaciones.mjs')).validarRectificaciones:null;
 const base='http://127.0.0.1:5199/api/v1/';
 const checks=[];
 const report={fecha_utc:new Date().toISOString(),tipo:'API .NET 8 + PostgreSQL embebido aislado por TCP',comprobaciones:checks};
@@ -24,6 +31,8 @@ const environment={...process.env,APPDATA:profile,LOCALAPPDATA:profile,Logging__
  ConnectionStrings__AfrisanRuntime:'Host=127.0.0.1;Port=55432;Database=postgres;Username=afrisan_api;Password=prueba-local;SSL Mode=Disable;Pooling=false',
  Persistencia__Modo:'PostgreSQL',Persistencia__PruebasLocales:'true',Persistencia__JwtKey:randomBytes(64).toString('base64'),
  Persistencia__FotosPath:path.join(root,'.local/evidencias-prueba-'+randomUUID())};
+environment.PowerBiDemo__ArchivoConfiguracion=path.join(profile,'powerbi-demo.json');
+environment.PowerBiDemo__UrlPublica='';
 let cloud;
 if(pruebaStorage){environment.Storage__Url='http://127.0.0.1:55433';const {crearStorageSimulado}=await import('../STORAGE_2026_11_02/storage_simulado.mjs');cloud=await crearStorageSimulado('sb_secret_'+randomBytes(32).toString('hex'));}
 let processApi,logs='';
@@ -48,6 +57,9 @@ function png(color){const crc=b=>{let n=0xffffffff;for(const x of b){n^=x;for(le
 try{
  await db.exec(await fs.readFile(path.join(root,'AFRISAN_NUEVO/02_BASE_DATOS/05_Crear_Afrisan_Sin_Emisiones.sql'),'utf8'));
  await db.exec(await fs.readFile(path.join(root,'AFRISAN_NUEVO/02_BASE_DATOS/07_Habilitar_Persistencia.sql'),'utf8'));
+ await db.exec(await fs.readFile(path.join(root,'AFRISAN_NUEVO/02_BASE_DATOS/08_Rectificacion_Pesajes.sql'),'utf8'));
+ await db.exec(await fs.readFile(path.join(root,'AFRISAN_NUEVO/02_BASE_DATOS/09_Mantenedores_Bajas.sql'),'utf8'));
+ await db.exec(await fs.readFile(path.join(root,'AFRISAN_NUEVO/02_BASE_DATOS/10_Costos_Limites.sql'),'utf8'));
  await db.exec("ALTER ROLE afrisan_api LOGIN PASSWORD 'prueba-local'");
  // El socket embebido no autentica el StartupMessage; imponer el rol de prueba
  // explícitamente para comprobar permisos reales sin ejecutar como propietario.
@@ -84,6 +96,7 @@ try{
  check((await api('ordenes-trabajo',otro)).length===0,'El técnico ajeno no lista OT de otro usuario');
  const route='ordenes-trabajo/'+ot.id;
  const photo=color=>({id:randomUUID(),nombre:'pesaje.png',contentType:'image/png',base64:png(color)});
+ const rect=async etapa=>{if(validarRectificaciones)await validarRectificaciones(etapa,{api,check,admin,bodega,autorizador,tecnico,otro,photo,db,base});};
  const salida={idOperacion:randomUUID(),codigo:installed.codigo,pesoBrutoGr:5800,foto:photo(10)};
  ot=await api(route+'/entregas',tecnico,salida);
  ot=await api(route+'/entregas',tecnico,salida);check(ot.entregas.length===1,'Reintento del retiro no duplica despacho ni foto');
@@ -101,10 +114,13 @@ try{
  op=await api(oper+'/fotos',tecnico,imagenInstalada);
  check((await api(oper+'/fotos',tecnico,imagenInstalada)).version===op.version,'Reintento de foto conserva la versión y no duplica');
  await api(route+'/operaciones',tecnico,{...draft,version:initialVersion,pesoInstaladoGr:5500},'PUT',409);
+ const versionAntesDeQuitar=op.version;
  op=await api(oper+'/fotos/'+imagenInstalada.id+'?version='+op.version,tecnico,undefined,'DELETE');
+ check((await api(oper+'/fotos/'+imagenInstalada.id+'?version='+versionAntesDeQuitar,tecnico,undefined,'DELETE')).version===op.version,'Reintento de eliminación después de respuesta perdida no exige la versión ya consumida');
  imagenInstalada={...photo(50),grupo:'Instalado',version:op.version};op=await api(oper+'/fotos',tecnico,imagenInstalada);
  op=await api(oper+'/confirmar?version='+op.version,tecnico,undefined,'POST');check(op.estado==='Registrada','Confirmación persiste pesajes, archivos y cambio físico');
  await bi('confirmado');
+ await rect('confirmado');
  await api(oper+'/fotos',tecnico,{...photo(70),grupo:'Instalado',version:op.version},'POST',409);
  await api(route+'/revision-autorizador',autorizador,{confirmoRevision:true},'POST',409);
  await api(oper+'/informar-entrega',tecnico,undefined,'POST');
@@ -113,9 +129,11 @@ try{
  ot=await api(route+'/recepciones',bodega,{codigo:spare.codigo,pesoBrutoGr:4800});
  ot=await api(route+'/aprobar-bodega',bodega,{confirmoRevision:true});
  await bi('bodega');
+ await rect('bodega');
  ot=await api(route+'/revision-autorizador',autorizador,{confirmoRevision:true});
  ot=await api(route+'/cerrar',autorizador,undefined,'POST');check(ot.estado==='Cerrada','Recorrido Técnico → Bodega → Autorizador cerrado en PostgreSQL');
  await bi('cerrado');
+ await rect('cerrado');
  const photoUrl=oper+'/fotos/'+retirado.id;
  const readPhoto=async token=>{const r=await fetch(base+photoUrl,{headers:{Authorization:'Bearer '+token}});if(!r.ok)throw Error('No se pudo leer la foto: '+r.status);return Buffer.from(await r.arrayBuffer());};
  const bytes=await readPhoto(tecnico);
@@ -128,6 +146,7 @@ try{
  for(let i=0;i<5;i++)await api('sesiones',null,{email:'otro@example.invalid',password:'incorrecta'},'POST',401);
  await stop();await start();await api('sesiones',null,{email:'otro@example.invalid',password},'POST',401);
  check(true,'Bloqueo por intentos fallidos conservado después de reiniciar');
+ if(validarUsuarios)await validarUsuarios({api,check,login,password,admin,bodega,autorizador,request});
  if(pruebaStorage){
   await stop();
   const key='sb_secret_'+randomBytes(32).toString('hex');
@@ -163,10 +182,13 @@ try{
   check((await fs.readdir(environment.Persistencia__FotosPath)).length===0,'Las nuevas fotos de nube no se guardan en disco');
   await stop();await start();check(bytes.equals(await readPhoto(tecnico)),'Storage conserva las fotografías después de otro reinicio');
  }
+ if(pruebaLocal){const {validarLocal}=await import('../MODULOS_2026_11_08/validar_local.mjs');await validarLocal({api,check,admin,bodega,autorizador,tecnico,photo});}
+ if(pruebaMantenedores){const {validarMantenedores}=await import('../MANTENEDORES_BAJAS_2026_11_08/validar_mantenedores.mjs');await validarMantenedores({api,check,admin,bodega,autorizador,tecnico,jefatura:await login('jefatura@example.invalid'),photo,db,root,start,stop});}
+ if(pruebaControl){const {validarControl}=await import('../COSTOS_LIMITES_2026_11_08/validar_control.mjs');await validarControl({api,check,admin,bodega,autorizador,tecnico,jefatura:await login('jefatura@example.invalid'),photo,db,root,start,stop,gas,sucursal,cliente,op,ot,entorno,base});}
  await db.exec('RESET ROLE');
  const scalar=async sql=>Object.values((await db.query(sql)).rows[0])[0];
  check(await scalar("SELECT NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolreplication AND NOT rolbypassrls FROM pg_roles WHERE rolname='afrisan_api'"),'La identidad no es superusuario ni puede crear roles/bases o eludir RLS');
- check(!await scalar("SELECT has_table_privilege('afrisan_api','afrisan.\"Costos\"','SELECT')"),'Sin permisos sobre costos fuera de este incremento');
+ check(!await scalar("SELECT has_table_privilege('afrisan_api','afrisan.\"CertificadosDisposicion\"','SELECT') OR has_table_privilege('afrisan_api','afrisan.\"CertificadosCilindros\"','INSERT')"),'Disposición y certificados siguen sin acceso desde la API');
  check(!await scalar("SELECT has_table_privilege('afrisan_api','afrisan.\"Auditoria\"','DELETE') OR has_table_privilege('afrisan_api','afrisan.\"Auditoria\"','UPDATE')"),'La identidad no puede borrar ni editar auditoría');
  let inmutable=false;
  try {await db.transaction(async tx=>{await tx.exec('SET LOCAL ROLE afrisan_api');await tx.exec('UPDATE afrisan."Pesaje" SET "PesoBrutoGr"="PesoBrutoGr"+1');});}catch(error){inmutable=/no se modifica|no se.*elimina/i.test(error.message);}
@@ -175,4 +197,4 @@ try{
  check(count===0,'RLS permanece habilitado después de la actualización');
  report.estado='CORRECTO';
 }catch(error){report.estado='FALLO';report.error=error.message;console.error(error.message);process.exitCode=1;}
-finally{await stop();await socket.stop();await db.close();if(cloud)await cloud.close();report.cantidad_comprobaciones=checks.length;await fs.writeFile(pruebaStorage?path.join(directory,'../STORAGE_2026_11_02/resultados_storage.json'):pruebaBi?path.join(directory,'../POWER_BI_2026_11_02/resultados_powerbi.json'):path.join(directory,'resultados_api.json'),JSON.stringify(report,null,2));await fs.mkdir(path.join(root,'.local'),{recursive:true});await fs.writeFile(path.join(root,'.local/persistencia-pruebas.log'),logs);console.log('Resultado:',report.estado,'Comprobaciones:',checks.length);}
+finally{await stop();await socket.stop();await db.close();if(cloud)await cloud.close();report.cantidad_comprobaciones=checks.length;await fs.writeFile(pruebaControl?path.join(directory,'../COSTOS_LIMITES_2026_11_08/resultados_control.json'):pruebaMantenedores?path.join(directory,'../MANTENEDORES_BAJAS_2026_11_08/resultados_mantenedores.json'):pruebaLocal?path.join(directory,'../MODULOS_2026_11_08/resultados_local.json'):pruebaRectificaciones?path.join(directory,'../MODULOS_2026_11_08/resultados_rectificaciones.json'):pruebaStorage?path.join(directory,'../STORAGE_2026_11_02/resultados_storage.json'):pruebaBi?path.join(directory,'../POWER_BI_2026_11_02/resultados_powerbi.json'):pruebaUsuarios?path.join(directory,'../USUARIOS_2026_11_08/resultados_usuarios.json'):path.join(directory,'resultados_api.json'),JSON.stringify(report,null,2));await fs.mkdir(path.join(root,'.local'),{recursive:true});await fs.writeFile(path.join(root,'.local/persistencia-pruebas.log'),logs);console.log('Resultado:',report.estado,'Comprobaciones:',checks.length);}

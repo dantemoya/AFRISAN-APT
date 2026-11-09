@@ -1,5 +1,5 @@
 {
-  "fecha_utc": "2026-11-03T01:04:51.527Z",
+  "fecha_utc": "2026-11-08T20:32:20.101Z",
   "tipo": "API .NET 8 + PostgreSQL embebido aislado por TCP",
   "comprobaciones": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "GET ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522: HTTP 403"
+      "comprobacion": "GET ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb: HTTP 403"
     },
     {
       "resultado": "OK",
@@ -52,11 +52,11 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/entregas: HTTP 409"
+      "comprobacion": "POST ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/entregas: HTTP 409"
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/operaciones/4c4f30cf-1fc9-45ad-94e8-ffe0b076e6d4/confirmar?version=1: HTTP 400"
+      "comprobacion": "POST ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/operaciones/76e7d5c1-24a5-422d-8c79-6839246b1a6d/confirmar?version=1: HTTP 400"
     },
     {
       "resultado": "OK",
@@ -64,7 +64,11 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "PUT ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/operaciones: HTTP 409"
+      "comprobacion": "PUT ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/operaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de eliminación después de respuesta perdida no exige la versión ya consumida"
     },
     {
       "resultado": "OK",
@@ -72,11 +76,11 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/operaciones/4c4f30cf-1fc9-45ad-94e8-ffe0b076e6d4/fotos: HTTP 409"
+      "comprobacion": "POST ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/operaciones/76e7d5c1-24a5-422d-8c79-6839246b1a6d/fotos: HTTP 409"
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/revision-autorizador: HTTP 409"
+      "comprobacion": "POST ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/revision-autorizador: HTTP 409"
     },
     {
       "resultado": "OK",
@@ -84,7 +88,7 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "GET ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/operaciones/4c4f30cf-1fc9-45ad-94e8-ffe0b076e6d4/fotos/c79f791b-a884-4b85-8613-5962e833ee97: HTTP 403"
+      "comprobacion": "GET ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/operaciones/76e7d5c1-24a5-422d-8c79-6839246b1a6d/fotos/5c2186c7-cb9b-4b01-b975-f4a2dc959128: HTTP 403"
     },
     {
       "resultado": "OK",
@@ -168,15 +172,15 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "GET ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/operaciones/4c4f30cf-1fc9-45ad-94e8-ffe0b076e6d4/fotos/c79f791b-a884-4b85-8613-5962e833ee97: HTTP 403"
+      "comprobacion": "GET ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/operaciones/76e7d5c1-24a5-422d-8c79-6839246b1a6d/fotos/5c2186c7-cb9b-4b01-b975-f4a2dc959128: HTTP 403"
     },
     {
       "resultado": "OK",
-      "comprobacion": "GET ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/operaciones/4c4f30cf-1fc9-45ad-94e8-ffe0b076e6d4/fotos/c79f791b-a884-4b85-8613-5962e833ee97: HTTP 503"
+      "comprobacion": "GET ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/operaciones/76e7d5c1-24a5-422d-8c79-6839246b1a6d/fotos/5c2186c7-cb9b-4b01-b975-f4a2dc959128: HTTP 503"
     },
     {
       "resultado": "OK",
-      "comprobacion": "GET ordenes-trabajo/40f29f0d-bac4-4dda-9eee-f4f5e6d1b522/operaciones/4c4f30cf-1fc9-45ad-94e8-ffe0b076e6d4/fotos/c79f791b-a884-4b85-8613-5962e833ee97: HTTP 503"
+      "comprobacion": "GET ordenes-trabajo/365ea2bb-ad89-43ba-affa-163a2bf0c7bb/operaciones/76e7d5c1-24a5-422d-8c79-6839246b1a6d/fotos/5c2186c7-cb9b-4b01-b975-f4a2dc959128: HTTP 503"
     },
     {
       "resultado": "OK",
@@ -184,7 +188,7 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/b046fdc6-2d79-4bbf-b24c-b69f65162ac9/entregas: HTTP 503"
+      "comprobacion": "POST ordenes-trabajo/302d1882-6355-40ab-90ac-67cb11e05a5a/entregas: HTTP 503"
     },
     {
       "resultado": "OK",
@@ -224,5 +228,5 @@
     }
   ],
   "estado": "CORRECTO",
-  "cantidad_comprobaciones": 55
+  "cantidad_comprobaciones": 56
 }

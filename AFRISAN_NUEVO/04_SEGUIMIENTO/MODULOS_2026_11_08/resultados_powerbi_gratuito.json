@@ -1,0 +1,112 @@
+{
+  "fecha_utc": "2026-11-09T00:34:56.290Z",
+  "tipo": "Power BI gratuito: API real, configuración aislada y Web publicada; iframe simulado, sin cuenta Microsoft",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Consulta anónima rechazada"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "tecnico: consulta, plantilla y configuración rechazadas"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "bodega: consulta, plantilla y configuración rechazadas"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "autorizador: consulta, plantilla y configuración rechazadas"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin enlace: estado vacío real, sin informe ficticio ni caché"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura descarga la plantilla de Desktop sin conexión a Supabase"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La plantilla contiene únicamente cabeceras: sin datos reales ni registros simulados"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Plantilla incluye proyecto, modelo y guía específica de demostración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura consulta pero no modifica el enlace"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Se rechazan enlaces privados, HTML, URLs externas, credenciales y parámetros inválidos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Administrador guarda el enlace público normalizado y su fecha"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura recibe la configuración compartida"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Repetir el guardado conserva el registro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El enlace sobrevive al reinicio de la API"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un fallo al persistir no cambia el enlace activo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Quitar el enlace persiste después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Menú principal abre el módulo gratuito sin mostrar un iframe inventado"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Formulario del Administrador guarda y muestra el iframe público"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Enlace inválido en la pantalla explica el formato y conserva el informe anterior"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura ve el informe sin controles de configuración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Botón de Desktop entrega el ZIP vacío mediante descarga autenticada"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La ruta /power-bi/demo conserva el acceso a la demostración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pantalla móvil sin desbordamiento horizontal"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Administrador puede retirar el enlace desde la aplicación"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La demostración no consulta indicadores ni paquetes de datos reales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La pantalla rechaza el rol Técnico también por URL directa"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 26
+}

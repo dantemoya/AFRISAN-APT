@@ -1,5 +1,5 @@
 {
-  "fecha_utc": "2026-11-03T01:32:35.752Z",
+  "fecha_utc": "2026-11-09T00:35:24.573Z",
   "tipo": "API .NET 8 + PostgreSQL embebido aislado por TCP",
   "comprobaciones": [
     {
@@ -120,7 +120,7 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "GET ordenes-trabajo/8a0b453b-45ce-4a5e-abae-50246e4e48f9: HTTP 403"
+      "comprobacion": "GET ordenes-trabajo/56a2892e-c9c4-44bb-b98c-e2bffe7f3952: HTTP 403"
     },
     {
       "resultado": "OK",
@@ -132,7 +132,7 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/8a0b453b-45ce-4a5e-abae-50246e4e48f9/entregas: HTTP 409"
+      "comprobacion": "POST ordenes-trabajo/56a2892e-c9c4-44bb-b98c-e2bffe7f3952/entregas: HTTP 409"
     },
     {
       "resultado": "OK",
@@ -140,7 +140,7 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/8a0b453b-45ce-4a5e-abae-50246e4e48f9/operaciones/28db4163-5f94-4692-88b8-cf926d57376c/confirmar?version=1: HTTP 400"
+      "comprobacion": "POST ordenes-trabajo/56a2892e-c9c4-44bb-b98c-e2bffe7f3952/operaciones/b656cdec-f8fe-4153-968f-11a572e28c4b/confirmar?version=1: HTTP 400"
     },
     {
       "resultado": "OK",
@@ -148,7 +148,11 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "PUT ordenes-trabajo/8a0b453b-45ce-4a5e-abae-50246e4e48f9/operaciones: HTTP 409"
+      "comprobacion": "PUT ordenes-trabajo/56a2892e-c9c4-44bb-b98c-e2bffe7f3952/operaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de eliminación después de respuesta perdida no exige la versión ya consumida"
     },
     {
       "resultado": "OK",
@@ -188,11 +192,11 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/8a0b453b-45ce-4a5e-abae-50246e4e48f9/operaciones/28db4163-5f94-4692-88b8-cf926d57376c/fotos: HTTP 409"
+      "comprobacion": "POST ordenes-trabajo/56a2892e-c9c4-44bb-b98c-e2bffe7f3952/operaciones/b656cdec-f8fe-4153-968f-11a572e28c4b/fotos: HTTP 409"
     },
     {
       "resultado": "OK",
-      "comprobacion": "POST ordenes-trabajo/8a0b453b-45ce-4a5e-abae-50246e4e48f9/revision-autorizador: HTTP 409"
+      "comprobacion": "POST ordenes-trabajo/56a2892e-c9c4-44bb-b98c-e2bffe7f3952/revision-autorizador: HTTP 409"
     },
     {
       "resultado": "OK",
@@ -224,6 +228,14 @@
     },
     {
       "resultado": "OK",
+      "comprobacion": "Paquete incluye el proyecto PBIP completo con modelo e informe"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Referencias del proyecto exportado y diez tablas, incluida la conversión histórica de costos"
+    },
+    {
+      "resultado": "OK",
       "comprobacion": "Plantilla contempla nulos y tema JSON válido"
     },
     {
@@ -248,7 +260,7 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "GET ordenes-trabajo/8a0b453b-45ce-4a5e-abae-50246e4e48f9/operaciones/28db4163-5f94-4692-88b8-cf926d57376c/fotos/13434497-7e88-40d8-9223-c9a39a9907a9: HTTP 403"
+      "comprobacion": "GET ordenes-trabajo/56a2892e-c9c4-44bb-b98c-e2bffe7f3952/operaciones/b656cdec-f8fe-4153-968f-11a572e28c4b/fotos/488ac92a-4ac2-4e03-94ab-68aaea3d7a5f: HTTP 403"
     },
     {
       "resultado": "OK",
@@ -300,7 +312,7 @@
     },
     {
       "resultado": "OK",
-      "comprobacion": "Sin permisos sobre costos fuera de este incremento"
+      "comprobacion": "Disposición y certificados siguen sin acceso desde la API"
     },
     {
       "resultado": "OK",
@@ -316,5 +328,5 @@
     }
   ],
   "estado": "CORRECTO",
-  "cantidad_comprobaciones": 78
+  "cantidad_comprobaciones": 81
 }

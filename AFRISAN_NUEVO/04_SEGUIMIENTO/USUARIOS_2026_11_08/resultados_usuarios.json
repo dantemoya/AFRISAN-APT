@@ -1,0 +1,248 @@
+{
+  "fecha_utc": "2026-11-08T20:29:50.458Z",
+  "tipo": "API .NET 8 + PostgreSQL embebido aislado por TCP",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Administrador inicial creado con contraseña por stdin, sin cuentas demo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Entorno público sin cuentas ni contraseña de demostración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Peso inválido revierte el alta completa del cilindro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de creación de OT no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/84ffbf97-5860-4d5c-8e4e-e661e452b619: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico ajeno no lista OT de otro usuario"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento del retiro no duplica despacho ni foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/84ffbf97-5860-4d5c-8e4e-e661e452b619/entregas: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/84ffbf97-5860-4d5c-8e4e-e661e452b619/operaciones/972b855a-f997-4db1-acf6-32972e43bb74/confirmar?version=1: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de foto conserva la versión y no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT ordenes-trabajo/84ffbf97-5860-4d5c-8e4e-e661e452b619/operaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de eliminación después de respuesta perdida no exige la versión ya consumida"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Confirmación persiste pesajes, archivos y cambio físico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/84ffbf97-5860-4d5c-8e4e-e661e452b619/operaciones/972b855a-f997-4db1-acf6-32972e43bb74/fotos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/84ffbf97-5860-4d5c-8e4e-e661e452b619/revision-autorizador: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Recorrido Técnico → Bodega → Autorizador cerrado en PostgreSQL"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/84ffbf97-5860-4d5c-8e4e-e661e452b619/operaciones/972b855a-f997-4db1-acf6-32972e43bb74/fotos/9bb39035-5f77-48b7-a606-303d12078395: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT y los pesos de terreno/recepción sobreviven al reinicio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad de instalación estable después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Inventario conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Fotografía privada íntegra después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bloqueo por intentos fallidos conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/1/estado: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/1/rol: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El Administrador no puede desactivarse ni cambiar su propio rol"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/7/estado: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/7/clave: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Desactivar devuelve la cuenta inactiva"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET refrigerantes: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Repetir la desactivación no falla"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El cambio de rol se guarda"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET refrigerantes: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La sesión nueva usa el rol actualizado"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/7/rol: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/7/clave: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/999999/estado: HTTP 404"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El listado muestra la cuenta bloqueada temporalmente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Restablecer la contraseña quita el bloqueo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La contraseña nueva permite entrar y la anterior no"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/4/estado: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT usuarios/4/rol: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un técnico con OT abierta no se desactiva ni cambia de rol"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no es superusuario ni puede crear roles/bases o eludir RLS"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin permisos sobre costos fuera de este incremento"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no puede borrar ni editar auditoría"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El permiso para bloquear Pesaje no permite reescribirlo: el trigger lo rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "RLS permanece habilitado después de la actualización"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 60
+}

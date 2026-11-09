@@ -52,7 +52,7 @@ try{
  await call('Fetch.enable',{patterns:[{urlPattern:'http://localhost:5181/api/v1/*',requestStage:'Request'}]});
  const inicial=await call('Page.addScriptToEvaluateOnNewDocument',{source:`sessionStorage.setItem('afrisan_nuevo.instancia','bi-ui');sessionStorage.setItem('afrisan_nuevo.sesion',JSON.stringify({Token:'solo-mock-ui',Vence:'2099-01-01T00:00:00Z',Nombre:'Revisión Power BI',Rol:'Administrador',Usuario:'prueba@example.invalid'}));`});
  await call('Emulation.setDeviceMetricsOverride',{width:1440,height:1100,deviceScaleFactor:1,mobile:false});
- await call('Page.navigate',{url:'http://localhost:5286/power-bi'});
+ await call('Page.navigate',{url:'http://localhost:5286/power-bi/operativo'});
  let loaded=false;for(let i=0;i<200;i++){if(await evalJs("document.querySelectorAll('.metric').length===5")){loaded=true;break;}await sleep(100);}
  check(loaded,'Pantalla Blazor carga los cinco indicadores con sesión sintética');
  check(await evalJs("document.body.innerText.includes('PENDIENTE DE PUBLICACIÓN') && !document.querySelector('iframe')"),'Sin informe no se carga iframe ni se finge conexión Microsoft');

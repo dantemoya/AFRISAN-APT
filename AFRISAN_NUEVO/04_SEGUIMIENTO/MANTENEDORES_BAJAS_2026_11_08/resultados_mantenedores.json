@@ -1,0 +1,512 @@
+{
+  "fecha_utc": "2026-11-08T22:30:43.147Z",
+  "tipo": "API .NET 8 + PostgreSQL embebido aislado por TCP",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Administrador inicial creado con contraseña por stdin, sin cuentas demo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Entorno público sin cuentas ni contraseña de demostración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Peso inválido revierte el alta completa del cilindro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de creación de OT no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/bbfe037c-0222-4eda-9747-7735e20febe4: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico ajeno no lista OT de otro usuario"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento del retiro no duplica despacho ni foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/bbfe037c-0222-4eda-9747-7735e20febe4/entregas: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/bbfe037c-0222-4eda-9747-7735e20febe4/operaciones/289d3de5-ddd2-434d-a7e9-43197787eb3b/confirmar?version=1: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de foto conserva la versión y no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT ordenes-trabajo/bbfe037c-0222-4eda-9747-7735e20febe4/operaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de eliminación después de respuesta perdida no exige la versión ya consumida"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Confirmación persiste pesajes, archivos y cambio físico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/bbfe037c-0222-4eda-9747-7735e20febe4/operaciones/289d3de5-ddd2-434d-a7e9-43197787eb3b/fotos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/bbfe037c-0222-4eda-9747-7735e20febe4/revision-autorizador: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Recorrido Técnico → Bodega → Autorizador cerrado en PostgreSQL"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/bbfe037c-0222-4eda-9747-7735e20febe4/operaciones/289d3de5-ddd2-434d-a7e9-43197787eb3b/fotos/d68a0832-6b9f-4642-a188-9caa73b0f449: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT y los pesos de terreno/recepción sobreviven al reinicio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad de instalación estable después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Inventario conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Fotografía privada íntegra después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bloqueo por intentos fallidos conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/clientes: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/sucursales: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/refrigerantes: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET bajas-cilindros: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/clientes: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/sucursales: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET bajas-cilindros: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT clientes/2: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/clientes: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/sucursales: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET bajas-cilindros: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT clientes/2: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/clientes: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/sucursales: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET bajas-cilindros: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT clientes/2: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/clientes: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/sucursales: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET bajas-cilindros: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT clientes/2: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/refrigerantes: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET mantenedores/refrigerantes: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Los mantenedores y las bajas rechazan acceso anónimo y roles no autorizados"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Editar cliente conserva el identificador y aumenta la versión"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de edición no genera otro cambio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT clientes/2: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT clientes/2: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT clientes/999999: HTTP 404"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Editar sucursal conserva su cliente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega edita el refrigerante y normaliza el código"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT refrigerantes/2: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT refrigerantes/2: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cliente inactivo y sus sucursales se omiten de las nuevas selecciones"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El mantenedor conserva el cliente y muestra su estado en las sucursales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sucursales: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT sucursales/2/estado: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reactivar cliente y sucursal recupera su disponibilidad"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura desactiva el gas sin eliminarlo del mantenedor"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Gas inactivo revierte la creación completa de la OT"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT clientes/2/estado: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT sucursales/2/estado: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-B97DB077A29343BAB0823B6C8B33A614/baja: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Se bloquean las bajas y desactivaciones que dejarían cilindros instalados sin destino activo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT refrigerantes/2/estado: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un gas con OT abierta no se desactiva"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E73B653B7FBA409D8A149A6749B10170/baja: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/NO-EXISTE/baja: HTTP 404"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Administrador registra la baja con motivo, actor y fecha"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de baja no duplica el registro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-99C6E8744A2041CCA060697A490B9047/baja: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E60ED60D459D4B67A194887D1DA326F0/baja: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Baja cambia la proyección de inventario y conserva los pesajes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Se admite también la baja a Inactivo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Los cilindros de baja quedan excluidos del despacho"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El historial del cilindro refleja la baja"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Las bajas permanecen consultables por Administrador"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reaplicar la migración 09 conserva datos e historia sin escrituras de negocio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Los mantenedores y las bajas tienen auditoría de cambios"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Mantenedores, sesión y bajas sobreviven al reinicio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pantalla de mantenedores edita y guarda el cliente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pantalla explica por qué se bloquea una desactivación con trabajo activo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pantalla edita la dirección de la sucursal"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cliente desactivado desaparece de la selección activa"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Mostrar inactivos permite consultar el registro conservado"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pantalla permite reactivar el cliente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega solo ve el mantenedor de refrigerantes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega edita el gas desde su pantalla autorizada"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega no accede a bajas mediante URL directa"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La ruta de baja admite el cilindro preseleccionado desde su ficha"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Formulario de baja persiste el motivo y muestra el historial"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El cilindro dado de baja sale de la lista de candidatos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bajas de cilindros se adapta al ancho móvil"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Mantenedores se adapta al ancho móvil"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Técnico no puede abrir los mantenedores por URL"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no es superusuario ni puede crear roles/bases o eludir RLS"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin permisos sobre costos fuera de este incremento"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no puede borrar ni editar auditoría"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El permiso para bloquear Pesaje no permite reescribirlo: el trigger lo rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "RLS permanece habilitado después de la actualización"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 126
+}

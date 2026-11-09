@@ -1,0 +1,348 @@
+{
+  "fecha_utc": "2026-11-09T00:34:52.292Z",
+  "tipo": "Validación estructural PBIP/PBIR; no sustituye revisión en Desktop",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.pbip"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\page.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\visuals\\visual_027\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\visuals\\visual_028\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\visuals\\visual_029\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\visuals\\visual_030\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\visuals\\visual_031\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\visuals\\visual_032\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\visuals\\visual_033\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Costos\\visuals\\visual_034\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Ejecucion\\page.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Ejecucion\\visuals\\visual_014\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Ejecucion\\visuals\\visual_015\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Ejecucion\\visuals\\visual_016\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Ejecucion\\visuals\\visual_017\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Ejecucion\\visuals\\visual_018\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Ejecucion\\visuals\\visual_019\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Inventario\\page.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Inventario\\visuals\\visual_010\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Inventario\\visuals\\visual_011\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Inventario\\visuals\\visual_012\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Inventario\\visuals\\visual_013\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\pages.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\page.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_001\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_002\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_003\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_004\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_005\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_006\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_007\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_008\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Resumen\\visuals\\visual_009\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Seguimiento\\page.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Seguimiento\\visuals\\visual_020\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Seguimiento\\visuals\\visual_021\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Seguimiento\\visuals\\visual_022\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Seguimiento\\visuals\\visual_023\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Seguimiento\\visuals\\visual_024\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Seguimiento\\visuals\\visual_025\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\pages\\Seguimiento\\visuals\\visual_026\\visual.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\report.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition\\version.json"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.Report\\definition.pbir"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Esquema Microsoft: AFRISAN.SemanticModel\\definition.pbism"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Modelo: siete fuentes, tres dimensiones y dieciocho medidas"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: DetalleOT_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: DetalleOT_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Operaciones_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Operaciones_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Despachos_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Despachos_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Incidencias_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Incidencias_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Costos_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Costos_Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Ordenes_Sucursales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Ordenes_Sucursales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Ordenes_Tecnicos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Ordenes_Tecnicos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Inventario_Sucursales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Inventario_Sucursales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Inventario_Tecnicos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Inventario_Tecnicos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Inventario_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Inventario_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: DetalleOT_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: DetalleOT_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Operaciones_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Operaciones_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Despachos_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Despachos_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Relación válida: Costos_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Filtro sin ambigüedad: Costos_Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Inventario"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Ordenes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde DetalleOT"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Operaciones"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Despachos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Incidencias"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Costos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Sucursales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Tecnicos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un único camino de filtro desde Gases"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El proyecto no incorpora credenciales"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 85
+}

@@ -1,0 +1,208 @@
+{
+  "fecha_utc": "2026-11-08T20:30:41.681Z",
+  "tipo": "API .NET 8 + PostgreSQL embebido aislado por TCP",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Administrador inicial creado con contraseña por stdin, sin cuentas demo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Entorno público sin cuentas ni contraseña de demostración"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST usuarios: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Peso inválido revierte el alta completa del cilindro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de creación de OT no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/5edfdd3f-c326-48fe-8aa6-08d3a5845344: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico ajeno no lista OT de otro usuario"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento del retiro no duplica despacho ni foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/5edfdd3f-c326-48fe-8aa6-08d3a5845344/entregas: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/5edfdd3f-c326-48fe-8aa6-08d3a5845344/operaciones/5ef032ad-9985-4959-b919-aea78c887201/confirmar?version=1: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de foto conserva la versión y no duplica"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "PUT ordenes-trabajo/5edfdd3f-c326-48fe-8aa6-08d3a5845344/operaciones: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento de eliminación después de respuesta perdida no exige la versión ya consumida"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Confirmación persiste pesajes, archivos y cambio físico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/5edfdd3f-c326-48fe-8aa6-08d3a5845344/operaciones/5ef032ad-9985-4959-b919-aea78c887201/fotos: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/5edfdd3f-c326-48fe-8aa6-08d3a5845344/revision-autorizador: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Recorrido Técnico → Bodega → Autorizador cerrado en PostgreSQL"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET ordenes-trabajo/5edfdd3f-c326-48fe-8aa6-08d3a5845344/operaciones/5ef032ad-9985-4959-b919-aea78c887201/fotos/1c4a35a9-7129-406f-a68e-364d46972fea: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT y los pesos de terreno/recepción sobreviven al reinicio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Identidad de instalación estable después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Inventario conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Fotografía privada íntegra después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST sesiones: HTTP 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bloqueo por intentos fallidos conservado después de reiniciar"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Migración IndexedDB v1→v2 conserva fotos y aísla usuarios sin cargar imágenes en el listado"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cerrar y reabrir pestaña sin red recupera sesión, OT, borrador y fotos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Edición sin red queda guardada en IndexedDB"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Pérdida de respuesta de foto deja el borrador pendiente en el dispositivo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintento envía solo la foto faltante y reconoce la ya recibida sin reenviarla"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Editar datos del borrador no reenvía las fotos sincronizadas"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Respuesta de confirmación perdida se recupera sin duplicar operación ni fotos"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Conflicto de instalación conserva las fotos locales"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cerrar sesión elimina la sesión persistida"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cerrar sesión conserva el trabajo pendiente por usuario"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La pantalla de Bodega registra una solicitud con peso, motivo y evidencia"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La pantalla del Autorizador permite ver evidencia y aprobar el peso vigente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no es superusuario ni puede crear roles/bases o eludir RLS"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin permisos sobre costos fuera de este incremento"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La identidad no puede borrar ni editar auditoría"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El permiso para bloquear Pesaje no permite reescribirlo: el trigger lo rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "RLS permanece habilitado después de la actualización"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 50
+}
