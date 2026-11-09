@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "simulado": true,
+  "semilla": 2026,
+  "generadoUtc": "2026-11-08T15:00:00+00:00",
+  "zonaFechas": "America/Santiago",
+  "alcance": "Datos ficticios para la demostración pública de Power BI. No contienen registros de AFRISAN.",
+  "filas": {
+    "Inventario": 147,
+    "Ordenes": 60,
+    "DetalleOT": 78,
+    "Operaciones": 68,
+    "Despachos": 76,
+    "Incidencias": 11,
+    "Costos": 50
+  }
+}

@@ -902,7 +902,7 @@
       {
         "name": "CarpetaAfrisan",
         "kind": "m",
-        "expression": "\"D:\\\\Afrisan_REPO_OFICIAL\\\\AFRISAN_NUEVO\\\\03_CODIGO\\\\PowerBI\\\\DatosVacios\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+        "expression": "\"D:\\\\Afrisan_REPO_OFICIAL\\\\AFRISAN_NUEVO\\\\03_CODIGO\\\\PowerBI\\\\DatosSimulados\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
       },
       {
         "name": "Afrisan",

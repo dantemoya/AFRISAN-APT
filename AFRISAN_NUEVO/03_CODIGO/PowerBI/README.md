@@ -1,10 +1,11 @@
 # Informe operativo AFRISAN
 
 Decisión posterior del 08/11: [módulo gratuito](../POWER_BI_GRATUITO.md).
-La aplicación principal `/power-bi` muestra ahora la conexión de la demostración
-pública; los datos simulados se prepararán después. Las instrucciones siguientes
-describen el proyecto operativo anterior; no publicar sus exportaciones reales
-como demostración. La descarga operativa se conserva en `/power-bi/operativo`.
+La aplicación principal `/power-bi` muestra la conexión de la demostración pública.
+Para esa demostración están los [datos simulados](DatosSimulados/README.md): CSV
+ficticios generados con la misma exportación de la API. Las instrucciones siguientes
+describen el informe operativo con datos reales; no publicar sus exportaciones
+reales como demostración. La descarga operativa se conserva en `/power-bi/operativo`.
 
 `AFRISAN.pbip` es el proyecto editable del informe: cinco páginas, 34 visuales,
 siete tablas de origen, tres dimensiones, catorce relaciones y dieciocho medidas.
@@ -28,11 +29,11 @@ Para completar el informe en Desktop:
 5. Ejecutar `03_CODIGO/Configurar-PowerBI.ps1 -ReportId GUID` (y, si corresponde,
    `-TenantId GUID`), reiniciar la API y verificar el enlace con una cuenta autorizada.
 
-El archivo del repositorio apunta inicialmente a `DatosVacios/`, con solo las
-cabeceras de los CSV. No contiene cifras de ejemplo ni registros de empresa.
-El ZIP descargado contiene el corte real; se selecciona mediante el parámetro.
-Para regenerar las fuentes: `node AFRISAN_NUEVO/03_CODIGO/PowerBI/generar_informe.mjs`.
-Puede recibir como argumento la ruta de los CSV. No ejecutarlo sobre un proyecto
+El archivo del repositorio apunta a `DatosSimulados/` (datos ficticios). `DatosVacios/`
+conserva solo las cabeceras de los CSV. El ZIP descargado contiene el corte real;
+se selecciona cambiando el parámetro `CarpetaAfrisan`.
+Para regenerar las fuentes: `node AFRISAN_NUEVO/03_CODIGO/PowerBI/generar_informe.mjs`
+(apunta a `DatosSimulados/` si no recibe otra ruta de CSV como argumento). No ejecutarlo sobre un proyecto
 que tenga cambios de diseño manuales sin conservar primero esos cambios.
 
 Los filtros compartidos de gas, sucursal y técnico usan dimensiones de dirección

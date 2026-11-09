@@ -44,7 +44,7 @@ const relacion=(fromTable,fromColumn,toTable,toColumn)=>relaciones.push({name:`$
 for(const t of ['DetalleOT','Operaciones','Despachos','Incidencias','Costos'])relacion(t,'OtId','Ordenes','OtId');
 for(const t of ['Ordenes','Inventario']){relacion(t,'SucursalId','Sucursales','SucursalId');relacion(t,'TecnicoId','Tecnicos','TecnicoId');}
 for(const t of ['Inventario','DetalleOT','Operaciones','Despachos','Costos'])relacion(t,'RefrigeranteId','Gases','RefrigeranteId');
-const datos=process.argv[2]?path.resolve(process.argv[2]):path.join(carpeta,'DatosVacios');
+const datos=process.argv[2]?path.resolve(process.argv[2]):path.join(carpeta,'DatosSimulados');
 await escribir(path.join(carpeta,'AFRISAN.SemanticModel/model.bim'),{name:'AFRISAN',compatibilityLevel:1567,model:{culture:'es-CL',defaultPowerBIDataSourceVersion:'powerBI_V3',sourceQueryCulture:'en-US',dataAccessOptions:{legacyRedirects:true,returnErrorValuesAsNull:true},tables:tablas,relationships:relaciones,expressions:[{name:'CarpetaAfrisan',kind:'m',expression:JSON.stringify(datos)+' meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]'},{name:'Afrisan',kind:'m',expression:pq.replaceAll('type datetimezone','type datetime')}],annotations:[{name:'PBI_QueryOrder',value:JSON.stringify(['CarpetaAfrisan','Afrisan',...tablas.map(t=>t.name)])}]}});
 await escribir(path.join(carpeta,'AFRISAN.SemanticModel/definition.pbism'),{$schema:schema+'item/semanticModel/definitionProperties/1.0.0/schema.json',version:'1.0',settings:{qnaEnabled:false}});
 await escribir(path.join(carpeta,'AFRISAN.pbip'),{$schema:schema+'pbip/pbipProperties/1.0.0/schema.json',version:'1.0',artifacts:[{report:{path:'AFRISAN.Report'}}],settings:{enableAutoRecovery:true}});

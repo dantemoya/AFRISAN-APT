@@ -2,7 +2,9 @@
 
 Decisión del usuario del 08/11/2026: utilizar la cuenta gratuita y datos simulados.
 El usuario tiene una cuenta gratuita y todavía no tiene un informe publicado.
-La carpeta y la generación de datos simulados quedaron expresamente para después.
+**Actualización 08/11:** los [datos simulados](PowerBI/DatosSimulados/README.md) ya
+están en el repositorio. Son siete CSV ficticios generados con `PowerBiPaquete` y una
+semilla fija, y el `AFRISAN.pbip` del repositorio apunta a ellos.
 
 ## Rutas de la aplicación
 
@@ -21,7 +23,7 @@ El botón **Descargar plantilla para Desktop** entrega un ZIP autenticado con el
 proyecto PBIP de cinco páginas, modelo, medidas, siete CSV de solo cabeceras y
 `LEEME_DEMO.md`. No consulta Supabase y no genera registros simulados. Puede
 usarse desde ahora en Power BI Desktop gratuito; los gráficos estarán vacíos
-hasta preparar los datos. No se requiere una cuenta Microsoft para editarlo localmente.
+hasta apuntar el parámetro `CarpetaAfrisan` a `PowerBI/DatosSimulados` del repositorio. No se requiere una cuenta Microsoft para editarlo localmente.
 
 Cuando exista un enlace público de un informe **con datos enteramente simulados**:
 
@@ -62,7 +64,7 @@ publicado. No se activaron pruebas Pro/Fabric, suscripciones ni cuentas nuevas.
 La publicación nueva no se declara disponible con esta licencia. Se puede
 continuar con Desktop gratis; la inserción interactiva queda pendiente de un
 enlace público existente que la cuenta pueda obtener legítimamente. No se ha
-creado un `.pbix` nuevo ni datos simulados en este incremento.
+creado un `.pbix` nuevo; los datos simulados se agregaron después (ver arriba).
 
 ## Configuración técnica
 
