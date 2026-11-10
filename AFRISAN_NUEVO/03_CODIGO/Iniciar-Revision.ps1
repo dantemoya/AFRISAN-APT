@@ -87,7 +87,7 @@ try {
     )
 
     if ($faltantesRevision.Count -gt 0) {
-        $compilarRevision = if ($faltantesRevision.Count -eq 2) { 'Afrisan.Nuevo.slnx' } else { $faltantesRevision[0].Proyecto }
+        $compilarRevision = if ($faltantesRevision.Count -eq 2) { Join-Path $raizRevision '..\..\AFRISAN.slnx' } else { $faltantesRevision[0].Proyecto }
         Push-Location $raizRevision
         try {
             dotnet build $compilarRevision --nologo -m:1 -p:UseSharedCompilation=false

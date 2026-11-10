@@ -1,4 +1,4 @@
-# AFRISAN · Código Fuente de la Solución Vigente (`Afrisan.Nuevo.slnx`)
+# AFRISAN · Código Fuente de la Solución Vigente (`AFRISAN.slnx`)
 
 Corte de implementación: **08/11/2026** · Responsable: **Dante Moya**.
 
@@ -43,7 +43,7 @@ Módulos anteriores (corte del 02/11):
 ## 2. Ejecución de la Solución
 
 ### Opción A — Visual Studio
-1. Abrir **`Afrisan.Nuevo.slnx`** (o **`AFRISAN.slnx`** en la raíz del repositorio).
+1. Abrir **`AFRISAN.slnx`**, en la raíz del repositorio.
 2. Seleccionar el perfil **`AFRISAN NUEVO - AMBOS`** e iniciar (`F5`).
 3. La API inicia en `http://localhost:5181` y la aplicación Web abre en `http://localhost:5286/acceso`.
 

@@ -1,12 +1,18 @@
-# Mockups y Pantallas Base del Sistema AFRISAN
+# Mockups de la Fase 1 (Figma)
 
-Esta carpeta contiene las vistas de referencia de la interfaz web de **AFRISAN** (`Blazor WebAssembly · .NET 8`), alineadas con el flujo operativo de `AFRISAN_NUEVO`.
+Diseños de Figma de la Fase 1, tomados del informe original
+([`Informe_Fase_1_AFRISAN_APT.docx`](../../Historico/Informe_Fase_1_AFRISAN_APT.docx), en `Historico/`).
 
-## Pantallas incluidas
+| Archivo | Pantallas |
+| --- | --- |
+| [`01_Mockups_Movil_Figma_Fase1.png`](01_Mockups_Movil_Figma_Fase1.png) | Aplicación móvil del técnico: inicio de sesión, perfil, carga de refrigerante y cilindros retirados |
+| [`02_Mockups_Web_Figma_Fase1.png`](02_Mockups_Web_Figma_Fase1.png) | Aplicación web: panel administrativo y registro de operaciones |
 
-| Archivo | Módulo representado | Propósito |
-| --- | --- | --- |
-| [`01_Panel_Principal_AFRISAN.png`](01_Panel_Principal_AFRISAN.png) | Resumen operativo (`PN-01` / `PN-02`) | Vista general de cilindros registrados, disponibles, pendientes de pesaje y tipos de refrigerante. |
-| [`02_Catalogo_Refrigerantes_AFRISAN.png`](02_Catalogo_Refrigerantes_AFRISAN.png) | Catálogo de refrigerantes (`PN-01`) | Registro y consulta de tipos de gas refrigerante con código normalizado y unidad en gramos por cilindro. |
-| [`03_Inventario_Cilindros_AFRISAN.png`](03_Inventario_Cilindros_AFRISAN.png) | Inventario de cilindros (`PN-02`) | Consulta filtrable por código QR/serie, refrigerante, ubicación (`Bodega`, `Tecnico`, `Sucursal`) y estado, con lectura en gramos. |
-| [`04_Identificacion_QR_AFRISAN.png`](04_Identificacion_QR_AFRISAN.png) | Ficha e identificación QR | Consulta unitaria del envase mediante lectura QR o código, mostrando capacidad, tara, último pesaje bruto y contenido neto en gramos. |
+Muestran el alcance definido en ese momento. Después cambiaron dos cosas:
+
+- la carga de refrigerante en equipos se reemplazó por el reemplazo físico de cilindros en la sucursal (D-09 y D-10);
+- las emisiones de CO₂e se difirieron como módulo futuro (D-21).
+
+Las pantallas del sistema construido están en las evidencias con fecha de
+[`AFRISAN_NUEVO/04_SEGUIMIENTO`](../../../../AFRISAN_NUEVO/04_SEGUIMIENTO/DECISIONES_Y_PENDIENTES.md), por ejemplo
+`VALIDACION_ROLES_2026_10_25/` y `FLUJO_TERRENO_2026_10_25/`.

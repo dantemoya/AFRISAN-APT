@@ -1,6 +1,6 @@
 # Diccionario de tablas AFRISAN: creación manual
 
-> **Documento histórico (modelo del 19/10/2026).** Describe el script `03_Crear_Tablas_Sin_Datos.sql`, anterior al modelo de reemplazo físico, y no corresponde al esquema instalado. El diccionario vigente de las 30 tablas y 8 vistas es [`DICCIONARIO_ESQUEMA_AFRISAN.md`](DICCIONARIO_ESQUEMA_AFRISAN.md).
+> **Documento histórico (modelo del 19/10/2026).** Describe el script `03_Crear_Tablas_Sin_Datos.sql`, anterior al modelo de reemplazo físico, y no corresponde al esquema instalado. El diccionario vigente de las 30 tablas y 8 vistas es [`DICCIONARIO_ESQUEMA_AFRISAN.md`](../DICCIONARIO_ESQUEMA_AFRISAN.md).
 
 Referencia: `03_Crear_Tablas_Sin_Datos.sql`. Fecha: 19 de octubre de 2026.
 Este documento describe el archivo local; no certifica el estado de tu Supabase.

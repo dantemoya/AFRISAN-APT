@@ -25,7 +25,7 @@ Código: `03_CODIGO/Afrisan.Nuevo.Api/Persistencia/PgUsuarios.cs`, `PgEndpoints.
 Para ejecutarlas, tras compilar la solución y con las dependencias de `.local/validacion_sql_contexto/node_modules` (ver `../PERSISTENCIA_2026_11_02/README.md`):
 
 ```powershell
-dotnet build AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.slnx
+dotnet build AFRISAN.slnx
 $env:AFRISAN_TEST_USUARIOS='1'; node AFRISAN_NUEVO/04_SEGUIMIENTO/PERSISTENCIA_2026_11_02/validar_api.mjs
 ```
 

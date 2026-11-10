@@ -10,11 +10,11 @@ El código fuente está en `AFRISAN_NUEVO/` para que la solución compile sin ca
 - [Módulo Power BI](../../../AFRISAN_NUEVO/03_CODIGO/POWER_BI.md) y [Power BI con cuenta gratuita](../../../AFRISAN_NUEVO/03_CODIGO/POWER_BI_GRATUITO.md).
 - [Mantenedores y bajas](../../../AFRISAN_NUEVO/03_CODIGO/MANTENEDORES_Y_BAJAS.md) · [Costos y límites](../../../AFRISAN_NUEVO/03_CODIGO/COSTOS_Y_LIMITES.md).
 - [Evidencias de pruebas y validaciones](../../../AFRISAN_NUEVO/04_SEGUIMIENTO). Las pruebas xUnit se ejecutan con `dotnet test AFRISAN.slnx`.
-- [Tablero de seguimiento](../../../AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_10_29/Tablero_AFRISAN.md).
+- [Tablero de seguimiento por sprints](../../../AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_08/Tablero_AFRISAN.md) (el del 29/10 se conserva en `TRELLO_2026_10_29/`).
+- [Migraciones `08` a `10` aplicadas en Supabase el 09/11/2026](../../../AFRISAN_NUEVO/04_SEGUIMIENTO/SUPABASE_2026_11_09.md).
 
 Pendientes de evidencia:
 
 - pruebas sin red y con cámara física;
 - URL pública del sistema;
-- migraciones `08` a `10` aplicadas en Supabase;
 - pruebas de aceptación con usuarios.
