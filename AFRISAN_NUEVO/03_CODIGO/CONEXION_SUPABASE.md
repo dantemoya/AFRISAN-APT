@@ -6,7 +6,12 @@ restringida `afrisan_api` está preparada y verificada. Consulta la
 diagnóstico del propietario, que se conserva separada de la conexión de ejecución.
 Las menciones históricas al modo en memoria se conservan como antecedente.
 
-**Actualización 02/11/2026:** el diagnóstico espera ahora **30 tablas y ocho
+**Actualización 09/11/2026:** con las migraciones `08` a `10` aplicadas en
+Supabase, el diagnóstico espera **32 tablas y nueve vistas** (se suman
+`RectificacionPesaje`, `TiposCambio` y `PesajeVigente`). La
+[aplicación quedó registrada](../04_SEGUIMIENTO/SUPABASE_2026_11_09.md).
+
+**Actualización 02/11/2026:** el diagnóstico esperaba **30 tablas y ocho
 vistas en el único esquema `afrisan`**, según el
 [nuevo instalador sin emisiones](../02_BASE_DATOS/README.md). El
 [diagnóstico autenticado ya pasó](../04_SEGUIMIENTO/SUPABASE_2026_11_02.md), con CA
@@ -90,7 +95,7 @@ La comprobación abre una transacción **READ ONLY**, consulta el catálogo de
 PostgreSQL y revierte la transacción. No instala SQL ni crea usuarios, roles,
 permisos, datos o buckets. Termina sin iniciar el servidor HTTP.
 
-- Salida 0: conexión verificada, presentes las 30 tablas y ocho vistas esperadas en `afrisan`,
+- Salida 0: conexión verificada, presentes las 32 tablas y nueve vistas esperadas en `afrisan`,
   con RLS habilitado en las tablas.
 - Salida 1: configuración, autenticación, certificado o red pendientes.
 - Salida 2: conexión correcta, objetos esperados ausentes o tablas sin RLS.

@@ -4,7 +4,7 @@ using System.Security.Authentication;
 
 namespace Afrisan.Nuevo.Api;
 
-// Verifica transporte y objetos del esquema. No sustituye los stores en memoria.
+// Verifica transporte y objetos del esquema (modelo 05 más las migraciones 08 y 10).
 public static class ConexionSupabase
 {
     private static readonly string[] Tablas =
@@ -15,12 +15,13 @@ public static class ConexionSupabase
         "Incidencia", "HistorialCilindro", "EventoOT", "LimiteSucursal",
         "LimiteSucursalHistorial", "MedicionLimite", "MedicionLimiteOperaciones",
         "RevisionExceso", "PreciosRefrigerantes", "Costos",
-        "CertificadosDisposicion", "CertificadosCilindros", "Auditoria", "BajaCilindro"
+        "CertificadosDisposicion", "CertificadosCilindros", "Auditoria", "BajaCilindro",
+        "RectificacionPesaje", "TiposCambio"
     ];
     private static readonly string[] Vistas =
     [
         "Inventario", "ResumenOT", "PesajesRecepcion", "LimitesVigentes", "ExcesosRegistrados",
-        "CostosOperaciones", "DisposicionesCertificadas", "PedidoYEjecucion"
+        "CostosOperaciones", "DisposicionesCertificadas", "PedidoYEjecucion", "PesajeVigente"
     ];
 
     public static async Task<int> VerificarAsync(IConfiguration configuration)
@@ -92,7 +93,7 @@ public static class ConexionSupabase
             if (faltantes.Length > 0 || sinRls.Count > 0) return 2;
 
             Console.WriteLine($"Presentes las {Tablas.Length} tablas y {Vistas.Length} vistas esperadas en afrisan; RLS habilitado en las tablas.");
-            Console.WriteLine("Diagnóstico de solo lectura. La aplicación sigue en memoria; faltan repositorios, autenticación persistente y Storage.");
+            Console.WriteLine("Diagnóstico de solo lectura: revisa nombres de objetos y RLS, no columnas, triggers ni permisos.");
             return 0;
         }
         catch (PostgresException ex)
