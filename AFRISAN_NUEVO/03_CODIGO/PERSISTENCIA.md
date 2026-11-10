@@ -90,7 +90,10 @@ el login `afrisan_api` con contraseña aleatoria. Guarda la conexión de ejecuci
 una clave JWT estable y la ruta privada de fotos en User Secrets. Conserva la
 conexión de propietario solo para diagnóstico/preparación, no para las peticiones
 normales. Repetir la preparación conserva el password de ejecución si ya está
-configurado; no rota la firma JWT.
+configurado; no rota la firma JWT. Si ese password ya permite entrar como
+`afrisan_api`, tampoco se vuelve a aplicar en Supabase: cada `ALTER ROLE ...
+PASSWORD` hace que el pooler rechace la conexión durante unos instantes
+(`28P01`), y la API o el paso del administrador fallarían al arrancar.
 
 Después solicita nombre, apellido, correo y contraseña del administrador. La
 contraseña solo se introduce en la entrada oculta de la terminal; no se pasa

@@ -100,18 +100,27 @@ public static class PrepararPersistencia
             if(separator<0||separator==poolerUser.Length-1) throw new InvalidOperationException("El usuario del Session pooler debe incluir el identificador del proyecto.");
             runtimeUser+="."+poolerUser[(separator+1)..];
         }
-        var password=saved is not null&&(saved.Username==runtimeUser||saved.Username=="afrisan_api")&&saved.Host==parsed.Host&&saved.Database==parsed.Database&&!string.IsNullOrWhiteSpace(saved.Password)
-            ?saved.Password:Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+        var reutilizada=saved is not null&&(saved.Username==runtimeUser||saved.Username=="afrisan_api")&&saved.Host==parsed.Host&&saved.Database==parsed.Database&&!string.IsNullOrWhiteSpace(saved.Password);
+        var password=reutilizada?saved!.Password!:Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+        // Cada ALTER ROLE ... PASSWORD (aunque repita la clave) hace que el pooler de Supabase rechace
+        // afrisan_api durante unos instantes. Si la clave guardada ya entra, no se vuelve a aplicar.
+        var vigente=reutilizada&&await AccedeComoApi(new NpgsqlConnectionStringBuilder(parsed.ConnectionString){Username=runtimeUser,Password=password});
         await using(var tx=await connection.BeginTransactionAsync())
         {
             await using(var cmd=new NpgsqlCommand(sql,connection,tx)) await cmd.ExecuteNonQueryAsync();
-            // format(%L) produce un literal seguro; la contraseña nunca va en argumentos ni salida.
-            await using var literal=new NpgsqlCommand("SELECT format('ALTER ROLE afrisan_api LOGIN PASSWORD %L',@password)",connection,tx);
-            literal.Parameters.AddWithValue("password",password);
-            var alter=(string)(await literal.ExecuteScalarAsync())!;
-            await using(var cmd=new NpgsqlCommand(alter,connection,tx)) await cmd.ExecuteNonQueryAsync();
+            if(!vigente)
+            {
+                // format(%L) produce un literal seguro; la contraseña nunca va en argumentos ni salida.
+                await using var literal=new NpgsqlCommand("SELECT format('ALTER ROLE afrisan_api LOGIN PASSWORD %L',@password)",connection,tx);
+                literal.Parameters.AddWithValue("password",password);
+                var alter=(string)(await literal.ExecuteScalarAsync())!;
+                await using(var cmd=new NpgsqlCommand(alter,connection,tx)) await cmd.ExecuteNonQueryAsync();
+            }
             await tx.CommitAsync();
         }
+        Console.WriteLine(vigente
+            ?"La conexión restringida guardada sigue siendo válida; no se cambió la contraseña de afrisan_api."
+            :"Se aplicó la contraseña de afrisan_api. Supabase puede tardar un minuto en aceptarla: si el paso siguiente falla por autenticación, espera y ejecuta el script con -SoloAdministrador.");
         parsed.Username=runtimeUser;parsed.Password=password;
         var root=Repositorio();
         SaveSecret("ConnectionStrings","AfrisanRuntime",parsed.ConnectionString);
@@ -120,6 +129,18 @@ public static class PrepararPersistencia
         SaveSecret("Persistencia","Modo","PostgreSQL");
         Console.WriteLine("Actualizaciones 07 a 10 aplicadas sin borrar datos. Conexión restringida y firma estable guardadas en User Secrets.");
         Console.WriteLine("El siguiente paso es crear el administrador inicial con --crear-administrador.");
+    }
+    // Prueba de inicio de sesión sin pool: cualquier fallo se trata como "hay que aplicar la contraseña".
+    private static async Task<bool> AccedeComoApi(NpgsqlConnectionStringBuilder runtime)
+    {
+        runtime.Pooling=false;runtime.Timeout=10;runtime.ApplicationName="AFRISAN-Preparar-Persistencia";
+        try
+        {
+            await using var probe=new NpgsqlConnection(runtime.ConnectionString);await probe.OpenAsync();
+            await using var cmd=new NpgsqlCommand("SELECT current_user::text",probe);
+            return await cmd.ExecuteScalarAsync() is "afrisan_api";
+        }
+        catch(Exception ex) when (ex is NpgsqlException or TimeoutException or OperationCanceledException) {return false;}
     }
     public static string Repositorio()
     {
