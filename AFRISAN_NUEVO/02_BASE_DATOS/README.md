@@ -1,9 +1,11 @@
 # Base de Datos del Contexto Actual de AFRISAN (`Esquema afrisan · 02/11/2026`)
 
-## Estado al 08/11/2026
+## Estado al 09/11/2026
 
-- **En Supabase:** modelo base `05` (30 tablas y 8 vistas) y la migración `07`.
-- **Preparadas y probadas en PostgreSQL local, pendientes de aplicar en Supabase** (orden 08 → 09 → 10, comandos en [DESPLIEGUE.md](../03_CODIGO/DESPLIEGUE.md)):
+- **En Supabase:** modelo base `05` (30 tablas y 8 vistas), la migración `07` y,
+  desde el 09/11/2026, las migraciones `08`, `09` y `10`
+  ([registro de la aplicación](../04_SEGUIMIENTO/SUPABASE_2026_11_09.md)).
+- **Migraciones aplicadas el 09/11** (probadas antes en PostgreSQL local; para otra instancia, orden 08 → 09 → 10 con los comandos de [DESPLIEGUE.md](../03_CODIGO/DESPLIEGUE.md)):
 
 | Migración | Qué agrega | Detalle |
 | --- | --- | --- |
@@ -11,7 +13,7 @@
 | [`09_Mantenedores_Bajas.sql`](09_Mantenedores_Bajas.sql) | Columna `Version` en `Cliente`, `Sucursales` y `Refrigerantes`, validaciones de desactivación y permisos de `BajaCilindro` | [Mantenedores y bajas](../03_CODIGO/MANTENEDORES_Y_BAJAS.md) |
 | [`10_Costos_Limites.sql`](10_Costos_Limites.sql) | Tabla `TiposCambio`, precios y valoraciones en CLP/EUR/USD/UF y límites por gas | [Costos y límites](../03_CODIGO/COSTOS_Y_LIMITES.md) |
 
-Después de 08–10 el esquema tiene **32 tablas y 9 vistas**. El
+Con 08–10 el esquema instalado tiene **32 tablas y 9 vistas**, todas las tablas con RLS. El
 [diccionario](DICCIONARIO_ESQUEMA_AFRISAN.md) ya incluye las tres migraciones.
 Certificados de disposición y la integración con el ERP siguen diferidos.
 
@@ -64,5 +66,5 @@ flowchart LR
 ```
 
 - **Unidades y precisión:** Todas las masas operativas (`TaraGr`, `Capacidadgr`, `PesoBrutoGr`, `GrSolicitados`, `GrAutorizados`) se almacenan en **gramos enteros (`1 kg = 1.000 g`)**. El contenido neto según pesaje equivale a `PesoBrutoGr - TaraGr`.
-- **Seguridad en base de datos:** Las 30 tablas mantienen **Row Level Security (RLS)** activo y permisos revocados para `PUBLIC`, `anon` y `authenticated`. La API se conecta mediante el rol restringido `afrisan_api` y fija en cada transacción el actor autenticado mediante `set_config('afrisan.id_usuario', :id_usuario::text, true)`.
+- **Seguridad en base de datos:** Las 32 tablas (30 del modelo base, `RectificacionPesaje` y `TiposCambio`) mantienen **Row Level Security (RLS)** activo y permisos revocados para `PUBLIC`, `anon` y `authenticated`. La API se conecta mediante el rol restringido `afrisan_api` y fija en cada transacción el actor autenticado mediante `set_config('afrisan.id_usuario', :id_usuario::text, true)`.
 - **Antecedentes históricos (`01` a `04`):** Los archivos `01_Crear_Afrisan_Supabase.sql`, `02_MER_Completo_Afrisan_Nuevo.sql`, `03_Crear_Tablas_Sin_Datos.sql` y `04_Crear_Afrisan_Contexto_Actual.sql` se conservan únicamente como registro de evolución del modelo de datos; no deben ejecutarse sobre la instalación vigente. Lo mismo vale para [`TABLAS_PK_FK_TIPOS_MANUAL.md`](TABLAS_PK_FK_TIPOS_MANUAL.md), que describe el script `03` del 19/10/2026; el diccionario vigente es [`DICCIONARIO_ESQUEMA_AFRISAN.md`](DICCIONARIO_ESQUEMA_AFRISAN.md).

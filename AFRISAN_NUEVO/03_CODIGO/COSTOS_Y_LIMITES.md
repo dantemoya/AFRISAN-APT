@@ -99,5 +99,7 @@ dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-c
 El comando aplica únicamente 10 mediante TLS `VerifyFull`. No ejecuta 05 ni 06,
 no elimina información y puede repetirse. Una preparación nueva con
 `--preparar-persistencia` incluye 07–10. Después se requiere desplegar API y Web.
+En el proyecto Supabase de AFRISAN, 08, 09 y 10 se aplicaron el 09/11/2026
+([registro](../04_SEGUIMIENTO/SUPABASE_2026_11_09.md)).
 
 [Pruebas y evidencias locales](../04_SEGUIMIENTO/COSTOS_LIMITES_2026_11_08/README.md).

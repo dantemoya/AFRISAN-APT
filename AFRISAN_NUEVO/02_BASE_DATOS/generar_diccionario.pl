@@ -239,7 +239,7 @@ sub acceso { my ($t) = @_; return '**Sin acceso** (diferido)' unless $permiso{$t
 print "# Diccionario del esquema `afrisan` (vigente)\n\n";
 print "- **Fuente:** `05_Crear_Afrisan_Sin_Emisiones.sql` (mismo esquema que `06`) más las migraciones aditivas `07_Habilitar_Persistencia.sql`, `08_Rectificacion_Pesajes.sql`, `09_Mantenedores_Bajas.sql` y `10_Costos_Limites.sql`.\n";
 print "- **Contenido:** " . scalar(@orden) . ' tablas y ' . scalar(@vistas) . " vistas en PostgreSQL 16 (Supabase): $base tablas y 8 vistas del modelo base más `RectificacionPesaje` (`08`), `TiposCambio` (`10`) y la vista `PesajeVigente` (`08`).\n";
-print "- **Estado de instalación:** el modelo base y `07` están aplicados en Supabase (verificación remota del 02/11/2026, `04_SEGUIMIENTO/PERSISTENCIA_2026_11_02`). `08`, `09` y `10` están probadas en PostgreSQL local y faltan por aplicar (ver `03_CODIGO/DESPLIEGUE.md`).\n";
+print "- **Estado de instalación:** el modelo base y `07` están aplicados en Supabase desde el 02/11/2026 (`04_SEGUIMIENTO/PERSISTENCIA_2026_11_02`); `08`, `09` y `10` se aplicaron el 09/11/2026 (`04_SEGUIMIENTO/SUPABASE_2026_11_09.md`).\n";
 print "- **Generado con:** `perl generar_diccionario.pl > DICCIONARIO_ESQUEMA_AFRISAN.md`. Si cambia el SQL, vuelve a generarlo en vez de editarlo a mano.\n";
 print "- **Convenciones:** PK = clave primaria, FK = clave foránea, UQ = único. Las masas se guardan en gramos enteros y las fechas en `timestamptz`.\n";
 print "- **Seguridad:** RLS está activo en las " . scalar(@orden) . " tablas y no hay acceso para `PUBLIC`, `anon` ni `authenticated`. La columna *Acceso API* indica los permisos del rol `afrisan_api` después de `10`; $sinAcceso tablas siguen sin acceso porque su módulo quedó diferido.\n\n";

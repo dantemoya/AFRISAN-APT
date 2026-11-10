@@ -1,5 +1,13 @@
 # Decisiones y Seguimiento Individual del Proyecto AFRISAN
 
+Actualización **09/11/2026:** las migraciones `08`, `09` y `10` quedaron aplicadas
+en Supabase y verificadas: 32 tablas y 9 vistas, todas las tablas con RLS
+([registro](SUPABASE_2026_11_09.md)). Las notas del 08/11 que siguen dicen
+«no aplicada» porque describen ese corte. El mismo día se publicaron los commits del
+08/11, la integración continua pasó en GitHub y el tablero de Trello quedó
+organizado en una lista por sprint, con el estado como etiqueta
+([copia del tablero](TRELLO_2026_11_08/Tablero_AFRISAN.md)).
+
 Incremento **5/6, 08/11/2026**: [mantenedores y bajas](../03_CODIGO/MANTENEDORES_Y_BAJAS.md)
 con edición, desactivación/reactivación y baja administrativa Chatarra/Inactivo.
 Se preservan identificadores, historia y auditoría. Se comprueban roles, versiones,
@@ -39,7 +47,7 @@ código público nuevo; la publicación e informe real permanecen pendientes.
 [Código, evidencias y pasos de instalación](MODULOS_2026_11_08/README.md).
 Las secciones siguientes conservan el corte histórico del 02/11.
 
-Responsable único actual: **Dante Moya** · Corte actualizado: **8 de noviembre de 2026** (la sección 1 conserva el corte del 02/11).
+Responsable único actual: **Dante Moya** · Corte actualizado: **9 de noviembre de 2026** (la sección 1 conserva el corte del 02/11).
 
 ---
 
@@ -63,16 +71,17 @@ Responsable único actual: **Dante Moya** · Corte actualizado: **8 de noviembre
 
 ## 2. Secuencia de Trabajo y Estado por Paquete (`G01` a `G09`)
 
-| Código | Paquete de trabajo | Estado al `08/11/2026` | Evidencia verificable |
+| Código | Paquete de trabajo | Estado al `09/11/2026` | Evidencia verificable |
 | --- | --- | --- | --- |
 | **`SUP-01`** | Verificar instalación y acceso autenticado a Supabase | **Completado** | [`SUPABASE_2026_11_02.md`](SUPABASE_2026_11_02.md) |
+| **`S7-08`** | Aplicar las migraciones `08` a `10` en Supabase | **Completado el 09/11** (32 tablas, 9 vistas, RLS en todas) | [`SUPABASE_2026_11_09.md`](SUPABASE_2026_11_09.md) |
 | **`G01`** | Revisar contratos persistentes y correspondencia con SQL | **Completado** | [`REVISION_PERSISTENCIA_2026_11_02.md`](REVISION_PERSISTENCIA_2026_11_02.md) |
 | **`G02`** | Persistencia PostgreSQL del flujo e integridad transaccional | **Completado** | [`PERSISTENCIA_2026_11_02/README.md`](PERSISTENCIA_2026_11_02/README.md) (37 pruebas) |
 | **`G03`** | Identidad real en BD y fotografías en Supabase Storage privado | **Completado**; gestión de cuentas agregada el 08/11 (D-23) | [`STORAGE_2026_11_02/README.md`](STORAGE_2026_11_02/README.md) (55 pruebas) · [`USUARIOS_2026_11_08`](USUARIOS_2026_11_08/README.md) (60) |
 | **`H-LOCAL`** | Borradores locales en IndexedDB y control de versiones | **Completado y probado en navegador** | [`MODULOS_2026_11_08`](MODULOS_2026_11_08/README.md) (50 pruebas) |
 | **`G04`** | Pruebas de reinicio, aislamiento entre técnicos y concurrencia | **Completado en API aislada** | [`PERSISTENCIA_2026_11_02/README.md`](PERSISTENCIA_2026_11_02/README.md) |
 | **`G05`** | Ensayos físicos en terreno con cámara móvil y corte de red | **Pendiente**: requiere el despliegue con HTTPS | Lector QR validado por archivo/navegador; falta ensayo en un Android real |
-| **`G06`** | Límites semanales/mensuales por sucursal e investigación de excesos | **Implementado con regla propia**, falta validarla con AFRISAN y aplicar `10` | [`COSTOS_LIMITES_2026_11_08`](COSTOS_LIMITES_2026_11_08/README.md) (137 pruebas, con costos) |
+| **`G06`** | Límites semanales/mensuales por sucursal e investigación de excesos | **Implementado con regla propia** y migración `10` aplicada el 09/11; falta validarla con AFRISAN | [`COSTOS_LIMITES_2026_11_08`](COSTOS_LIMITES_2026_11_08/README.md) (137 pruebas, con costos) |
 | **`G07`** | Integración Defontana y certificados de disposición Regener | **Diferido** (decisión del 08/11) | Tablas SQL creadas (`CertificadosDisposicion`, `CertificadosCilindros`), sin acceso de la API; falta contrato ERP |
 | **`G08`** | Módulo Power BI e indicadores operativos | **Implementado en app; falta guardar y publicar el `.pbix`** | [`POWER_BI_2026_11_02/README.md`](POWER_BI_2026_11_02/README.md) · [`MODULOS_2026_11_08`](MODULOS_2026_11_08/README.md) (PBIP de 5 páginas) |
 | **`G09` / `F3-01`** | Aceptación con usuarios, cierre documental y defensa final | **En curso**: [manual de usuario](../03_CODIGO/MANUAL_USUARIO.md) redactado; falta la sesión de aceptación | Informe final actualizado al `08/11/2026` |
@@ -103,11 +112,11 @@ Responsable único actual: **Dante Moya** · Corte actualizado: **8 de noviembre
 | **D-21** | Diferir las emisiones de carbono (`CO₂e` / `GWP`) como módulo opcional futuro; mantener Power BI con indicadores operativos reales. | Aplicado el `02/11/2026`. |
 | **D-22** | Retirar objetos de emisiones de la base de datos y consolidar todo en el esquema único `afrisan` (30 tablas y 8 vistas). | Aplicado y verificado en Supabase el `02/11/2026`. |
 | **D-23** | El Administrador puede desactivar o activar cuentas, cambiar el rol y restablecer la contraseña; cada cambio cierra las sesiones abiertas de esa cuenta. No puede modificar su propia cuenta, y un técnico con OT abiertas o cilindros en custodia no se desactiva ni cambia de rol hasta cerrarlas. | Implementado y validado: 60 comprobaciones correctas en `USUARIOS_2026_11_08/resultados_usuarios.json`. |
-| **D-24** | Rectificar pesajes mediante solicitudes con motivo y evidencia, aprobación/rechazo del Autorizador y conservación del original. Bloquear la OT cerrada y el cierre con solicitudes pendientes. | Aprobado por el usuario el 08/11; implementado en SQL 08, API y Web; validado localmente, pendiente de migración en Supabase. |
+| **D-24** | Rectificar pesajes mediante solicitudes con motivo y evidencia, aprobación/rechazo del Autorizador y conservación del original. Bloquear la OT cerrada y el cierre con solicitudes pendientes. | Aprobado por el usuario el 08/11; implementado en SQL 08, API y Web; validado localmente; migración aplicada en Supabase el 09/11. |
 | **D-25** | Conservar la sesión entre pestañas hasta su vencimiento original para recuperar trabajo sin señal; borrar la sesión al salir y mantener los borradores por usuario. | Implementado en `SesionService.cs` e IndexedDB v2; probado con el service worker publicado. Riesgo aceptado: en un celular compartido la sesión sigue abierta hasta 2 h si no se pulsa **Salir**. |
 | **D-26** | Usar Power BI con cuenta gratuita para una demostración con datos simulados: `/power-bi` muestra un enlace público configurado por el Administrador y la consulta interna pasa a `/power-bi/operativo`. | Implementado; falta un informe publicado. La cuenta gratuita no puede crear un enlace nuevo de «Publicar en la web». Datos simulados listos en `03_CODIGO/PowerBI/DatosSimulados` (generador determinista con `PowerBiPaquete`); el PBIP del repositorio apunta a ellos. |
-| **D-27** | Mantenedores: clientes, sucursales y refrigerantes se editan y se desactivan, no se borran; no se desactiva lo que tenga OT abiertas o cilindros instalados. Las bajas de cilindros (Chatarra o Inactivo) son históricas e inmutables. | Implementado en SQL `09`, API y Web; 126 comprobaciones locales; pendiente de migración en Supabase. |
-| **D-28** | Costos y límites con reglas definidas por el responsable: precios por gramo en CLP, EUR, USD o UF con valores de cambio manuales; límites por gas medidos en gramos netos instalados confirmados, semana lunes-domingo y mes calendario en horario chileno. Disposición, certificados y Defontana se difieren. | Implementado en SQL `10`, API y Web; 137 comprobaciones locales; pendiente de migración en Supabase y de validación con AFRISAN. |
+| **D-27** | Mantenedores: clientes, sucursales y refrigerantes se editan y se desactivan, no se borran; no se desactiva lo que tenga OT abiertas o cilindros instalados. Las bajas de cilindros (Chatarra o Inactivo) son históricas e inmutables. | Implementado en SQL `09`, API y Web; 126 comprobaciones locales; migración aplicada en Supabase el 09/11. |
+| **D-28** | Costos y límites con reglas definidas por el responsable: precios por gramo en CLP, EUR, USD o UF con valores de cambio manuales; límites por gas medidos en gramos netos instalados confirmados, semana lunes-domingo y mes calendario en horario chileno. Disposición, certificados y Defontana se difieren. | Implementado en SQL `10`, API y Web; 137 comprobaciones locales; migración aplicada en Supabase el 09/11; pendiente de validación con AFRISAN. |
 | **D-29** | Endurecer la API para producción: Swagger solo en Development, HTTPS y HSTS fuera de Development, 10 intentos de inicio de sesión por minuto e IP (`Seguridad:LoginPorMinuto`), igual tiempo de respuesta para correos inexistentes y paquetes en 8.0.33. | Implementado el 08/11; compila sin advertencias; verificado con xUnit (401, 403 y 429). Sin desplegar; imágenes Docker y flujo de publicación preparados en `03_CODIGO/Despliegue/`. Antes de subir una foto, el retiro y la corrección de peso se rechazan con las mismas reglas de la base, sin dejar fotos huérfanas. No se guarda en caché la verificación del bucket: la prueba de Storage exige detectar al instante un bucket público. |
-| **D-30** | Agregar pruebas xUnit (lógica en memoria, contratos, Power BI, fechas chilenas e integración HTTP) e integración continua en GitHub Actions. Las baterías `.mjs` siguen validando la capa PostgreSQL. | 409 pruebas aprobadas y 29 % de cobertura de líneas: la meta del 80 % del acta no se alcanzó. CI pendiente de su primera ejecución en GitHub. |
-| **D-31** | El repositorio público no contiene RUT, correos ni teléfonos de personas. Las versiones originales de las entregas se suben a `Historico/` con esos datos omitidos. | Aplicado el 08/11 en la copia de trabajo. El commit `c2cc46b`, ya publicado, conserva el RUT del estudiante y el contacto de AFRISAN en la guía 1.5 hasta que se decida si se reescribe el historial. |
+| **D-30** | Agregar pruebas xUnit (lógica en memoria, contratos, Power BI, fechas chilenas e integración HTTP) e integración continua en GitHub Actions. Las baterías `.mjs` siguen validando la capa PostgreSQL. | 409 pruebas aprobadas y 29 % de cobertura de líneas: la meta del 80 % del acta no se alcanzó. La integración continua pasó en GitHub el 09/11, en ambos repositorios. |
+| **D-31** | El repositorio público no contiene RUT, correos ni teléfonos de personas. Las versiones originales de las entregas se suben a `Historico/` con esos datos omitidos. | Aplicado el 08/11 y publicado el 09/11. El commit `c2cc46b`, ya publicado, conserva el RUT del estudiante y el contacto de AFRISAN en la guía 1.5 hasta que se decida si se reescribe el historial. |

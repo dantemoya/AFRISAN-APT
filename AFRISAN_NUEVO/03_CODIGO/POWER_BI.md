@@ -17,7 +17,8 @@ descarga incluye el [proyecto PBIP de cinco páginas](PowerBI/README.md), con
 modelo, visuales y medidas preparados. Falta revisión visual/actualización en
 Desktop, guardado PBIX, publicación y configuración del ReportId real. Esta
 actualización prevalece sobre las instrucciones de construcción manual de abajo.
-Requiere aplicar la migración 08 antes de desplegar la API nueva.
+Requiere la migración 08 antes de desplegar la API nueva; en Supabase quedó
+aplicada el 09/11/2026.
 
 Preparación del **02/11/2026**, solicitada por Dante. El usuario confirmó que
 todavía no tiene un informe publicado. Las emisiones quedan fuera del alcance.

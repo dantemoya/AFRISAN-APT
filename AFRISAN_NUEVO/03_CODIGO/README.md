@@ -13,8 +13,9 @@ Solución en **.NET 8** compuesta por **`Afrisan.Nuevo.Contratos`**, **`Afrisan.
 
 ## 1. Estado de los Módulos Implementados al `08/11/2026`
 
-Los módulos agregados el 08/11 están probados localmente. Requieren aplicar en
-Supabase las migraciones indicadas y desplegar.
+Los módulos agregados el 08/11 están probados localmente. Sus migraciones se
+aplicaron en Supabase el 09/11/2026
+([registro](../04_SEGUIMIENTO/SUPABASE_2026_11_09.md)); falta desplegar.
 
 | Módulo (08/11) | Ruta | Migración | Guía y evidencia |
 | --- | --- | --- | --- |
@@ -30,7 +31,7 @@ Módulos anteriores (corte del 02/11):
 
 | Módulo / Capa | Implementación activa | Guía y evidencia de verificación |
 | --- | --- | --- |
-| **Persistencia PostgreSQL (`G02` / `SUP-01`)** | `PgDatabase`, `PgInventario`, `PgTrabajo` y `PgUsuarios` sobre el esquema `afrisan` (30 tablas y 8 vistas) con rol restringido `afrisan_api` y TLS `VerifyFull`. | [`PERSISTENCIA.md`](PERSISTENCIA.md) · [`../04_SEGUIMIENTO/PERSISTENCIA_2026_11_02/README.md`](../04_SEGUIMIENTO/PERSISTENCIA_2026_11_02/README.md) (37 comprobaciones aprobadas) |
+| **Persistencia PostgreSQL (`G02` / `SUP-01`)** | `PgDatabase`, `PgInventario`, `PgTrabajo` y `PgUsuarios` sobre el esquema `afrisan` (30 tablas y 8 vistas al 02/11; 32 y 9 con `08` a `10`) con rol restringido `afrisan_api` y TLS `VerifyFull`. | [`PERSISTENCIA.md`](PERSISTENCIA.md) · [`../04_SEGUIMIENTO/PERSISTENCIA_2026_11_02/README.md`](../04_SEGUIMIENTO/PERSISTENCIA_2026_11_02/README.md) (37 comprobaciones aprobadas) |
 | **Usuarios reales y Storage privado (`G03`)** | Autenticación JWT con cuentas reales en PostgreSQL, administración de usuarios/clientes/sucursales (`/administracion`) y fotografías privadas en Supabase Storage (`afrisan-evidencias`). | [`STORAGE.md`](STORAGE.md) · [`../04_SEGUIMIENTO/STORAGE_2026_11_02/README.md`](../04_SEGUIMIENTO/STORAGE_2026_11_02/README.md) (55 comprobaciones aprobadas) |
 | **Flujo de OT, terreno y doble revisión (`G01`)** | Creación/asignación de OT por Autorizador, retiro desde Bodega por Técnico con peso y foto, reemplazo/agregado con evidencias por pesaje, recepción y aprobación de Bodega previa a la revisión y cierre del Autorizador. | [`TRABAJO_TECNICO.md`](TRABAJO_TECNICO.md) · [`../04_SEGUIMIENTO/FLUJO_TERRENO_2026_10_25/README.md`](../04_SEGUIMIENTO/FLUJO_TERRENO_2026_10_25/README.md) (274 comprobaciones aprobadas) |
 | **Módulo Power BI (`/power-bi`, `G08`)** | Vista previa operativa conectada a PostgreSQL para `Administrador` y `Jefatura`, filtros por período/sucursal/refrigerante/técnico y descarga de paquete ZIP con 6 CSV, Power Query (`Afrisan.pq`), medidas DAX (`Medidas.dax`) y tema visual. | [`POWER_BI.md`](POWER_BI.md) · [`../04_SEGUIMIENTO/POWER_BI_2026_11_02/README.md`](../04_SEGUIMIENTO/POWER_BI_2026_11_02/README.md) (100 comprobaciones aprobadas) |
@@ -77,7 +78,7 @@ dotnet run --project Afrisan.Nuevo.Api --launch-profile http -- --verificar-powe
 
 ## 4. Pendientes para el Cierre de Fase 2 / Fase 3
 
-- **Despliegue:** aplicar `08` a `10` en Supabase y publicar la API y la web con HTTPS ([`DESPLIEGUE.md`](DESPLIEGUE.md)).
+- **Despliegue:** publicar la API y la web con HTTPS ([`DESPLIEGUE.md`](DESPLIEGUE.md)). Las migraciones `08` a `10` ya están en Supabase.
 - **`G04` / `G05`:** ensayos con cámara física y sin red en un Android real, después del despliegue.
 - **`G06`:** validar con AFRISAN la regla de límites implementada (gramos netos instalados confirmados, calendario chileno).
 - **`G07`:** integración con Defontana (sujeta a credenciales o contrato del ERP) y certificados de disposición, diferidos.

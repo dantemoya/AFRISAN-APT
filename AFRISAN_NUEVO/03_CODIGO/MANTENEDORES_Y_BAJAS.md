@@ -81,7 +81,8 @@ dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-m
 ```
 
 No rota contraseñas ni crea usuarios. La preparación inicial incorpora 07, 08 y 09.
-**No se aplicó la migración a Supabase durante este incremento.** Las pantallas
+La migración no se aplicó a Supabase durante el incremento del 08/11; se aplicó
+el 09/11/2026 ([registro](../04_SEGUIMIENTO/SUPABASE_2026_11_09.md)). Las pantallas
 de gestión requieren PostgreSQL; no se agregaron implementaciones duplicadas
 en el modo Memoria.
 

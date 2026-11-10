@@ -23,12 +23,11 @@ El repositorio está organizado conforme a la estructura oficial exigida para la
 
 ---
 
-## 2. Estado Técnico al `08/11/2026` (`AFRISAN_NUEVO`)
+## 2. Estado Técnico al `09/11/2026` (`AFRISAN_NUEVO`)
 
 1. **Arquitectura (`.NET 8`):** `Afrisan.Nuevo.Web` (Blazor WebAssembly), `Afrisan.Nuevo.Api` (ASP.NET Core), `Afrisan.Nuevo.Contratos` (DTO compartidos) y `Afrisan.Nuevo.Pruebas` (xUnit).
 2. **Base de datos (PostgreSQL 16 en Supabase):**
-   - **Instalado en Supabase:** esquema único `afrisan` con 30 tablas y 8 vistas (`05` + `07`), rol restringido `afrisan_api`, TLS `VerifyFull` y RLS en todas las tablas.
-   - **Probado en PostgreSQL local y pendiente de aplicar:** las migraciones `08` a `10`, que llevan el esquema a 32 tablas y 9 vistas.
+   - **Instalado en Supabase:** esquema único `afrisan` con 32 tablas y 9 vistas (`05`, `07` y, desde el 09/11/2026, las migraciones `08` a `10`), rol restringido `afrisan_api`, TLS `VerifyFull` y RLS en todas las tablas ([registro de la aplicación](AFRISAN_NUEVO/04_SEGUIMIENTO/SUPABASE_2026_11_09.md)).
    - El detalle está en el [diccionario de datos](AFRISAN_NUEVO/02_BASE_DATOS/DICCIONARIO_ESQUEMA_AFRISAN.md).
 3. **Operación:**
    - OT por reemplazo o agregado físico, con el retiro del técnico (peso y foto), la recepción y aprobación de Bodega y la revisión del Autorizador.

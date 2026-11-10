@@ -1,7 +1,8 @@
 # Despliegue público de AFRISAN
 
-Guía para publicar la API y la web con HTTPS. **Estado al 08/11/2026:** la
-aplicación está preparada para producción, pero todavía no está desplegada. El
+Guía para publicar la API y la web con HTTPS. **Estado al 09/11/2026:** la
+aplicación está preparada para producción y la base de Supabase ya tiene las
+migraciones `08` a `10`, pero la API y la web todavía no están desplegadas. El
 proveedor de hosting y su cuenta los elige y crea el responsable del proyecto.
 
 ## 1. Qué cambia fuera de Development
@@ -19,7 +20,12 @@ en `localhost`. Por eso las pruebas de terreno (G05) requieren este despliegue.
 
 ## 2. Base de datos (Supabase)
 
-Aplicar las migraciones pendientes **en este orden**, con la conexión de
+**Estado:** las migraciones `08`, `09` y `10` se aplicaron en el proyecto
+Supabase de AFRISAN el 09/11/2026, desde el editor SQL del panel
+([registro y verificación](../04_SEGUIMIENTO/SUPABASE_2026_11_09.md)). Este paso
+solo se repite en una instancia nueva o de pruebas.
+
+Para otra instancia, aplicar las migraciones **en este orden**, con la conexión de
 propietario configurada localmente (`ConnectionStrings:Supabase`, ver
 [CONEXION_SUPABASE.md](CONEXION_SUPABASE.md)). Cada script es aditivo, se
 ejecuta en una transacción y puede repetirse:
