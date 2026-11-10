@@ -45,7 +45,7 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
     {
         await using var u=await database.Open(PgDatabase.Actor(user));
         var list=await u.Query<OtRow>(OtSql+(user.IsInRole("Tecnico")?" WHERE o.\"Id_Tecnico\"=@p0":" WHERE @p0>0")+" ORDER BY o.\"Id_OrdenTrabajo\" DESC",PgDatabase.Actor(user));
-        var result=new List<OtResponse>();foreach(var o in list) result.Add(await Ver(u,o));return result.ToArray();
+        return await VerVarias(u,list);
     }
     public async Task<OtResponse> Obtener(Guid id,ClaimsPrincipal user)
     {await using var u=await database.Open(PgDatabase.Actor(user));return await Ver(u,await Acceder(u,id,user,false));}
@@ -270,18 +270,21 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         INSERT INTO afrisan."EvidenciaPesaje"("Id_Evidencia","Id_Pesaje","BucketPrivado","RutaObjeto","NombreArchivo","ContentType","Bytes","SHA256","Id_Usuario")
         VALUES(@p0,@p1,@p8,@p2,@p3,@p4,@p5,@p6,@p7)
         """,f.Id,pesaje,f.Ruta,f.Nombre,f.ContentType,f.Bytes,f.Sha256,actor,f.Bucket);
-    private static Task<RecepcionRow[]> Recepciones(PgUnit u,long ot)=>u.Query<RecepcionRow>("""
-        SELECT r."Id_Recepcion" AS "Id",r."Id_Operacion" AS "OperacionId",r."Id_DespachoSinUso" AS "DespachoId",
+    // Las consultas de detalle filtran con "Id_OrdenTrabajo"=ANY(@p0): una sola ida a la base para todas las OT del listado.
+    private const string RecepcionesSql="""
+        SELECT r."Id_OrdenTrabajo" AS "OtId",r."Id_Recepcion" AS "Id",r."Id_Operacion" AS "OperacionId",r."Id_DespachoSinUso" AS "DespachoId",
           r."Id_Cilindro" AS "CilindroId",p."PesoBrutoGr" AS "Peso",u."Correo_Usuario" AS "Usuario",r."Fecha",r."Observacion"
         FROM afrisan."RecepcionBodega" r JOIN afrisan."Pesaje" p USING("Id_Pesaje") JOIN afrisan."Usuario" u ON u."Id_Usuario"=r."Id_Bodeguero"
-        WHERE r."Id_OrdenTrabajo"=@p0
-        """,ot);
-    private static Task<IncidenciaResponse[]> Incidencias(PgUnit u,long ot)=>u.Query<IncidenciaResponse>("""
-        SELECT i."Id_Incidencia" AS "Id",i."Id_Operacion" AS "OperacionId",i."Tipo",i."Motivo",u."Correo_Usuario" AS "Usuario",
+        """;
+    private const string IncidenciasSql="""
+        SELECT i."Id_OrdenTrabajo" AS "OtId",i."Id_Incidencia" AS "Id",i."Id_Operacion" AS "OperacionId",i."Tipo",i."Motivo",u."Correo_Usuario" AS "Usuario",
           i."Fecha",i."Respuesta",r."Correo_Usuario" AS "Revisor",i."FechaRevision"
         FROM afrisan."Incidencia" i JOIN afrisan."Usuario" u ON u."Id_Usuario"=i."Id_Usuario"
-        LEFT JOIN afrisan."Usuario" r ON r."Id_Usuario"=i."Id_Revisor" WHERE i."Id_OrdenTrabajo"=@p0 ORDER BY i."Fecha"
-        """,ot);
+        LEFT JOIN afrisan."Usuario" r ON r."Id_Usuario"=i."Id_Revisor"
+        """;
+    private static Task<RecepcionRow[]> Recepciones(PgUnit u,long ot)=>u.Query<RecepcionRow>(RecepcionesSql+" WHERE r.\"Id_OrdenTrabajo\"=@p0",ot);
+    private static async Task<IncidenciaResponse[]> Incidencias(PgUnit u,long ot)=>
+        (await u.Query<IncidenciaRow>(IncidenciasSql+" WHERE i.\"Id_OrdenTrabajo\"=@p0 ORDER BY i.\"Fecha\"",ot)).Select(i=>i.Response()).ToArray();
     private static async Task<OperacionResponse> VerOperacion(PgUnit u,OperacionRow op,RecepcionRow[]? recepciones=null)
     {
         var datos=Read<GuardarOperacionRequest>(op.Datos);var files=Read<FotoArchivo[]>(op.Fotos);
@@ -290,28 +293,51 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
             datos.Observacion,op.Estado,files.Select(f=>f.Response()).ToArray(),op.Entrega??op.Confirmacion??op.Fecha,
             op.Entrega is not null,recepcion is not null,recepcion?.Usuario,recepcion?.Fecha,recepcion?.Peso,recepcion?.Observacion);
     }
-    private static async Task<OtResponse> Ver(PgUnit u,OtRow o)
+    private static async Task<OtResponse> Ver(PgUnit u,OtRow o)=>(await VerVarias(u,[o]))[0];
+    // Una consulta por tipo de dato para todas las OT, no una serie por OT: con Supabase cada ida cuesta
+    // ~150 ms y el listado de 18 OT tardaba ~29 s. ToLookup conserva el orden de cada consulta dentro de la OT.
+    private static async Task<OtResponse[]> VerVarias(PgUnit u,IReadOnlyList<OtRow> ots)
     {
-        var detalle=await u.Query<LineaOtResponse>("SELECT d.\"Id_Refrigerante\" AS \"RefrigeranteId\",r.\"CodigoRefrigerante\" AS \"Refrigerante\",d.\"GrSolicitados\",d.\"GrAutorizados\" FROM afrisan.\"DetalleOT\" d JOIN afrisan.\"Refrigerantes\" r USING(\"Id_Refrigerante\") WHERE d.\"Id_OrdenTrabajo\"=@p0",o.Id);
-        var retirar=await u.Query<string>("SELECT c.\"CilindroQR\" AS \"Value\" FROM afrisan.\"RetiroPrevisto\" r JOIN afrisan.\"Cilindros\" c USING(\"Id_Cilindro\") WHERE r.\"Id_OrdenTrabajo\"=@p0",o.Id);
-        var despachos=await u.Query<DespachoRow>("""
-            SELECT d."Id_Despacho" AS "Id",c."Id_Cilindro" AS "CilindroId",c."CilindroQR" AS "Codigo",r."CodigoRefrigerante" AS "Refrigerante",
+        if(ots.Count==0) return [];
+        var ids=ots.Select(o=>o.Id).ToArray();
+        var detalle=(await u.Query<LineaOtRow>("SELECT d.\"Id_OrdenTrabajo\" AS \"OtId\",d.\"Id_Refrigerante\" AS \"RefrigeranteId\",r.\"CodigoRefrigerante\" AS \"Refrigerante\",d.\"GrSolicitados\",d.\"GrAutorizados\" FROM afrisan.\"DetalleOT\" d JOIN afrisan.\"Refrigerantes\" r USING(\"Id_Refrigerante\") WHERE d.\"Id_OrdenTrabajo\"=ANY(@p0)",ids)).ToLookup(d=>d.OtId);
+        var retirar=(await u.Query<RetiroRow>("SELECT r.\"Id_OrdenTrabajo\" AS \"OtId\",c.\"CilindroQR\" AS \"Codigo\" FROM afrisan.\"RetiroPrevisto\" r JOIN afrisan.\"Cilindros\" c USING(\"Id_Cilindro\") WHERE r.\"Id_OrdenTrabajo\"=ANY(@p0)",ids)).ToLookup(r=>r.OtId);
+        var despachos=(await u.Query<DespachoRow>("""
+            SELECT d."Id_OrdenTrabajo" AS "OtId",d."Id_Despacho" AS "Id",c."Id_Cilindro" AS "CilindroId",c."CilindroQR" AS "Codigo",r."CodigoRefrigerante" AS "Refrigerante",
               c."TaraGr",c."Capacidadgr" AS "CapacidadGr",p."PesoBrutoGr" AS "Peso",u."Correo_Usuario" AS "Usuario",d."Fecha",d."Estado",d."Id_Pesaje" AS "PesajeId"
             FROM afrisan."Despacho" d JOIN afrisan."Cilindros" c USING("Id_Cilindro") JOIN afrisan."Refrigerantes" r USING("Id_Refrigerante")
-            JOIN afrisan."Pesaje" p ON p."Id_Pesaje"=d."Id_Pesaje" JOIN afrisan."Usuario" u ON u."Id_Usuario"=d."Id_Tecnico" WHERE d."Id_OrdenTrabajo"=@p0
-            """,o.Id);
-        var recepciones=await Recepciones(u,o.Id);
-        var evidencias=await u.Query<EvidenciaRow>(EvidenciasSql+" WHERE e.\"Id_Pesaje\"=ANY(@p0)",despachos.Select(d=>d.PesajeId).ToArray());
-        var entregas=despachos.Select(d=>{
-            var r=recepciones.FirstOrDefault(r=>r.DespachoId==d.Id);var e=evidencias.FirstOrDefault(e=>e.PesajeId==d.PesajeId);
-            return new EntregaResponse(d.Codigo,d.Refrigerante,d.TaraGr,d.CapacidadGr,d.Peso,d.Usuario,d.Fecha,d.Estado,r?.Peso,r?.Usuario,r?.Fecha,d.Id,
-                e is null?null:new(e.Id,"Despacho",d.Codigo,e.Nombre,e.ContentType,e.Bytes,e.Fecha,e.Usuario));}).ToArray();
-        var operaciones=new List<OperacionResponse>();foreach(var op in await u.Query<OperacionRow>(OpSql+" WHERE \"Id_OrdenTrabajo\"=@p0 ORDER BY \"FechaRecepcion\"",o.Id)) operaciones.Add(await VerOperacion(u,op,recepciones));
-        var historial=await u.Query<EventoResponse>("SELECT e.\"Fecha\",e.\"Accion\",u.\"Correo_Usuario\" AS \"Usuario\",coalesce(e.\"Detalle\",'') AS \"Descripcion\" FROM afrisan.\"EventoOT\" e JOIN afrisan.\"Usuario\" u USING(\"Id_Usuario\") WHERE e.\"Id_OrdenTrabajo\"=@p0 ORDER BY e.\"Id_Evento\"",o.Id);
-        var revisiones=await u.Query<RevisionRow>("SELECT r.\"Etapa\",u.\"Correo_Usuario\" AS \"Usuario\",r.\"Fecha\",r.\"Observacion\" FROM afrisan.\"RevisionOT\" r JOIN afrisan.\"Usuario\" u USING(\"Id_Usuario\") WHERE r.\"Id_OrdenTrabajo\"=@p0",o.Id);
-        RevisionTrabajoResponse? Revision(string etapa){var r=revisiones.FirstOrDefault(r=>r.Etapa==etapa);return r is null?null:new(r.Usuario,r.Fecha,r.Observacion);}
-        return new(o.Publico,o.Codigo,o.Sucursal,o.Direccion,o.Descripcion,o.Tecnico,o.Estado,o.Autorizador,o.Fecha,
-            detalle,retirar,entregas,operaciones.ToArray(),await Incidencias(u,o.Id),historial,o.ObservacionTermino,Revision("Bodega"),Revision("Autorizador"));
+            JOIN afrisan."Pesaje" p ON p."Id_Pesaje"=d."Id_Pesaje" JOIN afrisan."Usuario" u ON u."Id_Usuario"=d."Id_Tecnico" WHERE d."Id_OrdenTrabajo"=ANY(@p0)
+            """,ids)).ToLookup(d=>d.OtId);
+        var recepciones=(await u.Query<RecepcionRow>(RecepcionesSql+" WHERE r.\"Id_OrdenTrabajo\"=ANY(@p0)",ids)).ToLookup(r=>r.OtId);
+        var evidencias=(await u.Query<EvidenciaRow>(EvidenciasSql+" WHERE e.\"Id_Pesaje\"=ANY(@p0)",despachos.SelectMany(g=>g).Select(d=>d.PesajeId).ToArray())).ToLookup(e=>e.PesajeId);
+        var operaciones=(await u.Query<OperacionRow>(OpSql+" WHERE \"Id_OrdenTrabajo\"=ANY(@p0) ORDER BY \"FechaRecepcion\"",ids)).ToLookup(op=>op.OtId);
+        var incidencias=(await u.Query<IncidenciaRow>(IncidenciasSql+" WHERE i.\"Id_OrdenTrabajo\"=ANY(@p0) ORDER BY i.\"Fecha\"",ids)).ToLookup(i=>i.OtId);
+        var historial=(await u.Query<EventoRow>("SELECT e.\"Id_OrdenTrabajo\" AS \"OtId\",e.\"Fecha\",e.\"Accion\",u.\"Correo_Usuario\" AS \"Usuario\",coalesce(e.\"Detalle\",'') AS \"Descripcion\" FROM afrisan.\"EventoOT\" e JOIN afrisan.\"Usuario\" u USING(\"Id_Usuario\") WHERE e.\"Id_OrdenTrabajo\"=ANY(@p0) ORDER BY e.\"Id_Evento\"",ids)).ToLookup(e=>e.OtId);
+        var revisiones=(await u.Query<RevisionRow>("SELECT r.\"Id_OrdenTrabajo\" AS \"OtId\",r.\"Etapa\",u.\"Correo_Usuario\" AS \"Usuario\",r.\"Fecha\",r.\"Observacion\" FROM afrisan.\"RevisionOT\" r JOIN afrisan.\"Usuario\" u USING(\"Id_Usuario\") WHERE r.\"Id_OrdenTrabajo\"=ANY(@p0)",ids)).ToLookup(r=>r.OtId);
+        var result=new OtResponse[ots.Count];
+        for(var i=0;i<ots.Count;i++)
+        {
+            var o=ots[i];var recepcionesOt=recepciones[o.Id].ToArray();var revisionesOt=revisiones[o.Id];
+            var entregas=despachos[o.Id].Select(d=>{
+                var r=recepcionesOt.FirstOrDefault(r=>r.DespachoId==d.Id);var e=evidencias[d.PesajeId].FirstOrDefault();
+                return new EntregaResponse(d.Codigo,d.Refrigerante,d.TaraGr,d.CapacidadGr,d.Peso,d.Usuario,d.Fecha,d.Estado,r?.Peso,r?.Usuario,r?.Fecha,d.Id,
+                    e is null?null:new(e.Id,"Despacho",d.Codigo,e.Nombre,e.ContentType,e.Bytes,e.Fecha,e.Usuario));}).ToArray();
+            var ops=new List<OperacionResponse>();foreach(var op in operaciones[o.Id]) ops.Add(await VerOperacion(u,op,recepcionesOt));
+            RevisionTrabajoResponse? Revision(string etapa){var r=revisionesOt.FirstOrDefault(r=>r.Etapa==etapa);return r is null?null:new(r.Usuario,r.Fecha,r.Observacion);}
+            result[i]=new(o.Publico,o.Codigo,o.Sucursal,o.Direccion,o.Descripcion,o.Tecnico,o.Estado,o.Autorizador,o.Fecha,
+                detalle[o.Id].Select(d=>d.Response()).ToArray(),retirar[o.Id].Select(r=>r.Codigo).ToArray(),entregas,ops.ToArray(),
+                incidencias[o.Id].Select(x=>x.Response()).ToArray(),historial[o.Id].Select(e=>e.Response()).ToArray(),
+                o.ObservacionTermino,Revision("Bodega"),Revision("Autorizador"));
+        }
+        return result;
     }
 }
-public sealed record RevisionRow(string Etapa,string Usuario,DateTimeOffset Fecha,string? Observacion);
+public sealed record RevisionRow(long OtId,string Etapa,string Usuario,DateTimeOffset Fecha,string? Observacion);
+public sealed record RetiroRow(long OtId,string Codigo);
+public sealed record LineaOtRow(long OtId,long RefrigeranteId,string Refrigerante,long GrSolicitados,long GrAutorizados)
+{public LineaOtResponse Response()=>new(RefrigeranteId,Refrigerante,GrSolicitados,GrAutorizados);}
+public sealed record EventoRow(long OtId,DateTimeOffset Fecha,string Accion,string Usuario,string Descripcion)
+{public EventoResponse Response()=>new(Fecha,Accion,Usuario,Descripcion);}
+public sealed record IncidenciaRow(long OtId,Guid Id,Guid? OperacionId,string Tipo,string Motivo,string Usuario,
+    DateTimeOffset Fecha,string? Respuesta,string? Revisor,DateTimeOffset? FechaRevision)
+{public IncidenciaResponse Response()=>new(Id,OperacionId,Tipo,Motivo,Usuario,Fecha,Respuesta,Revisor,FechaRevision);}

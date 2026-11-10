@@ -54,9 +54,9 @@ public sealed record OtRow(long Id, Guid Publico, string Codigo, int SucursalId,
 public sealed record OperacionRow(Guid Id, long OtId, string Tipo, int Version, string Estado,
     string Datos, string Fotos, DateTimeOffset Fecha, DateTimeOffset? Confirmacion,
     DateTimeOffset? Entrega, Guid? PesajeInstalado, Guid? PesajeRetirado);
-public sealed record DespachoRow(Guid Id, long CilindroId, string Codigo, string Refrigerante,
+public sealed record DespachoRow(long OtId, Guid Id, long CilindroId, string Codigo, string Refrigerante,
     long TaraGr, long CapacidadGr, long Peso, string Usuario, DateTimeOffset Fecha, string Estado, Guid PesajeId);
-public sealed record RecepcionRow(Guid Id, Guid? OperacionId, Guid? DespachoId, long CilindroId,
+public sealed record RecepcionRow(long OtId, Guid Id, Guid? OperacionId, Guid? DespachoId, long CilindroId,
     long Peso, string Usuario, DateTimeOffset Fecha, string? Observacion);
 public sealed record EvidenciaRow(Guid Id, Guid PesajeId, string Bucket, string Ruta, string Nombre,
     string ContentType, long Bytes, string Sha256, string Usuario, DateTimeOffset Fecha);

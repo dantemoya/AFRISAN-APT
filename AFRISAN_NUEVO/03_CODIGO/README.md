@@ -86,7 +86,7 @@ dotnet run --project Afrisan.Nuevo.Api --launch-profile http -- --verificar-powe
 - **`G09`:** sesión de aceptación con usuarios y revisión del [manual de usuario](MANUAL_USUARIO.md).
 - **Calidad:**
   - ampliar xUnit hacia la meta del 80 % de cobertura (hoy 29 %);
-  - paginar el listado de OT, que hoy consulta el detalle de cada OT. Se difiere porque el modo sin conexión del técnico guarda la lista completa, y el cambio necesita las baterías de PostgreSQL.
+  - paginar el listado de OT. Desde el 10/11/2026 ya no consulta cada OT por separado: arma todas con 10 consultas en total (con 18 OT en Supabase bajó de ~29 s a ~2,5 s, con la misma respuesta). La paginación se difiere porque el modo sin conexión del técnico guarda la lista completa.
   - No se guarda en caché la verificación del bucket de Storage: la prueba de Storage exige detectar de inmediato un bucket que pasó a público.
 
 ## 5. Pruebas
