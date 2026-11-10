@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -151,6 +152,49 @@ public static class PrepararPersistencia
         System.ComponentModel.DataAnnotations.Validator.ValidateObject(request,new(request),true);
         await usuarios.Crear(request,null,true);
         Console.WriteLine("Administrador creado. Ya puedes entrar a AFRISAN con tu correo y contraseña.");
+    }
+    // Recupera el acceso cuando ya hay usuarios y nadie recuerda una contraseña de Administrador.
+    // Usa la conexión de propietario y solo cambia la clave de un Administrador activo existente: no crea ni borra cuentas.
+    public static async Task RestablecerAdministrador(IConfiguration config)
+    {
+        var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Falta la conexión de propietario. Primero ejecuta Configurar-Supabase.ps1.");
+        var parsed=new NpgsqlConnectionStringBuilder(owner){SslMode=SslMode.VerifyFull,IncludeErrorDetail=false,PersistSecurityInfo=false};
+        await using var connection=new NpgsqlConnection(parsed.ConnectionString);await connection.OpenAsync();
+        const string filtro="""
+            FROM afrisan."Usuario" u JOIN afrisan."Rol" r USING ("Id_Rol")
+            WHERE lower(btrim(u."Correo_Usuario"))=@correo AND u."Activo" AND r."Nombre_Rol"='Administrador'
+            """;
+        Console.Write("Correo del administrador: ");var correo=(Console.ReadLine()??"").Trim().ToLowerInvariant();
+        // Se comprueba antes de pedir la contraseña, sin mantener una transacción abierta mientras se escribe.
+        await using(var existe=new NpgsqlCommand("SELECT u.\"Id_Usuario\" "+filtro,connection))
+        {
+            existe.Parameters.AddWithValue("correo",correo);
+            if(await existe.ExecuteScalarAsync() is null) throw new InvalidOperationException("No hay un administrador activo con ese correo. No se modificó ninguna cuenta.");
+        }
+        Console.Write("Nueva contraseña (12 a 128 caracteres, entrada oculta): ");var password=LeerPassword();
+        Console.Write("Repetir contraseña: ");var repetir=LeerPassword();
+        if(password!=repetir) throw new InvalidOperationException("Las contraseñas no coinciden. No se modificó ninguna cuenta.");
+        if(password.Length is < 12 or > 128) throw new InvalidOperationException("La contraseña debe tener entre 12 y 128 caracteres. No se modificó ninguna cuenta.");
+        var hash=new PasswordHasher<string>().HashPassword(correo,password);
+        await using var tx=await connection.BeginTransactionAsync();
+        // Mismo bloqueo que los cambios de cuentas desde Administración.
+        await using(var bloqueo=new NpgsqlCommand("SELECT pg_advisory_xact_lock(@bloqueo)",connection,tx))
+        {
+            bloqueo.Parameters.AddWithValue("bloqueo",PgUsuarios.BloqueoAdministracion);
+            await bloqueo.ExecuteNonQueryAsync();
+        }
+        // Una nueva VersionSeguridad invalida los JWT ya emitidos para esa cuenta.
+        await using(var cambio=new NpgsqlCommand("""
+            UPDATE afrisan."Usuario" SET "Clave_Usuario"=@hash,"IntentosFallidos"=0,"BloqueadoHasta"=NULL,"VersionSeguridad"=gen_random_uuid()
+            WHERE "Id_Usuario"=(SELECT u."Id_Usuario"
+            """+"\n"+filtro+")",connection,tx))
+        {
+            cambio.Parameters.AddWithValue("hash",hash);
+            cambio.Parameters.AddWithValue("correo",correo);
+            if(await cambio.ExecuteNonQueryAsync()!=1) throw new InvalidOperationException("La cuenta dejó de ser un administrador activo. No se modificó ninguna cuenta.");
+        }
+        await tx.CommitAsync();
+        Console.WriteLine("Contraseña restablecida y bloqueo eliminado. Las sesiones abiertas de esa cuenta se cerraron.");
     }
     internal static string LeerPassword()
     {

@@ -68,7 +68,7 @@ public sealed class PgUsuarios(PgDatabase database, PersistenciaOptions settings
         new(u.Id, u.Nombre, u.Apellido, u.Correo, u.Rol, u.Activo, u.BloqueadoHasta > DateTimeOffset.UtcNow);
 
     // Cada cambio renueva "VersionSeguridad": el JWT ya emitido deja de validarse en la siguiente solicitud.
-    private const long BloqueoAdministracion = 73420261108;
+    internal const long BloqueoAdministracion = 73420261108;
 
     private async Task<(PgUnit Unit, UsuarioRow Usuario)> Preparar(int id, int actor)
     {

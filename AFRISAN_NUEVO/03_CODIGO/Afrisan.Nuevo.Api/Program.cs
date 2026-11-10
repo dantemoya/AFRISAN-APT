@@ -44,6 +44,22 @@ if (args.Contains("--actualizar-mantenedores"))
     catch (Exception ex) { Console.Error.WriteLine(FalloActualizacion(ex, "09")); Environment.ExitCode=1; }
     return;
 }
+// Recuperación local del acceso de un Administrador existente, con la conexión de propietario.
+if (args.Contains("--restablecer-administrador"))
+{
+    try { await PrepararPersistencia.RestablecerAdministrador(builder.Configuration); }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine(ex switch
+        {
+            InvalidOperationException => ex.Message,
+            Npgsql.PostgresException pg => $"No se pudo restablecer la contraseña (SQLSTATE {pg.SqlState}). No se modificó ninguna cuenta.",
+            _ => "No se pudo restablecer la contraseña. Revisa la conexión de propietario y el certificado; no se modificó ninguna cuenta."
+        });
+        Environment.ExitCode=1;
+    }
+    return;
+}
 var persistente = !string.Equals(builder.Configuration["Persistencia:Modo"], "Memoria", StringComparison.OrdinalIgnoreCase);
 builder.Services.AddSingleton<PowerBiDemo>();
 if (!persistente && !builder.Environment.IsDevelopment())

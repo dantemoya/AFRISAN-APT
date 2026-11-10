@@ -97,6 +97,22 @@ contraseña solo se introduce en la entrada oculta de la terminal; no se pasa
 en argumentos ni se imprime. Si la preparación ya se ejecutó y solo falta el
 administrador, añadir `-SoloAdministrador`.
 
+### Recuperar el acceso de un administrador
+
+`-SoloAdministrador` solo funciona con la tabla de usuarios vacía. Si ya hay
+usuarios y nadie recuerda la contraseña de un administrador, se restablece la
+de uno existente desde `AFRISAN_NUEVO\03_CODIGO`, con la API detenida:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\Restablecer-Administrador.ps1
+```
+
+Usa la conexión de propietario de `Configurar-Supabase.ps1`. Pide el correo de
+un administrador activo, comprueba que existe y luego la nueva contraseña (de
+12 a 128 caracteres) en entrada oculta. También quita el bloqueo por intentos
+fallidos y cierra las sesiones abiertas de esa cuenta. No crea ni borra cuentas,
+y no cambia los usuarios que no son administradores.
+
 No hay usuarios, contraseñas de ejemplo, clientes ni sucursales precargados.
 El administrador crea las cuentas y catálogos reales desde la aplicación.
 No repetir el archivo 06: ese archivo borra la base completa.
