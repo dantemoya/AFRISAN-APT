@@ -20,6 +20,67 @@ actualización prevalece sobre las instrucciones de construcción manual de abaj
 Requiere la migración 08 antes de desplegar la API nueva; en Supabase quedó
 aplicada el 09/11/2026.
 
+## Conexión directa a la API con un token de 30 días (10/11/2026, D-32)
+
+Power BI puede leer los datos directamente desde la API, sin descargar el paquete.
+La sesión normal de la aplicación sigue durando 2 horas. Para Power BI hay un token
+aparte que dura **30 días** y que **solo** permite leer las tablas.
+
+| Qué | Detalle |
+| --- | --- |
+| Generar el token | `/power-bi/operativo` → **Generar token para Power BI** (Administrador o Jefatura). Equivale a `POST /api/v1/power-bi/token`. El token se muestra una sola vez. |
+| Leer una tabla | `GET /api/v1/power-bi/tablas/{tabla}` con el encabezado `Authorization: Bearer <token>`. Responde un arreglo JSON. |
+| Tablas | `inventario`, `ordenes`, `detalle`, `operaciones`, `despachos`, `incidencias`, `costos` (las mismas del paquete, sin correos, fotos ni credenciales) |
+| Qué no permite | Cualquier otra ruta o método responde 403: no sirve para entrar a la aplicación, ver usuarios ni modificar datos |
+| Revocar | Cambiar la contraseña de la cuenta que lo generó, cambiarle el rol o desactivarla invalida el token en la siguiente consulta |
+| Renovar | Antes de los 30 días, generar uno nuevo y reemplazar el parámetro `Token` en Power BI |
+
+Conviene crear una cuenta de **Jefatura dedicada a Power BI**: así, revocar el token no
+cierra la sesión de una persona. La API registra quién pidió cada token y cuándo
+vence; nunca registra el token.
+
+### Power BI Desktop (funciona hoy, con la API en este equipo)
+
+1. Inicia la API (`Iniciar-Revision.ps1`) y genera el token en `/power-bi/operativo`.
+2. En Power BI Desktop: **Inicio → Transformar datos → Administrar parámetros**. Crea
+   dos parámetros de texto: `Base` = `http://localhost:5181/api/v1/power-bi/tablas/`
+   y `Token` = el token copiado.
+3. **Nuevo origen → Consulta en blanco → Editor avanzado**, y pega:
+
+   ```powerquery
+   let
+       Leer = (tabla as text) as table =>
+           Table.FromRecords(Json.Document(Web.Contents(Base, [
+               RelativePath = tabla,
+               Headers = [Authorization = "Bearer " & Token]
+           ])))
+   in
+       Leer("ordenes")
+   ```
+
+4. Duplica la consulta para cada tabla, cambiando `"ordenes"` por su nombre.
+5. Cuando Power BI pida credenciales para `http://localhost:5181`, elige **Anónima**
+   (el token ya viaja en el encabezado) y nivel de privacidad **Organizativo**.
+
+`RelativePath` mantiene fija la dirección base, lo que permite programar la
+actualización en el servicio de Power BI. No compartas el PBIX con el parámetro
+`Token` lleno: quien lo abra podría leer las tablas hasta que el token venza.
+
+### Power BI en la web (requiere la API desplegada)
+
+La pantalla **Configuración de la conexión** de Power BI en la web necesita una
+dirección pública con HTTPS. Con la API solo en `localhost` no funciona, salvo que se
+instale una puerta de enlace de datos en este equipo y quede encendido. Después del
+despliegue (`S8-02`, [DESPLIEGUE.md](DESPLIEGUE.md)):
+
+- **Dirección URL:** `https://<dominio-de-la-api>/api/v1/power-bi/tablas/ordenes`
+- **Tipo de autenticación:** Anónima · **Nivel de privacidad:** Organizativo ·
+  **Puerta de enlace:** (ninguno)
+- Esa pantalla no tiene campo para encabezados: el encabezado `Authorization` se
+  agrega editando la consulta con el mismo código M de arriba.
+
+En modo Memoria (solo desarrollo) las tablas responden vacías.
+
 Preparación del **02/11/2026**, solicitada por Dante. El usuario confirmó que
 todavía no tiene un informe publicado. Las emisiones quedan fuera del alcance.
 

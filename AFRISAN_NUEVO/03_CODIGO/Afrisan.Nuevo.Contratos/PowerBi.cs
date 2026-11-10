@@ -7,6 +7,9 @@ public static class RolesBi
 
 public sealed record PowerBiConfiguracionResponse(bool Configurado, string? EmbedUrl, string? AbrirUrl);
 
+/// <summary>Token de solo lectura para conectar Power BI a la API: 30 días y solo las tablas.</summary>
+public sealed record TokenPowerBiResponse(string Token, DateTimeOffset Vence, string[] Tablas);
+
 public sealed record PowerBiDemoResponse(bool Configurado, string? UrlPublica, DateTimeOffset? Actualizada);
 
 public sealed record ConfigurarPowerBiDemoRequest

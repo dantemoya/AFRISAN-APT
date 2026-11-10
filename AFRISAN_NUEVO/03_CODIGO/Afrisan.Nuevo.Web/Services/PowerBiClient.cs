@@ -34,6 +34,13 @@ public sealed partial class InventarioClient
         return ObtenerAsync<BiResumenResponse>("power-bi/resumen?"+string.Join('&',query));
     }
 
+    /// <summary>Token de solo lectura de 30 días para que Power BI lea las tablas desde la API.</summary>
+    public Task<TokenPowerBiResponse> TokenPowerBiAsync() =>
+        EnviarAsync<TokenPowerBiResponse>("power-bi/token", new { });
+
+    /// <summary>Dirección base de las tablas de Power BI en esta API.</summary>
+    public string UrlTablasPowerBi => new Uri(http.BaseAddress!, "power-bi/tablas/").ToString();
+
     public async Task<byte[]> PowerBiPaqueteAsync()
     {
         using var respuesta=await http.GetAsync("power-bi/paquete");

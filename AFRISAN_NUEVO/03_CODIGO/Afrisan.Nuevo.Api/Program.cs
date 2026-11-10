@@ -207,10 +207,13 @@ else
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
+app.UseAlcancePowerBi();
 app.UseAuthorization();
 if(persistente) { app.MapPersistencia(); app.MapPowerBi(); }
 else {app.MapInventario();app.MapTrabajo();}
 app.MapPowerBiDemo();
+app.MapConexionPowerBi(persistente, firma,
+    persistente ? PgUsuarios.Issuer : SesionesDemo.Issuer, persistente ? PgUsuarios.Audience : SesionesDemo.Audience);
 app.Logger.LogInformation(persistente?"AFRISAN: PostgreSQL, usuarios persistidos y evidencias privadas.":"AFRISAN: modo explícito de revisión en memoria.");
 app.Run();
 

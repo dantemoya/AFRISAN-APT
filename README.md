@@ -68,7 +68,7 @@ Guía de uso por rol: [Manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUARIO
 
 | Tipo | Cómo ejecutar | Resultado al 08/11/2026 |
 | --- | --- | --- |
-| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 409 pruebas aprobadas; 29 % de cobertura de líneas (77 % a 100 % en la lógica en memoria, Power BI y seguridad) |
+| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 431 pruebas aprobadas al 10/11; 30 % de cobertura de líneas (77 % a 100 % en la lógica en memoria, Power BI y seguridad, medida el 08/11) |
 | Integración sobre PostgreSQL embebido y navegador | `AFRISAN_NUEVO/04_SEGUIMIENTO/MODULOS_2026_11_08/Validar-Modulos.ps1` (requiere Node.js) | Resultados JSON fechados en `AFRISAN_NUEVO/04_SEGUIMIENTO/` |
 | Integración continua | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Compila y ejecuta xUnit en cada push a `main` |
 

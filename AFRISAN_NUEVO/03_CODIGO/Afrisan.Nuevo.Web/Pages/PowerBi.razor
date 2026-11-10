@@ -37,6 +37,24 @@ else
             <p class="muted">El paquete incluye los registros completos al momento de descargarlo. Su actualización es manual.</p>
         }
     </section>
+    <section class="panel bi-report" aria-labelledby="titulo-conexion">
+        <div class="section-heading"><h2 id="titulo-conexion">Conexión directa desde Power BI</h2><span class="stage-pill">TOKEN DE 30 DÍAS</span></div>
+        <p>Genera un token para que Power BI lea las tablas desde la API. Dura 30 días y solo permite leer las tablas: no sirve para entrar a la aplicación ni para modificar datos.</p>
+        <p class="muted">Conviene generarlo con una cuenta de Jefatura dedicada a Power BI. Para revocarlo antes de su vencimiento, cambia la contraseña de esa cuenta o desactívala.</p>
+        @if(token is null)
+        {
+            <button class="btn secondary" disabled="@generando" @onclick="GenerarToken">@(generando ? "Generando…" : "Generar token para Power BI")</button>
+        }
+        else
+        {
+            <div class="notice info" role="status">Copia el token ahora: no se vuelve a mostrar. Vence el @token.Vence.ToLocalTime().ToString("dd/MM/yyyy HH:mm").</div>
+            <label for="bi-token">Token</label>
+            <textarea id="bi-token" class="bi-token" readonly rows="4" spellcheck="false">@token.Token</textarea>
+            <div class="form-actions"><button class="btn primary" @onclick="CopiarToken">Copiar token</button></div>
+            <p class="bi-token-url">Dirección de cada tabla: <code>@(Api.UrlTablasPowerBi){tabla}</code>. Tablas: @string.Join(", ", token.Tablas).</p>
+            <p class="muted">En Power BI usa autenticación «Anónima» y envía el token en el encabezado <code>Authorization: Bearer …</code>. Los pasos están en POWER_BI.md.</p>
+        }
+    </section>
     <div class="section-heading mt"><h2>Vista previa operativa</h2><span class="muted">Consulta directa de AFRISAN</span></div>
     <p class="muted">Esta vista usa la base actual. El informe publicado tendrá su propia fecha de actualización.</p>
     <section class="panel" aria-label="Filtros de la vista previa">
@@ -76,8 +94,9 @@ else
     private DateTime? desde,hasta;
     private int? sucursalId,tecnicoId;
     private long? refrigeranteId;
-    private bool cargando,descargando;
+    private bool cargando,descargando,generando;
     private string? error,mensaje;
+    private TokenPowerBiResponse? token;
     private bool persistente=>Sesion.Entorno?.Modo=="PostgreSQL";
     private static string Numero(decimal n)=>n.ToString("N2",CultureInfo.GetCultureInfo("es-CL"));
     protected override Task OnInitializedAsync()=>persistente?Cargar():Task.CompletedTask;
@@ -113,6 +132,20 @@ else
         }
         catch(Exception ex){error=Formato.Error(ex);}
         finally{descargando=false;}
+    }
+    private async Task GenerarToken()
+    {
+        if(generando)return;
+        generando=true;error=null;mensaje=null;
+        try{token=await Api.TokenPowerBiAsync();}
+        catch(Exception ex){error=Formato.Error(ex);}
+        finally{generando=false;}
+    }
+    private async Task CopiarToken()
+    {
+        if(token is null)return;
+        try{await JS.InvokeVoidAsync("navigator.clipboard.writeText",token.Token);mensaje="Token copiado. Pégalo en Power BI y no lo compartas.";}
+        catch(JSException){error="El navegador no permitió copiar. Selecciona el token y cópialo con Ctrl+C.";}
     }
     private RenderFragment Grafico(string titulo,BiGrupoResponse[] grupos,string unidad)=>@<section class="panel bi-chart"><h3>@titulo</h3>
         @if(grupos.Length==0){<p class="muted">Sin registros para estos filtros.</p>}

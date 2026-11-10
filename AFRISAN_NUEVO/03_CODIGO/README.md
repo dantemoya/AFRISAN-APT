@@ -24,8 +24,9 @@ aplicaron en Supabase el 09/11/2026
 | Mantenedores y bajas de cilindros | `/mantenedores`, `/bajas-cilindros` | `09` | [`MANTENEDORES_Y_BAJAS.md`](MANTENEDORES_Y_BAJAS.md) (126) |
 | Precios, costos y límites por gas | `/costos`, `/limites` | `10` | [`COSTOS_Y_LIMITES.md`](COSTOS_Y_LIMITES.md) (137) |
 | Power BI gratuito y vista operativa | `/power-bi`, `/power-bi/operativo` | — | [`POWER_BI_GRATUITO.md`](POWER_BI_GRATUITO.md) (26) · [`POWER_BI.md`](POWER_BI.md) (81) |
+| Conexión directa de Power BI (token de 30 días, 10/11) | `/power-bi/operativo` | — | [`POWER_BI.md`](POWER_BI.md) · decisión D-32 |
 | Seguridad de producción | API | — | [`DESPLIEGUE.md`](DESPLIEGUE.md) · decisión D-29 |
-| Pruebas xUnit e integración continua | `Afrisan.Nuevo.Pruebas` | — | `dotnet test` (409 pruebas) · `.github/workflows/ci.yml` |
+| Pruebas xUnit e integración continua | `Afrisan.Nuevo.Pruebas` | — | `dotnet test` (431 pruebas) · `.github/workflows/ci.yml` |
 
 Módulos anteriores (corte del 02/11):
 
@@ -92,7 +93,7 @@ dotnet run --project Afrisan.Nuevo.Api --launch-profile http -- --verificar-powe
 ## 5. Pruebas
 
 ```powershell
-dotnet test AFRISAN.slnx          # desde la raíz: 409 pruebas xUnit
+dotnet test AFRISAN.slnx          # desde la raíz: 431 pruebas xUnit
 ```
 
 `Afrisan.Nuevo.Pruebas` cubre el almacén en memoria (flujo completo de la OT),
