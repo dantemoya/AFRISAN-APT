@@ -85,7 +85,7 @@ datos persistentes.
 | Tarjeta | Estado | Evidencia |
 | --- | --- | --- |
 | `H-NEGOCIO` Documentar el flujo vigente y la arquitectura base | Hecho | `AFRISAN_NUEVO/01_NEGOCIO/` |
-| `H-PROTOTIPO` Prototipo de inventario y OT en memoria | Hecho | `04_SEGUIMIENTO/REVISION_2026_10_20/` |
+| `H-PROTOTIPO` Prototipo de inventario y OT en memoria | Hecho | `04_SEGUIMIENTO/VALIDACION_QR_Y_SELECCION_2026_10_22/` |
 | `H-LIMPIEZA` Dejar la solución local apuntando a la aplicación nueva | Hecho | `AFRISAN.slnx` |
 
 ## Sprint 7 · F2-04 · S12–S14 (22/10–11/11)
