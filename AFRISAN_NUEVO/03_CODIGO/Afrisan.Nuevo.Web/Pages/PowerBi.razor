@@ -41,6 +41,10 @@ else
         <div class="section-heading"><h2 id="titulo-conexion">Conexión directa desde Power BI</h2><span class="stage-pill">TOKEN DE 30 DÍAS</span></div>
         <p>Genera un token para que Power BI lea las tablas desde la API. Dura 30 días y solo permite leer las tablas: no sirve para entrar a la aplicación ni para modificar datos.</p>
         <p class="muted">Conviene generarlo con una cuenta de Jefatura dedicada a Power BI. Para revocarlo antes de su vencimiento, cambia la contraseña de esa cuenta o desactívala.</p>
+        <h3>Opción simple: proyecto listo para abrir</h3>
+        <ol class="bi-steps"><li>Descarga el proyecto y descomprímelo fuera del repositorio (incluye el token).</li><li>Con la API encendida, abre <code>AFRISAN.pbip</code> en Power BI Desktop.</li><li>Pulsa <strong>Actualizar</strong>. Si pide credenciales, elige «Anónimo».</li></ol>
+        <div class="form-actions"><button class="btn primary" disabled="@(descargandoConectado || !persistente)" @onclick="DescargarConectado">@(descargandoConectado ? "Preparando proyecto…" : "Descargar Power BI conectado")</button></div>
+        <h3>Opción manual: solo el token</h3>
         @if(token is null)
         {
             <button class="btn secondary" disabled="@generando" @onclick="GenerarToken">@(generando ? "Generando…" : "Generar token para Power BI")</button>
@@ -132,6 +136,22 @@ else
         }
         catch(Exception ex){error=Formato.Error(ex);}
         finally{descargando=false;}
+    }
+    private bool descargandoConectado;
+    private async Task DescargarConectado()
+    {
+        if(descargandoConectado)return;
+        descargandoConectado=true;error=null;mensaje=null;
+        try
+        {
+            var bytes=await Api.PowerBiProyectoConectadoAsync();
+            using var stream=new MemoryStream(bytes);
+            using var referencia=new DotNetStreamReference(stream);
+            await JS.InvokeVoidAsync("afrisanBi.descargar",$"AFRISAN_PowerBI_Conectado_{DateTime.Now:yyyyMMdd_HHmm}.zip",referencia);
+            mensaje="Proyecto descargado. Descomprímelo, abre AFRISAN.pbip en Power BI Desktop y pulsa Actualizar.";
+        }
+        catch(Exception ex){error=Formato.Error(ex);}
+        finally{descargandoConectado=false;}
     }
     private async Task GenerarToken()
     {

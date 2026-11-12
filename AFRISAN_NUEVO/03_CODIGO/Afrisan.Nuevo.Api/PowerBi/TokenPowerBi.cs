@@ -65,6 +65,23 @@ public static class TokenPowerBi
                 usuario.FindFirstValue(ClaimTypes.NameIdentifier), token.Vence);
             return token;
         });
+        // Proyecto PBIP listo para abrir: ya incluye la dirección de la API y un token nuevo de 30 días.
+        grupo.MapPost("/proyecto-conectado", (HttpContext contexto, ClaimsPrincipal usuario, ILoggerFactory registros) =>
+        {
+            var token = Emitir(usuario, firma, emisor, audiencia, DateTimeOffset.UtcNow);
+            registros.CreateLogger("AFRISAN.PowerBi").LogInformation("Proyecto Power BI conectado emitido para la cuenta {Cuenta}; vence {Vence:O}.",
+                usuario.FindFirstValue(ClaimTypes.NameIdentifier), token.Vence);
+            var solicitud = contexto.Request;
+            // Termina en "/" porque Power BI usa esta dirección tal cual como origen y le agrega el nombre de la tabla.
+            var urlTablas = $"{solicitud.Scheme}://{solicitud.Host}{solicitud.PathBase}{RutaTablas}/";
+            return Results.File(PowerBiProyectoConectado.Crear(urlTablas, token.Token, token.Vence), "application/zip",
+                $"AFRISAN_PowerBI_Conectado_{DateTime.UtcNow:yyyyMMdd_HHmm}.zip");
+        });
+        // Prueba de conexión (D-33). Antes de leer una tabla, Power BI consulta la dirección base sin
+        // credenciales; si recibe 404 o 401 no deja continuar. Responde solo los nombres de las tablas.
+        grupo.MapGet("/tablas", () => new IndicePowerBiResponse("ok", Tablas,
+            "Cada tabla se lee con GET /api/v1/power-bi/tablas/{tabla} y el encabezado Authorization: Bearer <token de Power BI>."))
+            .AllowAnonymous();
         grupo.MapGet("/tablas/{nombre}", async (string nombre, HttpContext contexto, ClaimsPrincipal usuario) =>
         {
             // El modo memoria no tiene datos para Power BI: responde las tablas vacías.

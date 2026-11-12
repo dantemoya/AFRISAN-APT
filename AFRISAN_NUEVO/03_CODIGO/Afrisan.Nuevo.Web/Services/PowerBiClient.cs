@@ -41,6 +41,14 @@ public sealed partial class InventarioClient
     /// <summary>Dirección base de las tablas de Power BI en esta API.</summary>
     public string UrlTablasPowerBi => new Uri(http.BaseAddress!, "power-bi/tablas/").ToString();
 
+    /// <summary>Proyecto de Power BI listo para abrir, ya conectado a la API con un token nuevo de 30 días.</summary>
+    public async Task<byte[]> PowerBiProyectoConectadoAsync()
+    {
+        using var respuesta = await http.PostAsync("power-bi/proyecto-conectado", null);
+        await RevisarAsync(respuesta);
+        return await respuesta.Content.ReadAsByteArrayAsync();
+    }
+
     public async Task<byte[]> PowerBiPaqueteAsync()
     {
         using var respuesta=await http.GetAsync("power-bi/paquete");

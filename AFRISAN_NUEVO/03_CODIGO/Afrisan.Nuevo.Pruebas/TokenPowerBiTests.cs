@@ -117,6 +117,45 @@ public sealed class TokenPowerBiTests(ApiMemoria api) : IClassFixture<ApiMemoria
         Assert.Equal(HttpStatusCode.Unauthorized, (await api.CreateClient().GetAsync("/api/v1/power-bi/tablas/ordenes")).StatusCode);
     }
 
+    // D-33: Power BI consulta la dirección base sin credenciales antes de leer una tabla.
+    [Theory]
+    [InlineData("/api/v1/power-bi/tablas")]
+    [InlineData("/api/v1/power-bi/tablas/")]
+    public async Task La_direccion_base_responde_la_prueba_de_conexion_sin_credenciales_ni_datos(string ruta)
+    {
+        var respuesta = await api.CreateClient().GetAsync(ruta);
+
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+        Assert.Equal("no-store", respuesta.Headers.CacheControl?.ToString());
+        var indice = await respuesta.Content.ReadFromJsonAsync<IndicePowerBiResponse>();
+        Assert.Equal("ok", indice!.Estado);
+        Assert.Equal(TokenPowerBi.Tablas, indice.Tablas);
+        // Solo nombres de tablas e instrucciones: ninguna fila ni dato de cuentas.
+        var texto = await respuesta.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("afrisan.example", texto);
+        Assert.DoesNotContain("eyJ", texto);
+    }
+
+    [Fact]
+    public async Task La_prueba_de_conexion_no_abre_las_tablas_ni_las_demas_rutas()
+    {
+        var anonimo = api.CreateClient();
+
+        foreach (var tabla in TokenPowerBi.Tablas)
+            Assert.Equal(HttpStatusCode.Unauthorized, (await anonimo.GetAsync($"/api/v1/power-bi/tablas/{tabla}")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonimo.PostAsync("/api/v1/power-bi/token", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonimo.PostAsync("/api/v1/power-bi/proyecto-conectado", null)).StatusCode);
+        Assert.NotEqual(HttpStatusCode.OK, (await anonimo.PostAsync("/api/v1/power-bi/tablas", null)).StatusCode);
+    }
+
+    [Fact]
+    public async Task El_token_de_Power_BI_tambien_puede_consultar_la_direccion_base()
+    {
+        var http = ConToken((await PedirToken("jefatura@afrisan.example")).Token);
+
+        Assert.Equal(HttpStatusCode.OK, (await http.GetAsync("/api/v1/power-bi/tablas/")).StatusCode);
+    }
+
     [Fact]
     public async Task Un_token_alterado_no_se_acepta()
     {

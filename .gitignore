@@ -22,3 +22,6 @@ node_modules/
 
 # Resultados de dotnet test
 TestResults/
+
+# Proyecto Power BI descargado desde AFRISAN: incluye un token de acceso
+AFRISAN_PowerBI_Conectado*/

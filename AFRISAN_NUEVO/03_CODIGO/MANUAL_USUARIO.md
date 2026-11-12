@@ -80,7 +80,7 @@ Menú: **Resumen**, **Órdenes de trabajo**, **Inventario**, **Refrigerantes**, 
 Menú: **Resumen**, **Órdenes de trabajo**, **Inventario**, **Refrigerantes**, **Identificar cilindro**, **Power BI**, **Mantenedores**, **Precios y costos** y **Límites por sucursal**.
 
 - **Power BI:** ver el informe publicado. En `/power-bi/operativo` hay una vista previa con filtros por período, sucursal, gas y técnico, y la descarga del paquete para Power BI Desktop.
-- **Conexión de Power BI a la API:** en `/power-bi/operativo`, **Generar token para Power BI** entrega un token de solo lectura que dura 30 días. Cópialo de inmediato (no se vuelve a mostrar) y pégalo en Power BI según [POWER_BI.md](POWER_BI.md). Para revocarlo antes, cambia la contraseña de la cuenta que lo generó.
+- **Conexión de Power BI a la API:** en `/power-bi/operativo`, la forma más simple es **Descargar Power BI conectado**: entrega el proyecto listo, con un token de solo lectura que dura 30 días. Descomprímelo fuera del repositorio, abre `AFRISAN.pbip` y pulsa **Actualizar** (credencial **Anónimo**). También puedes pedir solo el token con **Generar token para Power BI**; cópialo de inmediato porque no se vuelve a mostrar. Los pasos y los errores frecuentes están en [POWER_BI.md](POWER_BI.md). Para revocarlo antes, cambia la contraseña de la cuenta que lo generó.
 - **Precios y costos:** consultar precios por gramo y valoraciones guardadas. Solo el Administrador las registra.
 - **Límites:** definir límites, bloquear o habilitar la edición por Bodega y registrar la conclusión cuando una medición supera el límite (**Revisar exceso**).
 

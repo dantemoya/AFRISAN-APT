@@ -10,6 +10,9 @@ public sealed record PowerBiConfiguracionResponse(bool Configurado, string? Embe
 /// <summary>Token de solo lectura para conectar Power BI a la API: 30 días y solo las tablas.</summary>
 public sealed record TokenPowerBiResponse(string Token, DateTimeOffset Vence, string[] Tablas);
 
+/// <summary>Respuesta pública de la dirección base de las tablas: sirve de prueba de conexión y no trae datos.</summary>
+public sealed record IndicePowerBiResponse(string Estado, string[] Tablas, string Uso);
+
 public sealed record PowerBiDemoResponse(bool Configurado, string? UrlPublica, DateTimeOffset? Actualizada);
 
 public sealed record ConfigurarPowerBiDemoRequest

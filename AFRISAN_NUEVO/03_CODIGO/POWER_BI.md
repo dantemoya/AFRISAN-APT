@@ -39,7 +39,43 @@ Conviene crear una cuenta de **Jefatura dedicada a Power BI**: así, revocar el 
 cierra la sesión de una persona. La API registra quién pidió cada token y cuándo
 vence; nunca registra el token.
 
-### Power BI Desktop (funciona hoy, con la API en este equipo)
+### Prueba de conexión (12/11/2026, D-33)
+
+Antes de leer una tabla, Power BI consulta la **dirección base** sin credenciales para
+comprobar que el origen existe. Hasta el 11/11 la API respondía 404 en esa dirección y
+Power BI Desktop detenía la conexión con el mensaje *Web.Contents no pudo obtener el
+contenido de '…/api/v1/power-bi/tablas/' (404)*. Desde el 12/11:
+
+- `GET /api/v1/power-bi/tablas` (con o sin barra final) responde **200 sin credenciales**
+  con el estado y los nombres de las tablas. No entrega ninguna fila.
+- Cada tabla sigue exigiendo el token: sin él responde 401.
+
+### Forma más simple: proyecto ya conectado
+
+1. Inicia la API (`Iniciar-Revision.ps1`) y entra a `/power-bi/operativo` como
+   Administrador o Jefatura.
+2. Pulsa **Descargar Power BI conectado** y descomprime el ZIP **fuera del repositorio**
+   (incluye un token).
+3. Abre `AFRISAN.pbip` en Power BI Desktop y pulsa **Actualizar**.
+4. Si pide credenciales, elige **Anónimo**, aplica la configuración a la dirección
+   completa (la que termina en `/tablas/`) y pulsa **Conectar**. Privacidad: **Organizativo**.
+
+El proyecto trae el modelo, las cinco páginas y dos parámetros: `UrlApi` (la dirección
+base, terminada en `/`) y `TokenPowerBi`. Para renovar el token, descarga el proyecto
+otra vez o reemplaza el parámetro `TokenPowerBi`.
+
+### Si aparece un error
+
+| Mensaje | Causa | Qué hacer |
+| --- | --- | --- |
+| 404 en `…/tablas/` | La API es anterior al 12/11 | Actualizar la API y volver a intentarlo |
+| 404 en `…/tablas/<nombre>` | El nombre de la tabla no existe | Usar uno de los siete nombres de la tabla de arriba |
+| 401 | Falta el token, venció o se revocó. En modo Memoria también se invalida al reiniciar la API, porque la clave de firma se genera en cada arranque | Descargar el proyecto otra vez o generar otro token |
+| 403 | El token se usó en otra ruta o con otro método | El token solo sirve para `GET` de las tablas |
+| *No se puede conectar* sin código | La API está apagada o la dirección de `UrlApi` no es la correcta | Iniciar la API y revisar el parámetro `UrlApi` |
+| *The 'Authorization' header is only supported when connecting anonymously* | Se eligió otro tipo de credencial | En **Configuración de origen de datos**, borrar el permiso y elegir **Anónimo** |
+
+### Opción manual en Power BI Desktop
 
 1. Inicia la API (`Iniciar-Revision.ps1`) y genera el token en `/power-bi/operativo`.
 2. En Power BI Desktop: **Inicio → Transformar datos → Administrar parámetros**. Crea
@@ -73,13 +109,42 @@ dirección pública con HTTPS. Con la API solo en `localhost` no funciona, salvo
 instale una puerta de enlace de datos en este equipo y quede encendido. Después del
 despliegue (`S8-02`, [DESPLIEGUE.md](DESPLIEGUE.md)):
 
-- **Dirección URL:** `https://<dominio-de-la-api>/api/v1/power-bi/tablas/ordenes`
+- **Dirección URL:** `https://<dominio-de-la-api>/api/v1/power-bi/tablas/` (la misma
+  del parámetro `UrlApi`). El servicio la prueba sin credenciales y recibe 200.
 - **Tipo de autenticación:** Anónima · **Nivel de privacidad:** Organizativo ·
   **Puerta de enlace:** (ninguno)
-- Esa pantalla no tiene campo para encabezados: el encabezado `Authorization` se
-  agrega editando la consulta con el mismo código M de arriba.
+- Esa pantalla no tiene campo para encabezados: el encabezado `Authorization` viaja en
+  la consulta del proyecto conectado. Para publicar, descarga el proyecto desde la
+  aplicación ya desplegada, así `UrlApi` apunta a la dirección pública.
 
 En modo Memoria (solo desarrollo) las tablas responden vacías.
+
+**Estado al 12/11/2026:** la secuencia de solicitudes de Power BI está probada contra
+la API (prueba de conexión 200, siete tablas 200 con token y 401 sin él, 403 fuera de
+las tablas) y con 439 pruebas xUnit. Falta ejecutar **Actualizar** dentro de Power BI
+Desktop (caso CP-57) y publicar el informe (CP-58), que depende del despliegue y de la
+licencia.
+
+### Alternativas evaluadas y por qué no se usan todavía
+
+El 12/11/2026 se revisó un informe técnico sobre cómo conectar Power BI a una API
+privada. Describe una versión anterior del proyecto, sin el token de 30 días, así que
+se tomó solo lo que aplica a la versión actual:
+
+| Propuesta | Decisión | Motivo |
+| --- | --- | --- |
+| Prueba de conexión que responde 200 | **Adoptada** | Era la causa del error 404 al conectar; ahora la dirección base responde sin entregar datos |
+| Dirección base fija y tabla en `RelativePath` | **Ya aplicada**, reforzada | `UrlApi` va sin transformar en `Web.Contents`, requisito para programar la actualización en el servicio |
+| Tablas en JSON en vez del ZIP | **Ya aplicada** (D-32) | El ZIP sigue disponible solo para trabajar con archivos CSV |
+| Clave API técnica en el encabezado `X-Afrisan-Bi-Key` | No se agrega | Duplicaría el token de 30 días, que ya es de solo lectura, se revoca al cambiar la cuenta y queda registrado. Se cubre con una cuenta de Jefatura dedicada |
+| Conector personalizado (`.mez`) que guarda la credencial fuera del archivo | Diferida | En Power BI Desktop exige bajar el nivel de seguridad o firmar el conector, y en el servicio exige una puerta de enlace. No se puede probar sin esas piezas. Es el paso recomendado si AFRISAN publica el informe con licencias Pro |
+| Puerta de enlace de datos local | Diferida | Solo hace falta si la API no es pública. El despliegue previsto en Azure la deja accesible por HTTPS |
+| Token en la dirección (`?token=…`) | Rechazada | Quedaría escrito en los registros del servidor y de los intermediarios |
+| Paginación por cursor y actualización incremental | Diferida | El volumen actual es de pocos miles de filas; hoy el límite es de 50.000 filas por tabla (responde 413). Se revisa si el historial crece |
+
+**Riesgo que se mantiene (aceptado en D-32):** el token queda escrito como parámetro
+dentro del proyecto o del PBIX. Por eso el proyecto se descomprime fuera del
+repositorio, no se comparte, y el token se revoca cambiando la contraseña de la cuenta.
 
 Preparación del **02/11/2026**, solicitada por Dante. El usuario confirmó que
 todavía no tiene un informe publicado. Las emisiones quedan fuera del alcance.
@@ -144,7 +209,7 @@ acceso a sus lectores. Obtener ReportId desde Archivo > Insertar informe >
 Sitio web o portal (inserción segura). Después, en este equipo:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File "D:\Afrisan\AFRISAN_NUEVO\03_CODIGO\Configurar-PowerBI.ps1" -ReportId "GUID-DEL-INFORME"
+powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File ".\AFRISAN_NUEVO\03_CODIGO\Configurar-PowerBI.ps1" -ReportId "GUID-DEL-INFORME"
 ```
 
 Opcionalmente añadir `-TenantId "GUID-DEL-TENANT"`. El script guarda únicamente
