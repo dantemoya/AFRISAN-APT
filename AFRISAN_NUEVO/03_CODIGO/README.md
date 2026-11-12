@@ -6,6 +6,8 @@ Documentos de uso y operación: [manual de usuario por rol](MANUAL_USUARIO.md) y
 [guía de despliegue](DESPLIEGUE.md), que incluye las migraciones `08` a `10`,
 las variables de entorno, las imágenes Docker de [`Despliegue/`](Despliegue) y las
 comprobaciones con HTTPS. Datos ficticios para Power BI: [`PowerBI/DatosSimulados`](PowerBI/DatosSimulados/README.md).
+Endpoints, roles y comandos: [especificación de la API](API.md). Respaldo,
+recuperación, secretos e incidentes: [manual de operación](MANUAL_OPERACION.md).
 
 Solución en **.NET 8** compuesta por **`Afrisan.Nuevo.Contratos`**, **`Afrisan.Nuevo.Api` (ASP.NET Core Web API)** y **`Afrisan.Nuevo.Web` (Blazor WebAssembly)**, conectada por defecto a **PostgreSQL 16 en Supabase** (esquema `afrisan`), **Supabase Storage privado** (bucket `afrisan-evidencias`) y módulo analítico **Power BI (`/power-bi`)**.
 
@@ -26,7 +28,7 @@ aplicaron en Supabase el 09/11/2026
 | Power BI gratuito y vista operativa | `/power-bi`, `/power-bi/operativo` | — | [`POWER_BI_GRATUITO.md`](POWER_BI_GRATUITO.md) (26) · [`POWER_BI.md`](POWER_BI.md) (81) |
 | Conexión directa de Power BI (token de 30 días, 10/11) | `/power-bi/operativo` | — | [`POWER_BI.md`](POWER_BI.md) · decisión D-32 |
 | Seguridad de producción | API | — | [`DESPLIEGUE.md`](DESPLIEGUE.md) · decisión D-29 |
-| Pruebas xUnit e integración continua | `Afrisan.Nuevo.Pruebas` | — | `dotnet test` (431 pruebas) · `.github/workflows/ci.yml` |
+| Pruebas xUnit e integración continua | `Afrisan.Nuevo.Pruebas` | — | `dotnet test` (439 pruebas) · `.github/workflows/ci.yml` |
 
 Módulos anteriores (corte del 02/11):
 
@@ -93,7 +95,7 @@ dotnet run --project Afrisan.Nuevo.Api --launch-profile http -- --verificar-powe
 ## 5. Pruebas
 
 ```powershell
-dotnet test AFRISAN.slnx          # desde la raíz: 431 pruebas xUnit
+dotnet test AFRISAN.slnx          # desde la raíz: 439 pruebas xUnit
 ```
 
 `Afrisan.Nuevo.Pruebas` cubre el almacén en memoria (flujo completo de la OT),
