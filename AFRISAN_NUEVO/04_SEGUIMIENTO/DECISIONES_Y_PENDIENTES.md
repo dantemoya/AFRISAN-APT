@@ -1,5 +1,16 @@
 # Decisiones y Seguimiento Individual del Proyecto AFRISAN
 
+Actualización **12/11/2026:** se cerró la conexión de Power BI a la API con la prueba
+de conexión pública y el proyecto ya conectado (D-33), y se registraron las decisiones
+del 11/11 sobre licencia, hosting y contraparte (D-34 a D-36). La web ahora se conecta
+sola cuando la API termina de arrancar. Hay 439 pruebas xUnit aprobadas. Se agregó la
+documentación de proyecto que faltaba, ordenada en el
+[mapa documental](../../MAPA_DOCUMENTAL.md): plan de pruebas y matriz (06 y 07),
+especificación de requisitos (08), plan de implantación (09), registro de riesgos y
+lecciones (10), registro de tratamiento de datos (11), acta de cierre (12) y
+estimación de costos (13). Sigue pendiente lo que depende del despliegue (`S8-02`) y
+de AFRISAN: pruebas en terreno, aceptación y publicación del informe.
+
 Actualización **09/11/2026:** las migraciones `08`, `09` y `10` quedaron aplicadas
 en Supabase y verificadas: 32 tablas y 9 vistas, todas las tablas con RLS
 ([registro](SUPABASE_2026_11_09.md)). Las notas del 08/11 que siguen dicen
@@ -83,13 +94,13 @@ Responsable único actual: **Dante Moya** · Corte actualizado: **9 de noviembre
 | **`G05`** | Ensayos físicos en terreno con cámara móvil y corte de red | **Pendiente**: requiere el despliegue con HTTPS | Lector QR validado por archivo/navegador; falta ensayo en un Android real |
 | **`G06`** | Límites semanales/mensuales por sucursal e investigación de excesos | **Implementado con regla propia** y migración `10` aplicada el 09/11; falta validarla con AFRISAN | [`COSTOS_LIMITES_2026_11_08`](COSTOS_LIMITES_2026_11_08/README.md) (137 pruebas, con costos) |
 | **`G07`** | Integración Defontana y certificados de disposición Regener | **Diferido** (decisión del 08/11) | Tablas SQL creadas (`CertificadosDisposicion`, `CertificadosCilindros`), sin acceso de la API; falta contrato ERP |
-| **`G08`** | Módulo Power BI e indicadores operativos | **Implementado en app; falta guardar y publicar el `.pbix`** | [`POWER_BI_2026_11_02/README.md`](POWER_BI_2026_11_02/README.md) · [`MODULOS_2026_11_08`](MODULOS_2026_11_08/README.md) (PBIP de 5 páginas) |
+| **`G08`** | Módulo Power BI e indicadores operativos | **Implementado en app y conexión a la API cerrada el 12/11 (D-33); falta actualizar en Power BI Desktop (CP-57) y publicar el informe (CP-58)** | [`POWER_BI_2026_11_02/README.md`](POWER_BI_2026_11_02/README.md) · [`MODULOS_2026_11_08`](MODULOS_2026_11_08/README.md) (PBIP de 5 páginas) |
 | **`G09` / `F3-01`** | Aceptación con usuarios, cierre documental y defensa final | **En curso**: [manual de usuario](../03_CODIGO/MANUAL_USUARIO.md) redactado; falta la sesión de aceptación | Informe final actualizado al `08/11/2026` |
-| **`CAL-01`** | Pruebas unitarias, integración continua y seguridad de producción | **Implementado el 08/11** | `03_CODIGO/Afrisan.Nuevo.Pruebas` (431 pruebas al 10/11) · `.github/workflows/ci.yml` · [`DESPLIEGUE.md`](../03_CODIGO/DESPLIEGUE.md) |
+| **`CAL-01`** | Pruebas unitarias, integración continua y seguridad de producción | **Implementado el 08/11** | `03_CODIGO/Afrisan.Nuevo.Pruebas` (439 pruebas al 12/11) · `.github/workflows/ci.yml` · [`DESPLIEGUE.md`](../03_CODIGO/DESPLIEGUE.md) |
 
 ---
 
-## 3. Registro Completo de Decisiones (`D-01` a `D-32`)
+## 3. Registro Completo de Decisiones (`D-01` a `D-36`)
 
 | ID | Decisión | Estado y aplicación actual |
 | --- | --- | --- |
@@ -121,3 +132,7 @@ Responsable único actual: **Dante Moya** · Corte actualizado: **9 de noviembre
 | **D-30** | Agregar pruebas xUnit (lógica en memoria, contratos, Power BI, fechas chilenas e integración HTTP) e integración continua en GitHub Actions. Las baterías `.mjs` siguen validando la capa PostgreSQL. | 409 pruebas aprobadas y 29 % de cobertura de líneas: la meta del 80 % del acta no se alcanzó. La integración continua pasó en GitHub el 09/11, en ambos repositorios. |
 | **D-31** | El repositorio público no contiene RUT, correos ni teléfonos de personas. Las versiones originales de las entregas se suben a `Historico/` con esos datos omitidos. | Aplicado el 08/11 y publicado el 09/11. El commit `c2cc46b`, ya publicado, conserva el RUT del estudiante y el contacto de AFRISAN en la guía 1.5 hasta que se decida si se reescribe el historial. |
 | **D-32** | Conectar Power BI directamente a la API con un token propio que dura 30 días y solo permite `GET /api/v1/power-bi/tablas/{tabla}`. Lo genera Administrador o Jefatura; la sesión normal sigue en 2 horas. El token hereda la versión de seguridad de la cuenta: cambiar su contraseña, su rol o desactivarla lo revoca. | Solicitado por el usuario el 10/11; implementado en `TokenPowerBi.cs` y `/power-bi/operativo`; 22 pruebas xUnit nuevas (431 en total, 30 % de cobertura de líneas). No probado contra PostgreSQL ni desde el servicio de Power BI: requiere la API desplegada (`S8-02`). Riesgo aceptado: quien obtenga el token puede leer los datos operativos durante 30 días; se recomienda una cuenta de Jefatura dedicada. |
+| **D-33** | Cerrar la conexión de Power BI a la API: la dirección base `GET /api/v1/power-bi/tablas` responde 200 sin credenciales (estado y nombres de tablas, sin datos) para que Power BI pueda probar el origen; la web entrega un proyecto PBIP ya conectado con un token nuevo; el parámetro `UrlApi` va sin transformar para permitir la actualización programada. Se evaluó un informe técnico externo y no se adoptan por ahora la clave API técnica, el conector personalizado, la puerta de enlace ni el token en la dirección. | Pedido por el usuario el 12/11. Implementado en `TokenPowerBi.cs`, `PowerBiProyectoConectado.cs` y `Conexion/AfrisanApi.pq`; 8 pruebas xUnit nuevas entre el 11/11 y el 12/11 (439 en total). Secuencia de solicitudes de Power BI probada contra la API en modo Memoria. Falta pulsar **Actualizar** en Power BI Desktop (CP-57). Detalle y alternativas en [`POWER_BI.md`](../03_CODIGO/POWER_BI.md). |
+| **D-34** | El código y la documentación son propiedad del autor, con todos los derechos reservados. El repositorio es público solo para la evaluación académica; el uso por AFRISAN requiere un acuerdo por escrito. | Decidido por el usuario el 11/11. Archivo [`LICENSE`](../../LICENSE) en la raíz. |
+| **D-35** | Desplegar la API y la web en Microsoft Azure (App Service y Static Web Apps, región East US). La base y las fotos siguen en Supabase, región us-east-1. | Decidido por el usuario el 11/11; despliegue pendiente (`S8-02`). Costo de operación en la estimación de costos (documento 13): US$0 con planes gratuitos y unos US$65 al mes en el escenario recomendado. Falta la tarifa por hora para valorizar el desarrollo. Los datos quedan en Estados Unidos (ver registro de tratamiento de datos, documento 11). |
+| **D-36** | Seguir el proyecto sin contraparte mientras no esté disponible: revisión del sprint con el docente, ejecución interna de los escenarios de aceptación y traspaso de la aceptación del cliente en el acta de cierre. Una validación interna no se informa como aceptación de AFRISAN. | Informado por el usuario el 11/11: la contraparte no está disponible. Plan alternativo en el plan de implantación (documento 09, sección 3.1); riesgo R-08 materializado en el registro de riesgos (documento 10). |
