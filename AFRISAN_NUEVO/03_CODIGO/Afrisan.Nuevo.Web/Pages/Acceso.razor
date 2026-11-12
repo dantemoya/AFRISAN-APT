@@ -4,6 +4,7 @@
 @inject InventarioClient Api
 @inject NavigationManager Nav
 @inject HttpClient Http
+@implements IDisposable
 
 <PageTitle>Acceso · AFRISAN</PageTitle>
 <div class="access-shell">
@@ -24,6 +25,7 @@
                     </div><small>Solo memoria. Sin cuentas ni registros en Supabase.</small>
                 </div>
             }
+            else if (Sesion.Entorno is null && Sesion.Reconectando) { <div class="notice warning" role="status">Conectando con la API… La página se actualizará sola en cuanto responda.</div> }
             else if (Sesion.Entorno is null) { <div class="notice warning">La API no está disponible. Inicia ambos proyectos y <button class="text-button" @onclick="Recargar">vuelve a conectar</button>.</div> }
             <EditForm Model="form" OnValidSubmit="Ingresar">
                 <DataAnnotationsValidator /><ValidationSummary />
@@ -40,8 +42,11 @@
     private readonly CredencialesForm form = new();
     private bool ocupado;
     private string? error;
+    protected override void OnInitialized() { Sesion.CambioConexion += ConexionCambio; Sesion.IniciarReconexion(); }
+    private void ConexionCambio() { if (Sesion.Entorno is not null) error = null; _ = InvokeAsync(StateHasChanged); }
+    public void Dispose() => Sesion.CambioConexion -= ConexionCambio;
     private void Elegir(CuentaDemoResponse cuenta) { form.Email = cuenta.Email; form.Password = Sesion.Entorno!.PasswordDemo; error = null; }
-    private async Task Recargar() { await Sesion.InicializarAsync(); error = Sesion.Entorno is null ? $"La API sigue sin responder en {Http.BaseAddress}." : null; }
+    private async Task Recargar() { await Sesion.InicializarAsync(); Sesion.IniciarReconexion(); error = Sesion.Entorno is null ? $"La API sigue sin responder en {Http.BaseAddress}." : null; }
     private async Task Ingresar()
     {
         if (ocupado) return;

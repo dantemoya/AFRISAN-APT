@@ -17,6 +17,11 @@ public sealed class SesionService(HttpClient http, IJSRuntime js) : Authenticati
     public SesionResponse? Sesion { get; private set; }
     public EntornoResponse? Entorno { get; private set; }
     public bool SinConexion { get; private set; }
+    /// <summary>True mientras se reintenta en segundo plano la conexión con la API.</summary>
+    public bool Reconectando { get; private set; }
+    /// <summary>Se dispara cuando cambia el estado de conexión, para que las pantallas se actualicen.</summary>
+    public event Action? CambioConexion;
+    private CancellationTokenSource? reconexion;
     public bool Autenticado => Sesion is not null && Sesion.Vence > DateTimeOffset.UtcNow;
     public bool PuedeRegistrar => Sesion?.Rol is "Bodega" or "Administrador";
     public bool PuedeCatalogo => Sesion?.Rol is "Bodega" or "Jefatura" or "Administrador";
@@ -61,6 +66,53 @@ public sealed class SesionService(HttpClient http, IJSRuntime js) : Authenticati
             }
             catch (Exception localError) when (localError is JsonException or JSException) { Aplicar(null); }
         }
+    }
+
+    /// <summary>
+    /// Si la API no respondió (por ejemplo, porque aún está arrancando), la vuelve a buscar en segundo
+    /// plano y se conecta sola en cuanto responde. Solo reinicializa la sesión cuando la API ya contesta,
+    /// para no cerrar una sesión de trabajo sin conexión en cada intento.
+    /// </summary>
+    public void IniciarReconexion()
+    {
+        if (!SinConexion || reconexion is not null) return;
+        reconexion = new CancellationTokenSource();
+        _ = ReconectarAsync(reconexion.Token);
+    }
+
+    private async Task ReconectarAsync(CancellationToken cancelacion)
+    {
+        Reconectando = true;
+        CambioConexion?.Invoke();
+        var espera = TimeSpan.FromSeconds(1);
+        try
+        {
+            while (SinConexion && !cancelacion.IsCancellationRequested)
+            {
+                await Task.Delay(espera, cancelacion);
+                if (await ApiRespondeAsync(cancelacion)) await InicializarAsync();
+                if (espera < TimeSpan.FromSeconds(4)) espera += espera;
+            }
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            Reconectando = false;
+            reconexion = null;
+            CambioConexion?.Invoke();
+        }
+    }
+
+    private async Task<bool> ApiRespondeAsync(CancellationToken cancelacion)
+    {
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancelacion);
+            timeout.CancelAfter(TimeSpan.FromSeconds(3));
+            using var respuesta = await http.GetAsync("entorno", timeout.Token);
+            return respuesta.IsSuccessStatusCode;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException) { return false; }
     }
 
     public async Task IngresarAsync(SesionResponse sesion)

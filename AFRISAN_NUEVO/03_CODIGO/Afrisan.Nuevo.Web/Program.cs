@@ -15,5 +15,8 @@ builder.Services.AddScoped<AuthenticationStateProvider>(s => s.GetRequiredServic
 builder.Services.AddScoped<InventarioClient>();
 builder.Services.AddScoped<TrabajoLocalService>();
 var host = builder.Build();
-await host.Services.GetRequiredService<SesionService>().InicializarAsync();
+var sesion = host.Services.GetRequiredService<SesionService>();
+await sesion.InicializarAsync();
+// Si la API todavía está arrancando, la web sigue intentando y se conecta sola cuando responde.
+sesion.IniciarReconexion();
 await host.RunAsync();
