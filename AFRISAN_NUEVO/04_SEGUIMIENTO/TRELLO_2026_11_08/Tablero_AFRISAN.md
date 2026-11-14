@@ -1,6 +1,11 @@
 # AFRISAN — Tablero por sprints (corte 09/11/2026)
 
 Tablero: https://trello.com/b/g3Op8qZb/afrisan · Responsable: Dante Moya.
+
+> **Nota del 14/11/2026:** este tablero cuenta las semanas desde el 06/08, una semana antes
+> que el calendario oficial de la asignatura. Su «S12» es la semana oficial 11 (22/10). La
+> equivalencia y la línea base vigente están en el
+> [documento 16](<../../../Fase 2/Evidencias Proyecto/Evidencias de documentación/16_Linea_Base_de_Planificacion_Afrisan_DM.md>) (D-38).
 Reemplaza la organización por estados del [corte del 29/10](../TRELLO_2026_10_29/Tablero_AFRISAN.md).
 Aplicado en Trello el 09/11/2026: las cinco listas por estado se renombraron como
 Sprint 1 a 5, se crearon Sprint 6 a 9, se movieron las 21 tarjetas existentes y se
@@ -120,7 +125,7 @@ Quedan en el Sprint 7 porque se hicieron el 09/11.
 
 | Tarjeta | Estado | Qué falta |
 | --- | --- | --- |
-| `S8-01` Informe final y presentación de Fase 2 | En curso | Completar los 5 `[COMPLETAR]`, exportar la presentación a `.pptx` y guardarla |
+| `S8-01` Informe final y presentación de Fase 2 | En curso | El informe quedó sin marcadores el 14/11; falta la presentación de cuatro bloques para el 19/11 |
 | `S8-02` Despliegue de la API y la web con HTTPS | Pendiente | Crear la cuenta del hosting; archivos en `03_CODIGO/Despliegue/` |
 | `G05` Pruebas sin red y con cámara en Android | Pendiente | Requiere `S8-02` |
 | `G09` Aceptación con usuarios y documentación de cierre | Pendiente | Sesión con técnico, bodeguero y Autorizador; manual listo |

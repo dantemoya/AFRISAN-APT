@@ -1,7 +1,7 @@
 # Mapa documental del proyecto AFRISAN
 
 Índice de toda la documentación del proyecto, ordenada por las áreas del ciclo de
-vida de un proyecto de software. Corte: **12/11/2026**. Responsable: Dante Moya.
+vida de un proyecto de software. Corte: **14/11/2026**. Responsable: Dante Moya.
 
 ## Cómo se armó este mapa
 
@@ -30,14 +30,17 @@ revisión, o **Pendiente** si depende de un hecho que todavía no ocurre.
 | Acta de constitución (objetivos, alcance, RF, RNF, riesgos iniciales, gobernanza) | `Fase 1/Documentación del proyecto/00_Acta_de_Constitucion_Afrisan_DM.docx` | Existente |
 | Product backlog con criterios de aceptación | `Fase 1/Documentación del proyecto/01_Product_Backlog_Afrisan_DM.xlsx` | Existente |
 | Sprint backlog | `Fase 1/Documentación del proyecto/02_Sprint_Backlog_Afrisan_DM.xlsx` | Existente |
-| Plan de trabajo e hitos | `Fase 1/Documentación del proyecto/03_Plan_de_Trabajo_e_Hitos_Afrisan_DM.xlsx` | Existente |
-| Carta Gantt | `Fase 1/Documentación del proyecto/04_Carta_Gantt_Afrisan_DM.xlsx` | Existente |
+| Plan de trabajo e hitos | `Fase 1/Documentación del proyecto/03_Plan_de_Trabajo_e_Hitos_Afrisan_DM.xlsx` | Existente; mismo desfase de una semana que la carta Gantt |
+| Carta Gantt | `Fase 1/Documentación del proyecto/04_Carta_Gantt_Afrisan_DM.xlsx` | Existente; las semanas cuentan desde el 06/08, una antes que el calendario oficial (ver la línea base) |
+| **Línea base de planificación con el calendario oficial** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/16_Linea_Base_de_Planificacion_Afrisan_DM.md` | Nuevo (14/11) |
+| **Visión del producto, definición de hecho (DoD) y retrospectivas de la Fase 2** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/14_Vision_DoD_y_Retrospectivas_Afrisan_DM.md` | Nuevo (14/11) |
 | Estructura de desglose del trabajo (EDT) | `Fase 1/Documentación del proyecto/Arquitectura/AFRISAN_03_EDT_3_NIVELES.png` | Existente |
 | Plan de comunicación y registro de interesados | `Fase 1/Documentación del proyecto/06_Plan_de_Comunicacion_Afrisan_DM.docx` | Existente |
 | Matriz RACI | `Fase 1/Documentación del proyecto/08_Matriz_RACI_Afrisan_DM.docx` | Existente |
-| Registro de decisiones y cambios (D-01 a D-36) | `AFRISAN_NUEVO/04_SEGUIMIENTO/DECISIONES_Y_PENDIENTES.md` | Existente |
+| Registro de decisiones y cambios (D-01 a D-38) | `AFRISAN_NUEVO/04_SEGUIMIENTO/DECISIONES_Y_PENDIENTES.md` | Existente |
 | Tablero de seguimiento por sprints | `AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_08/Tablero_AFRISAN.md` | Existente |
-| Informes de Fase 1, avance, monitoreo y final | `Fase 1/…/05_…`, `Fase 2/Evidencias Proyecto/Evidencias de documentación/02_` a `04_` | Existente |
+| Informes de Fase 1, avance y monitoreo | `Fase 1/…/05_…`, `Fase 2/Evidencias Proyecto/Evidencias de documentación/02_` y `03_` | Existente |
+| **Informe final del Proyecto APT** | `Fase 2/Evidencias Grupales/Informe_Final_Proyecto_APT_Afrisan_DM.docx` | Existente; movido el 14/11 a la carpeta que pide el docente |
 | **Registro de riesgos, supuestos y lecciones aprendidas** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/10_Registro_de_Riesgos_y_Lecciones_Afrisan_DM.xlsx` | Nuevo (11/11) |
 | **Acta de cierre del proyecto** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/12_Acta_de_Cierre_del_Proyecto_Afrisan_DM.docx` | Nuevo (11/11), se firma al cierre |
 | **Estimación de costos de desarrollo y operación** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/13_Estimacion_de_Costos_Afrisan_DM.xlsx` | Nuevo (11/11); falta la tarifa por hora |
@@ -57,7 +60,8 @@ revisión, o **Pendiente** si depende de un hecho que todavía no ocurre.
 | --- | --- | --- |
 | Arquitectura 4+1 y modelo de datos | `Fase 1/Documentación del proyecto/Arquitectura/01_Arquitectura_y_Modelo_de_Datos_Afrisan_DM.docx` | Existente |
 | Evaluación de arquitectura ATAM | `Fase 1/Documentación del proyecto/Arquitectura/AFRISAN_ATAM_Fase_1_Arquitectura_Propuesta.docx` | Existente |
-| Diagramas de despliegue y componentes, MER y mockups | `Fase 1/Documentación del proyecto/Sprint 0/` | Existente |
+| Diagramas de despliegue y componentes, MER y mockups | `Fase 1/Documentación del proyecto/Sprint 0/` | Existente (diseño de la Fase 1, modelo de recarga) |
+| **Diagramas UML vigentes (casos de uso, componentes, secuencia) y MER del esquema actual** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/15_Diagramas_UML_y_Modelo_de_Datos_Afrisan_DM.md` | Nuevo (14/11) |
 | Diccionario de datos | `AFRISAN_NUEVO/02_BASE_DATOS/DICCIONARIO_ESQUEMA_AFRISAN.md` | Existente |
 | Scripts de base de datos (migraciones 05 a 10) | `AFRISAN_NUEVO/02_BASE_DATOS/` | Existente |
 | **Especificación de la API (interfaces)** | `AFRISAN_NUEVO/03_CODIGO/API.md` | Nuevo (11/11) |

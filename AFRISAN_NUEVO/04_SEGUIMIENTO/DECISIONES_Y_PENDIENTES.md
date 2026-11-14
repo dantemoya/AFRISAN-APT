@@ -1,5 +1,7 @@
 # Decisiones y Seguimiento Individual del Proyecto AFRISAN
 
+Actualización **14/11/2026:** se respondió la retroalimentación de la Fase 1 publicada en AVA el 29/10. Se agregaron la visión del producto, la definición de hecho y las retrospectivas de la Fase 2 (documento 14), los diagramas UML y el modelo de datos vigente (15) y la línea base de planificación con el calendario oficial (16, D-38). Se registró el reemplazo de la aplicación MAUI por la web (D-37). El informe final se movió a `Fase 2/Evidencias Grupales/` con la sección de innovación (5.6) y sin marcadores pendientes.
+
 Actualización **12/11/2026:** se cerró la conexión de Power BI a la API con la prueba
 de conexión pública y el proyecto ya conectado (D-33), y se registraron las decisiones
 del 11/11 sobre licencia, hosting y contraparte (D-34 a D-36). La web ahora se conecta
@@ -100,7 +102,7 @@ Responsable único actual: **Dante Moya** · Corte actualizado: **9 de noviembre
 
 ---
 
-## 3. Registro Completo de Decisiones (`D-01` a `D-36`)
+## 3. Registro Completo de Decisiones (`D-01` a `D-38`)
 
 | ID | Decisión | Estado y aplicación actual |
 | --- | --- | --- |
@@ -136,3 +138,5 @@ Responsable único actual: **Dante Moya** · Corte actualizado: **9 de noviembre
 | **D-34** | El código y la documentación son propiedad del autor, con todos los derechos reservados. El repositorio es público solo para la evaluación académica; el uso por AFRISAN requiere un acuerdo por escrito. | Decidido por el usuario el 11/11. Archivo [`LICENSE`](../../LICENSE) en la raíz. |
 | **D-35** | Desplegar la API y la web en Microsoft Azure (App Service y Static Web Apps, región East US). La base y las fotos siguen en Supabase, región us-east-1. | Decidido por el usuario el 11/11; despliegue pendiente (`S8-02`). Costo de operación en la estimación de costos (documento 13): US$0 con planes gratuitos y unos US$65 al mes en el escenario recomendado. Falta la tarifa por hora para valorizar el desarrollo. Los datos quedan en Estados Unidos (ver registro de tratamiento de datos, documento 11). |
 | **D-36** | Seguir el proyecto sin contraparte mientras no esté disponible: revisión del sprint con el docente, ejecución interna de los escenarios de aceptación y traspaso de la aceptación del cliente en el acta de cierre. Una validación interna no se informa como aceptación de AFRISAN. | Informado por el usuario el 11/11: la contraparte no está disponible. Plan alternativo en el plan de implantación (documento 09, sección 3.1); riesgo R-08 materializado en el registro de riesgos (documento 10). |
+| **D-37** | No desarrollar la aplicación móvil .NET MAUI del acta: el celular usa la misma web Blazor WebAssembly, adaptada a la pantalla y con borradores sin conexión en IndexedDB (D-25). | Aplicado desde el 20/10 con la solución `AFRISAN_NUEVO`; se registra el 14/11 al responder la retroalimentación de la Fase 1, que pidió controlar el alcance. Falta el ensayo en un Android real (`G05`). |
+| **D-38** | Usar una sola línea base de planificación con el calendario oficial de la asignatura (semana 1 el 13/08, semana 11 el 22/10 y semana 15 el 19/11). Los documentos `03` y `04` y el tablero de Trello cuentan desde el 06/08, una semana antes. | Registrado el 14/11 en el documento 16 (`16_Linea_Base_de_Planificacion_Afrisan_DM.md`), en respuesta a la retroalimentación de la Fase 1, que pidió unificar la planificación. |
