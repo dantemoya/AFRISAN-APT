@@ -5,7 +5,7 @@
 @inject NavigationManager Nav
 
 <PageTitle>Preparar OT · AFRISAN</PageTitle>
-<a href="ordenes" class="back-link">← Órdenes</a><div class="page-heading"><div><span class="eyebrow">AUTORIZADOR / REVISIÓN</span><h1>Preparar una OT</h1><p>Asigna el técnico y registra el pedido por refrigerante.</p></div></div>
+<a href="ordenes" class="back-link">← Órdenes</a><div class="page-heading"><div><span class="eyebrow">AUTORIZADOR / NUEVA OT</span><h1>Preparar una OT</h1><p>Asigna el técnico y registra el pedido por refrigerante.</p></div></div>
 <div class="notice info">Selecciona una sucursal y un técnico, y registra las cantidades solicitadas y autorizadas.</div>
 @if (error is not null) { <div class="notice error" role="alert">@error</div> }
 @if (cargando) { <p>Cargando refrigerantes…</p> }
@@ -40,7 +40,7 @@ else
                 }
                 </tbody></table></div>
             }
-            <p class="field-help">@seleccionados.Count seleccionados. Elige en el pedido el refrigerante de cada cilindro marcado. Los kilos solicitados y autorizados se registran por separado.</p>
+            <p class="field-help">@seleccionados.Count seleccionados. Elige en el pedido el refrigerante de cada cilindro marcado. Los gramos solicitados y autorizados se registran por separado.</p>
         }
         <div class="form-actions"><a class="btn secondary" href="ordenes">Cancelar</a><button class="btn primary" type="submit">@(ocupado ? "Preparando…" : "Autorizar y asignar OT")</button></div>
         </fieldset>

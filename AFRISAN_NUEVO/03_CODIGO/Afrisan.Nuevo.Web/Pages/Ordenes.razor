@@ -5,7 +5,7 @@
 
 <PageTitle>Órdenes de trabajo · AFRISAN</PageTitle>
 <div class="page-heading"><div><span class="eyebrow">REEMPLAZO FÍSICO DE CILINDROS</span><h1>@(Sesion.Sesion?.Rol == "Tecnico" ? "Mis órdenes de trabajo" : "Órdenes de trabajo")</h1><p>Cada OT identifica una sucursal, un técnico y el pedido por refrigerante.</p></div>
-    @if (Sesion.Sesion?.Rol == "Autorizador") { <a class="btn primary" href="ordenes/nueva">+ Preparar OT de revisión</a> }
+    @if (Sesion.Sesion?.Rol == "Autorizador") { <a class="btn primary" href="ordenes/nueva">+ Nueva OT</a> }
 </div>
 @if (error is not null) { <div class="notice error" role="alert">@error</div> }
 @if (Local.ConsultaOffline) { <div class="notice warning">Consulta local sin conexión. La lista corresponde a la última información guardada, no al estado actual del servidor.</div> }

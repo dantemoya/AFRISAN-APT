@@ -28,11 +28,13 @@ let
         {"CilindroId",type text},{"Codigo",type text},{"RefrigeranteId",type text},
         {"Refrigerante",type text},{"Estado",type text},{"Ubicacion",type text},
         {"SucursalId",type text},{"Sucursal",type text},{"TecnicoId",type text},{"Tecnico",type text},
-        {"KgSegunUltimoPesaje",type number},{"FechaPesaje",type datetime}}),
+        {"KgSegunUltimoPesaje",type number},{"FechaPesaje",type datetime},
+        {"ClienteId",type text},{"Cliente",type text}}),
     Ordenes = Leer("ordenes", {
         {"OtId",type text},{"Codigo",type text},{"SucursalId",type text},{"Sucursal",type text},
         {"TecnicoId",type text},{"Tecnico",type text},{"Estado",type text},
-        {"FechaCreacion",type datetime},{"DiaCreacion",type date},{"FechaCierre",type datetime}}),
+        {"FechaCreacion",type datetime},{"DiaCreacion",type date},{"FechaCierre",type datetime},
+        {"ClienteId",type text},{"Cliente",type text}}),
     DetalleOT = Leer("detalle", {
         {"OtId",type text},{"RefrigeranteId",type text},{"Refrigerante",type text},
         {"KgSolicitados",type number},{"KgAutorizados",type number}}),

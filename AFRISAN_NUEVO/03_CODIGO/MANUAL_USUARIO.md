@@ -1,7 +1,8 @@
 # Manual de usuario de AFRISAN
 
 Guía de uso por rol del sistema de gestión y trazabilidad de refrigerantes.
-Versión del **08/11/2026**, escrita a partir de las pantallas de `Afrisan.Nuevo.Web`.
+Versión del **15/11/2026**, escrita a partir de las pantallas de `Afrisan.Nuevo.Web`
+(incluye la devolución, la anulación y la recarga de la migración 11).
 Pendiente de revisar con usuarios de AFRISAN en la sesión de aceptación (G09).
 
 ## 1. Conceptos básicos
@@ -9,6 +10,10 @@ Pendiente de revisar con usuarios de AFRISAN en la sesión de aceptación (G09).
 - **Cilindro:** envase con código QR propio (`AFR-000001`), un solo tipo de gas, tara y capacidad en gramos.
 - **Orden de trabajo (OT):** pedido de reemplazo o agregado de gas en una sucursal. Avanza así:
   `Asignada → EnProcesoDespacho → EnTerreno → PendienteBodega → PendienteRevision → Cerrada`.
+  Bodega puede **devolver** la OT de `PendienteBodega` a `EnTerreno` con un motivo, y el
+  Autorizador puede **anular** una OT `Asignada` que todavía no tiene retiros ni trabajos (`Anulada`).
+- **Cilindro vacío:** el cilindro retirado de una sucursal vuelve a Bodega como «Vacío». No se
+  entrega a otra OT hasta que Bodega registra su **recarga**.
 - **Pesaje:** lectura bruta de la balanza en gramos (envase + gas), siempre con foto. Un pesaje confirmado no se borra ni se edita; si está mal, se pide una **rectificación**.
 - **Roles:** Técnico, Bodega, Autorizador, Jefatura y Administrador. Cada pantalla muestra solo lo que el rol puede hacer.
 
@@ -39,8 +44,10 @@ Menú: **Mis órdenes de trabajo** e **Identificar cilindro**.
    - Adjunta al menos una foto del pesaje de cada cilindro. No se acepta la misma foto para dos envases.
    - **Guardar borrador local** guarda el trabajo en el celular. **Guardar y sincronizar borrador** lo envía a la API.
    - Revisa los datos y pulsa **Confirmar cambio con evidencias**. Después de confirmar ya no se edita.
+   - El peso del cilindro instalado no puede diferir en más de **200 g** del peso con que salió de Bodega, y el retirado no puede pesar más de 200 g sobre su último peso registrado. Si la balanza marca otra cosa, revisa la lectura o registra una incidencia.
 4. **Entregar el cilindro retirado:** de vuelta en Bodega, pulsa **Informar entrega del retirado en bodega**.
 5. **Terminar:** pulsa **Enviar trabajo a revisión de Bodega**. Si quedó un retiro sin hacer, explica el motivo.
+   - Si Bodega **devuelve** la OT, vuelve a `EnTerreno` con el aviso *Bodega devolvió esta OT al técnico* y su motivo. Corrige lo indicado (incidencia o rectificación de peso) y vuelve a enviarla.
 6. **Problemas o pesos mal registrados:**
    - para avisar un problema, usa *Incidencia o solicitud de rectificación* y pulsa **Enviar para revisión**;
    - para corregir un pesaje ya confirmado de tu OT abierta, entra a **Revisar y rectificar pesajes confirmados**, propone el peso con motivo y foto, y pulsa **Enviar al Autorizador**.
@@ -58,8 +65,10 @@ Menú: **Mis órdenes de trabajo** e **Identificar cilindro**.
 Menú: **Resumen**, **Órdenes de trabajo**, **Inventario de cilindros**, **Refrigerantes**, **Identificar cilindro**, **Mantenedores** y **Límites por sucursal**.
 
 - **Registrar cilindros:** en *Inventario de cilindros*, crea el cilindro con gas, tara y capacidad. Puedes registrar el primer pesaje en su detalle. Desde el detalle se descarga el QR para etiquetarlo.
-- **Recibir un cilindro retirado:** cuando el técnico informa la entrega, en la OT, *Recepción oficial de bodega*: pésalo en la balanza, escribe el peso bruto y pulsa **Confirmar recepción física**. También se reciben aquí los cilindros despachados que no se usaron.
-- **Aprobar la OT:** cuando el técnico la envía (`PendienteBodega`), revisa cilindros, pesos y fotos, marca la confirmación y pulsa **Aprobar y enviar al Autorizador**.
+- **Recibir un cilindro retirado:** cuando el técnico informa la entrega, en la OT, *Recepción oficial de bodega*: pésalo en la balanza, escribe el peso bruto y pulsa **Confirmar recepción física**. También se reciben aquí los cilindros despachados que no se usaron. El cilindro retirado de la sucursal queda «Vacío»; el despachado que no se usó vuelve «Disponible».
+- **Registrar una recarga:** cuando un cilindro «Vacío» vuelve recargado, abre su detalle, en *Registrar recarga* escribe el peso bruto, adjunta la foto de la balanza y pulsa **Registrar recarga**. Queda «Disponible» para nuevas OT.
+- **Aprobar la OT:** cuando el técnico la envía (`PendienteBodega`), revisa cilindros, pesos y fotos, marca la confirmación y pulsa **Aprobar y enviar al Autorizador**. No se puede aprobar mientras haya incidencias sin conclusión o rectificaciones pendientes.
+- **Devolver la OT:** si algo no corresponde, en *Devolver al técnico* escribe el motivo (mínimo 5 caracteres) y pulsa **Devolver la OT al técnico**. La OT vuelve a `EnTerreno`.
 - **Incidencias:** en *Incidencia o solicitud de rectificación*, describe el problema y pulsa **Enviar para revisión**.
 - **Rectificar un pesaje confirmado:** en la OT, **Revisar y rectificar pesajes confirmados** → *Solicitar corrección*: peso propuesto, motivo y foto → **Enviar al Autorizador**.
 - **Refrigerantes:** en *Mantenedores* puedes editar, desactivar o reactivar gases. No se desactiva un gas con OT abiertas.
@@ -69,8 +78,9 @@ Menú: **Resumen**, **Órdenes de trabajo**, **Inventario de cilindros**, **Refr
 
 Menú: **Resumen**, **Órdenes de trabajo**, **Inventario**, **Refrigerantes**, **Identificar cilindro** y **Límites por sucursal**.
 
-1. **Crear una OT:** en *Órdenes de trabajo* → **+ Preparar OT de revisión**, completa sucursal, técnico, el pedido por refrigerante (gramos solicitados y autorizados) y los cilindros a retirar de la sucursal.
-2. **Revisar incidencias:** después de la aprobación de Bodega, escribe la conclusión y pulsa **Registrar conclusión**.
+1. **Crear una OT:** en *Órdenes de trabajo* → **+ Nueva OT**, completa sucursal, técnico, el pedido por refrigerante (gramos solicitados y autorizados) y los cilindros a retirar de la sucursal.
+   - **Anular una OT:** mientras siga `Asignada` y sin retiros ni trabajos, en *Anular OT* escribe el motivo y pulsa **Anular OT**. Los cilindros previstos para retiro quedan libres.
+2. **Revisar incidencias:** en cualquier etapa abierta de la OT, escribe la conclusión y pulsa **Registrar conclusión**. Bodega no puede aprobar hasta que respondas las incidencias.
 3. **Revisar fotos y cerrar:** las fotos se habilitan después de la aprobación de Bodega. Compáralas con los registros, pulsa **Aprobar fotos y registro** y luego **Verificar y cerrar OT**.
 4. **Rectificaciones:** en *Revisar y rectificar pesajes confirmados*, abre **Ver evidencia de la corrección** y elige **Aprobar peso propuesto** o **Rechazar solicitud** con una conclusión. Una OT con solicitudes pendientes no se puede cerrar.
 5. **Límites:** consultar el avance del período y guardar mediciones.
@@ -111,3 +121,6 @@ Menú: todas las pantallas de consulta, más **Administración**, **Mantenedores
 | Peso rechazado por estar fuera de rango | Revisar la lectura: va en gramos, incluye el envase y debe estar entre la tara y la tara más la capacidad. |
 | Foto rechazada por repetida o por formato | Tomar una foto distinta para cada cilindro, en JPEG, PNG o WebP de hasta 4 MiB. |
 | Conflicto de versión del borrador | Elegir si se conservan tus datos o la versión de la API. |
+| *El peso instalado difiere en más de 200 g…* | El gas no se consume antes de instalar: revisar la lectura de la balanza. Si el peso de salida estaba mal, pedir una rectificación. |
+| El cilindro no aparece para retirar | Puede estar «Vacío»: Bodega debe registrar su recarga primero. |
+| Bodega no puede aprobar: *Incidencias sin revisar* o rectificación pendiente | El Autorizador debe responder la incidencia o resolver la rectificación; si el error es del técnico, Bodega devuelve la OT. |

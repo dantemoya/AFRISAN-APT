@@ -65,7 +65,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Kg instalados por refrigerante · no equivale a consumo'"
+                  "Value": "'Kg instalados por refrigerante'"
                 }
               }
             },

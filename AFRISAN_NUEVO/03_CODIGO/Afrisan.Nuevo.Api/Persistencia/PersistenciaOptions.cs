@@ -47,6 +47,15 @@ public sealed class PersistenciaOptions
 
 public static class PrepararPersistencia
 {
+    public static async Task ActualizarDevolucionRecarga(IConfiguration config)
+    {
+        var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Falta la conexión de propietario.");
+        var parsed=new NpgsqlConnectionStringBuilder(owner){SslMode=SslMode.VerifyFull,IncludeErrorDetail=false,PersistSecurityInfo=false};
+        await using var connection=new NpgsqlConnection(parsed.ConnectionString);await connection.OpenAsync();
+        using var stream=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.DevolucionRecarga.sql")!;
+        await using var cmd=new NpgsqlCommand(await new StreamReader(stream).ReadToEndAsync(),connection);await cmd.ExecuteNonQueryAsync();
+        Console.WriteLine("Actualización 11 aplicada: devolución y anulación de OT, tolerancia de peso y recarga. No se modifican registros existentes.");
+    }
     public static async Task ActualizarCostosLimites(IConfiguration config)
     {
         var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Falta la conexión de propietario.");
@@ -89,6 +98,8 @@ public static class PrepararPersistencia
         sql += "\n" + await new StreamReader(mantenedores).ReadToEndAsync();
         using var costosLimites=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.CostosLimites.sql")!;
         sql += "\n" + await new StreamReader(costosLimites).ReadToEndAsync();
+        using var devolucionRecarga=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.DevolucionRecarga.sql")!;
+        sql += "\n" + await new StreamReader(devolucionRecarga).ReadToEndAsync();
         sql=string.Join('\n',sql.Split('\n').Where(l=>l.Trim() is not("BEGIN;" or "COMMIT;")));
         var previous=config.GetConnectionString("AfrisanRuntime");
         var saved=string.IsNullOrWhiteSpace(previous)?null:new NpgsqlConnectionStringBuilder(previous);

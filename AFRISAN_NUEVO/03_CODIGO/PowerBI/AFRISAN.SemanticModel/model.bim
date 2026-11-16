@@ -84,6 +84,18 @@
             "dataType": "dateTime",
             "sourceColumn": "FechaPesaje",
             "summarizeBy": "none"
+          },
+          {
+            "name": "ClienteId",
+            "dataType": "string",
+            "sourceColumn": "ClienteId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Cliente",
+            "dataType": "string",
+            "sourceColumn": "Cliente",
+            "summarizeBy": "none"
           }
         ],
         "partitions": [
@@ -123,7 +135,7 @@
           },
           {
             "name": "OT abiertas",
-            "expression": "CALCULATE(DISTINCTCOUNT(Ordenes[OtId]), TREATAS(VALUES(DetalleOT[OtId]), Ordenes[OtId]), KEEPFILTERS(Ordenes[Estado] <> \"Cerrada\"))",
+            "expression": "CALCULATE(DISTINCTCOUNT(Ordenes[OtId]), TREATAS(VALUES(DetalleOT[OtId]), Ordenes[OtId]), KEEPFILTERS(NOT (Ordenes[Estado] IN {\"Cerrada\", \"Anulada\"})))",
             "formatString": "#,0",
             "displayFolder": "Indicadores operativos"
           },
@@ -204,6 +216,18 @@
             "expression": "COUNTROWS(FILTER(Costos, ISBLANK(Costos[TotalClp])))",
             "formatString": "#,0",
             "displayFolder": "Indicadores operativos"
+          },
+          {
+            "name": "Consumo kg (gas instalado)",
+            "expression": "CALCULATE(SUM(Operaciones[KgInstalados]), TREATAS(VALUES(Calendario[Fecha]), Operaciones[DiaConfirmacion]))",
+            "formatString": "#,0.00",
+            "displayFolder": "Consumo por sucursal"
+          },
+          {
+            "name": "Kg solicitados por el cliente",
+            "expression": "CALCULATE(SUM(DetalleOT[KgSolicitados]), TREATAS(VALUES(Calendario[Fecha]), Ordenes[DiaCreacion]), KEEPFILTERS(Ordenes[Estado] <> \"Anulada\"))",
+            "formatString": "#,0.00",
+            "displayFolder": "Consumo por sucursal"
           }
         ]
       },
@@ -269,6 +293,18 @@
             "name": "FechaCierre",
             "dataType": "dateTime",
             "sourceColumn": "FechaCierre",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ClienteId",
+            "dataType": "string",
+            "sourceColumn": "ClienteId",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Cliente",
+            "dataType": "string",
+            "sourceColumn": "Cliente",
             "summarizeBy": "none"
           }
         ],
@@ -688,6 +724,12 @@
             "dataType": "string",
             "sourceColumn": "Sucursal",
             "summarizeBy": "none"
+          },
+          {
+            "name": "Cliente",
+            "dataType": "string",
+            "sourceColumn": "Cliente",
+            "summarizeBy": "none"
           }
         ],
         "partitions": [
@@ -696,7 +738,7 @@
             "mode": "import",
             "source": {
               "type": "m",
-              "expression": "let Todos = Table.Combine({Table.SelectColumns(Afrisan[Ordenes], {\"SucursalId\", \"Sucursal\"}), Table.SelectColumns(Afrisan[Inventario], {\"SucursalId\", \"Sucursal\"})}), Valid = Table.SelectRows(Todos, each [SucursalId] <> null), Unicos = Table.Distinct(Valid, {\"SucursalId\"}) in Unicos"
+              "expression": "let Todos = Table.Combine({Table.SelectColumns(Afrisan[Ordenes], {\"SucursalId\", \"Sucursal\", \"Cliente\"}), Table.SelectColumns(Afrisan[Inventario], {\"SucursalId\", \"Sucursal\", \"Cliente\"})}), Valid = Table.SelectRows(Todos, each [SucursalId] <> null), Unicos = Table.Distinct(Valid, {\"SucursalId\"}) in Unicos"
             }
           }
         ]
@@ -751,6 +793,61 @@
             "source": {
               "type": "m",
               "expression": "let Todos = Table.Combine({Table.SelectColumns(Afrisan[DetalleOT], {\"RefrigeranteId\", \"Refrigerante\"}), Table.SelectColumns(Afrisan[Inventario], {\"RefrigeranteId\", \"Refrigerante\"})}), Valid = Table.SelectRows(Todos, each [RefrigeranteId] <> null), Unicos = Table.Distinct(Valid, {\"RefrigeranteId\"}) in Unicos"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Calendario",
+        "columns": [
+          {
+            "type": "calculatedTableColumn",
+            "name": "Fecha",
+            "dataType": "dateTime",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Fecha]",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Mes",
+            "dataType": "string",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Mes]",
+            "summarizeBy": "none",
+            "sortByColumn": "MesOrden"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "MesOrden",
+            "dataType": "int64",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[MesOrden]",
+            "summarizeBy": "none",
+            "isHidden": true
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Semana",
+            "dataType": "dateTime",
+            "isNameInferred": true,
+            "isDataTypeInferred": true,
+            "sourceColumn": "[Semana]",
+            "summarizeBy": "none",
+            "formatString": "dd/MM/yyyy"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Calendario",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": "VAR i1 = MIN(Operaciones[DiaConfirmacion])\nVAR i2 = MIN(Ordenes[DiaCreacion])\nVAR f1 = MAX(Operaciones[DiaConfirmacion])\nVAR f2 = MAX(Ordenes[DiaCreacion])\nVAR Inicio = COALESCE(IF(ISBLANK(i1) || (NOT ISBLANK(i2) && i2 < i1), i2, i1), TODAY())\nVAR Fin = COALESCE(IF(ISBLANK(f1) || (NOT ISBLANK(f2) && f2 > f1), f2, f1), TODAY())\nRETURN SELECTCOLUMNS(CALENDAR(DATE(YEAR(Inicio), MONTH(Inicio), 1), EOMONTH(Fin, 0)),\n    \"Fecha\", [Date],\n    \"Mes\", FORMAT([Date], \"mmmm yyyy\"),\n    \"MesOrden\", YEAR([Date]) * 100 + MONTH([Date]),\n    \"Semana\", [Date] - WEEKDAY([Date], 2) + 1)"
             }
           }
         ]
@@ -907,7 +1004,7 @@
       {
         "name": "Afrisan",
         "kind": "m",
-        "expression": "// Power BI Desktop: crear parámetro de texto CarpetaAfrisan y consulta en blanco Afrisan.\n// Pegar este contenido en su Editor avanzado. La carpeta contiene el ZIP descomprimido.\nlet\n    Carpeta = Text.TrimEnd(CarpetaAfrisan, {\"\\\", \"/\"}) & \"\\\",\n    Leer = (Nombre as text, Tipos as list) as table =>\n        let\n            Cabecera = Table.PromoteHeaders(\n                Csv.Document(Binary.Buffer(File.Contents(Carpeta & Nombre & \".csv\")),\n                    [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n                [PromoteAllScalars=true]),\n            Nulos = Table.ReplaceValue(Cabecera,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Cabecera))\n        in Table.TransformColumnTypes(Nulos, Tipos, \"en-US\"),\n    Inventario = Leer(\"Inventario\", {\n        {\"CilindroId\",type text},{\"Codigo\",type text},{\"RefrigeranteId\",type text},\n        {\"Refrigerante\",type text},{\"Estado\",type text},{\"Ubicacion\",type text},\n        {\"SucursalId\",type text},{\"Sucursal\",type text},{\"TecnicoId\",type text},{\"Tecnico\",type text},\n        {\"KgSegunUltimoPesaje\",type number},{\"FechaPesaje\",type datetime}}),\n    Ordenes = Leer(\"Ordenes\", {\n        {\"OtId\",type text},{\"Codigo\",type text},{\"SucursalId\",type text},{\"Sucursal\",type text},\n        {\"TecnicoId\",type text},{\"Tecnico\",type text},{\"Estado\",type text},\n        {\"FechaCreacion\",type datetime},{\"DiaCreacion\",type date},{\"FechaCierre\",type datetime}}),\n    DetalleOT = Leer(\"DetalleOT\", {\n        {\"OtId\",type text},{\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"KgSolicitados\",type number},{\"KgAutorizados\",type number}}),\n    Operaciones = Leer(\"Operaciones\", {\n        {\"OperacionId\",type text},{\"OtId\",type text},{\"Tipo\",type text},\n        {\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"CilindroInstalado\",type text},{\"CilindroRetirado\",type text},\n        {\"FechaConfirmacion\",type datetime},{\"DiaConfirmacion\",type date},\n        {\"KgInstalados\",type number},{\"KgRetirados\",type number},\n        {\"FechaRecepcion\",type datetime},{\"KgRecepcion\",type number},{\"PendienteRecepcion\",type logical}}),\n    Despachos = Leer(\"Despachos\", {\n        {\"DespachoId\",type text},{\"OtId\",type text},{\"Cilindro\",type text},\n        {\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"Fecha\",type datetime},{\"Dia\",type date},{\"KgDespachados\",type number},\n        {\"Estado\",type text},{\"FechaDevolucion\",type datetime},{\"KgDevueltos\",type number}}),\n    Incidencias = Leer(\"Incidencias\", {\n        {\"IncidenciaId\",type text},{\"OtId\",type text},{\"Tipo\",type text},\n        {\"Fecha\",type datetime},{\"Dia\",type date},{\"Abierta\",type logical},{\"FechaRevision\",type datetime}}),\n    Costos = Leer(\"Costos\", {\n        {\"CostoId\",type text},{\"OperacionId\",type text},{\"OtId\",type text},{\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"Gramos\",type number},{\"PrecioPorGramo\",type number},{\"Moneda\",type text},{\"Total\",type number},\n        {\"FactorClp\",type number},{\"TotalClp\",type number},{\"FechaValoracion\",type datetime},{\"DiaValoracion\",type date},{\"FechaCambio\",type date}})\nin\n    [Inventario=Inventario, Ordenes=Ordenes, DetalleOT=DetalleOT,\n     Operaciones=Operaciones, Despachos=Despachos, Incidencias=Incidencias, Costos=Costos]\n"
+        "expression": "// Power BI Desktop: crear parámetro de texto CarpetaAfrisan y consulta en blanco Afrisan.\n// Pegar este contenido en su Editor avanzado. La carpeta contiene el ZIP descomprimido.\nlet\n    Carpeta = Text.TrimEnd(CarpetaAfrisan, {\"\\\", \"/\"}) & \"\\\",\n    Leer = (Nombre as text, Tipos as list) as table =>\n        let\n            Cabecera = Table.PromoteHeaders(\n                Csv.Document(Binary.Buffer(File.Contents(Carpeta & Nombre & \".csv\")),\n                    [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n                [PromoteAllScalars=true]),\n            Nulos = Table.ReplaceValue(Cabecera,\"\",null,Replacer.ReplaceValue,Table.ColumnNames(Cabecera))\n        in Table.TransformColumnTypes(Nulos, Tipos, \"en-US\"),\n    Inventario = Leer(\"Inventario\", {\n        {\"CilindroId\",type text},{\"Codigo\",type text},{\"RefrigeranteId\",type text},\n        {\"Refrigerante\",type text},{\"Estado\",type text},{\"Ubicacion\",type text},\n        {\"SucursalId\",type text},{\"Sucursal\",type text},{\"TecnicoId\",type text},{\"Tecnico\",type text},\n        {\"KgSegunUltimoPesaje\",type number},{\"FechaPesaje\",type datetime},\n        {\"ClienteId\",type text},{\"Cliente\",type text}}),\n    Ordenes = Leer(\"Ordenes\", {\n        {\"OtId\",type text},{\"Codigo\",type text},{\"SucursalId\",type text},{\"Sucursal\",type text},\n        {\"TecnicoId\",type text},{\"Tecnico\",type text},{\"Estado\",type text},\n        {\"FechaCreacion\",type datetime},{\"DiaCreacion\",type date},{\"FechaCierre\",type datetime},\n        {\"ClienteId\",type text},{\"Cliente\",type text}}),\n    DetalleOT = Leer(\"DetalleOT\", {\n        {\"OtId\",type text},{\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"KgSolicitados\",type number},{\"KgAutorizados\",type number}}),\n    Operaciones = Leer(\"Operaciones\", {\n        {\"OperacionId\",type text},{\"OtId\",type text},{\"Tipo\",type text},\n        {\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"CilindroInstalado\",type text},{\"CilindroRetirado\",type text},\n        {\"FechaConfirmacion\",type datetime},{\"DiaConfirmacion\",type date},\n        {\"KgInstalados\",type number},{\"KgRetirados\",type number},\n        {\"FechaRecepcion\",type datetime},{\"KgRecepcion\",type number},{\"PendienteRecepcion\",type logical}}),\n    Despachos = Leer(\"Despachos\", {\n        {\"DespachoId\",type text},{\"OtId\",type text},{\"Cilindro\",type text},\n        {\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"Fecha\",type datetime},{\"Dia\",type date},{\"KgDespachados\",type number},\n        {\"Estado\",type text},{\"FechaDevolucion\",type datetime},{\"KgDevueltos\",type number}}),\n    Incidencias = Leer(\"Incidencias\", {\n        {\"IncidenciaId\",type text},{\"OtId\",type text},{\"Tipo\",type text},\n        {\"Fecha\",type datetime},{\"Dia\",type date},{\"Abierta\",type logical},{\"FechaRevision\",type datetime}}),\n    Costos = Leer(\"Costos\", {\n        {\"CostoId\",type text},{\"OperacionId\",type text},{\"OtId\",type text},{\"RefrigeranteId\",type text},{\"Refrigerante\",type text},\n        {\"Gramos\",type number},{\"PrecioPorGramo\",type number},{\"Moneda\",type text},{\"Total\",type number},\n        {\"FactorClp\",type number},{\"TotalClp\",type number},{\"FechaValoracion\",type datetime},{\"DiaValoracion\",type date},{\"FechaCambio\",type date}})\nin\n    [Inventario=Inventario, Ordenes=Ordenes, DetalleOT=DetalleOT,\n     Operaciones=Operaciones, Despachos=Despachos, Incidencias=Incidencias, Costos=Costos]\n"
       }
     ],
     "annotations": [

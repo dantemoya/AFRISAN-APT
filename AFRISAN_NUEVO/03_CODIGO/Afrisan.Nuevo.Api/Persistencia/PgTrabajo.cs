@@ -10,7 +10,8 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         SELECT o."Id_OrdenTrabajo" AS "Id",o."Id_Publico" AS "Publico",o."CodigoOT" AS "Codigo",
           s."Id_Sucursal" AS "SucursalId",s."NombreSucursal" AS "Sucursal",s."Direccion",o."Descripcion",
           o."Id_Tecnico" AS "TecnicoId",t."Correo_Usuario" AS "Tecnico",o."Estado",a."Correo_Usuario" AS "Autorizador",
-          o."FechaCreacion" AS "Fecha",o."ObservacionTermino",o."HuellaCreacion" AS "Huella"
+          o."FechaCreacion" AS "Fecha",o."ObservacionTermino",o."HuellaCreacion" AS "Huella",
+          o."MotivoDevolucion",o."MotivoAnulacion"
         FROM afrisan."OrdenTrabajo" o JOIN afrisan."Sucursales" s USING("Id_Sucursal")
         JOIN afrisan."Usuario" t ON t."Id_Usuario"=o."Id_Tecnico" JOIN afrisan."Usuario" a ON a."Id_Usuario"=o."Id_Autorizador"
         """;
@@ -229,6 +230,50 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         await u.Exec("UPDATE afrisan.\"Incidencia\" SET \"Respuesta\"=@p1 WHERE \"Id_Incidencia\"=@p0",incidencia,dto.Respuesta.Trim());
         var result=await Ver(u,o);await u.Commit();return result;
     }
+    // D-43: Bodega reingresa un cilindro recargado con su nuevo peso y la foto de la balanza.
+    public async Task<CilindroResponse> RecargarCilindro(string codigo,RecargarCilindroRequest dto,ClaimsPrincipal user)
+    {
+        Rol(user,"Bodega","Administrador");var actor=PgDatabase.Actor(user);await using var u=await database.Open(actor);
+        if(dto.IdOperacion==Guid.Empty||dto.Foto is null) throw new ReglaInventarioException("Falta el identificador de la recarga o su foto.");
+        var c=(await u.Query<CilindroRow>(PgInventario.CilindrosSql+" WHERE upper(c.\"CilindroQR\")=@p0 FOR UPDATE OF c",codigo.Trim().ToUpperInvariant())).SingleOrDefault()
+            ??throw new ReglaInventarioException("Cilindro no encontrado.",404);
+        var previo=await u.Query<long>("SELECT \"PesoBrutoGr\" AS \"Value\" FROM afrisan.\"Pesaje\" WHERE \"Id_Pesaje\"=@p0 AND \"Id_Cilindro\"=@p1 AND \"Tipo\"='Recarga'",dto.IdOperacion,c.Id);
+        if(previo.Length==0)
+        {
+            // Mismas reglas que el disparador de Pesaje, antes de subir la foto, para no dejar fotos huérfanas.
+            if(c.Ubicacion!="Bodega"||c.Estado is not("Vacio" or "Disponible")) throw new ReglaInventarioException("Solo se recarga un cilindro en Bodega, vacío o disponible, y con gas",409);
+            if(dto.PesoBrutoGr<=c.TaraGr||(decimal)dto.PesoBrutoGr>(decimal)c.TaraGr+c.CapacidadGr) throw new ReglaInventarioException("Peso fuera de tara/capacidad",409);
+            var f=await fotos.Guardar(dto.IdOperacion,dto.Foto.Id,"Recarga",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user));
+            await u.Exec("""
+                INSERT INTO afrisan."Pesaje"("Id_Pesaje","Id_Cilindro","Tipo","PesoBrutoGr","Id_Usuario","Observacion")
+                VALUES(@p0,@p1,'Recarga',@p2,@p3,@p4)
+                """,dto.IdOperacion,c.Id,dto.PesoBrutoGr,actor,PgInventario.Null(dto.Observacion));
+            await Evidencia(u,f,dto.IdOperacion,actor);
+        }
+        else if(previo[0]!=dto.PesoBrutoGr) throw new ReglaInventarioException("La recarga ya se registró con otro peso.",409);
+        var result=(await PgInventario.Map(u,await u.Query<CilindroRow>(PgInventario.CilindrosSql+" WHERE c.\"Id_Cilindro\"=@p0",c.Id))).Single();
+        await u.Commit();return result;
+    }
+    // D-39: Bodega devuelve al técnico una OT enviada a revisión, antes de aprobarla.
+    public async Task<OtResponse> Devolver(Guid id,DevolverOtRequest dto,ClaimsPrincipal user)
+    {
+        Rol(user,"Bodega");await using var u=await database.Open(PgDatabase.Actor(user));var o=await Acceder(u,id,user);
+        var motivo=dto.Motivo.Trim();
+        if(o.Estado=="EnTerreno"&&o.MotivoDevolucion==motivo) return await Ver(u,o);
+        if(o.Estado!="PendienteBodega") throw new ReglaInventarioException("Solo se devuelve una OT pendiente de aprobación de Bodega.",409);
+        await u.Exec("UPDATE afrisan.\"OrdenTrabajo\" SET \"Estado\"='EnTerreno',\"MotivoDevolucion\"=@p1 WHERE \"Id_OrdenTrabajo\"=@p0",o.Id,motivo);
+        var result=await Ver(u,await Acceder(u,id,user));await u.Commit();return result;
+    }
+    // D-40: el Autorizador anula una OT sin retiros de Bodega ni trabajos registrados.
+    public async Task<OtResponse> Anular(Guid id,AnularOtRequest dto,ClaimsPrincipal user)
+    {
+        Rol(user,"Autorizador");await using var u=await database.Open(PgDatabase.Actor(user));var o=await Acceder(u,id,user);
+        var motivo=dto.Motivo.Trim();
+        if(o.Estado=="Anulada") {if(o.MotivoAnulacion!=motivo) throw new ReglaInventarioException("La OT ya fue anulada con otro motivo.",409);return await Ver(u,o);}
+        if(o.Estado!="Asignada") throw new ReglaInventarioException("Solo se anula una OT asignada, sin retiros de Bodega ni trabajos registrados.",409);
+        await u.Exec("UPDATE afrisan.\"OrdenTrabajo\" SET \"Estado\"='Anulada',\"MotivoAnulacion\"=@p1 WHERE \"Id_OrdenTrabajo\"=@p0",o.Id,motivo);
+        var result=await Ver(u,await Acceder(u,id,user));await u.Commit();return result;
+    }
     public async Task<OtResponse> Transicion(Guid id,string accion,string? observacion,bool confirma,ClaimsPrincipal user)
     {
         Rol(user,accion=="termino"?"Tecnico":accion=="bodega"?"Bodega":"Autorizador");
@@ -327,7 +372,7 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
             result[i]=new(o.Publico,o.Codigo,o.Sucursal,o.Direccion,o.Descripcion,o.Tecnico,o.Estado,o.Autorizador,o.Fecha,
                 detalle[o.Id].Select(d=>d.Response()).ToArray(),retirar[o.Id].Select(r=>r.Codigo).ToArray(),entregas,ops.ToArray(),
                 incidencias[o.Id].Select(x=>x.Response()).ToArray(),historial[o.Id].Select(e=>e.Response()).ToArray(),
-                o.ObservacionTermino,Revision("Bodega"),Revision("Autorizador"));
+                o.ObservacionTermino,Revision("Bodega"),Revision("Autorizador"),o.MotivoDevolucion,o.MotivoAnulacion);
         }
         return result;
     }

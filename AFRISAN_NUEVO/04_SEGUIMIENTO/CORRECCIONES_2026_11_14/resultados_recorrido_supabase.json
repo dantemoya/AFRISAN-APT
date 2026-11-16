@@ -1,0 +1,213 @@
+{
+  "fecha_utc": "2026-11-15T04:29:10.738Z",
+  "tipo": "API .NET 8 local + base de Supabase con la migración 11 (CDP-67, repetición)",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresan las cuentas de prueba de Bodega, Autorizador y Técnico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Existen la sucursal, el gas y el cilindro instalado del recorrido del 14/11"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Se retoma la OT de reemplazo de la ejecución anterior, con el retiro de Bodega y el borrador guardados"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/operaciones/{id}/confirmar?version=5: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un instalado de 13.000 g con salida de 14.990 g se rechaza (DEF-03)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/operaciones/{id}/confirmar?version=6: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un retirado 210 g sobre su último peso se rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Con los pesos de las fotos el reemplazo se confirma"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico envía la OT a Bodega y queda en el historial"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega recibe el cilindro retirado con 12.900 g (50 g menos que en terreno)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/aprobar-bodega: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega no aprueba con su incidencia abierta (DEF-02)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/devolver: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/devolver: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega devuelve la OT al técnico con el motivo (DEF-01)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El Autorizador responde la incidencia con la OT devuelta"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico reenvía la OT a Bodega"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/aprobar-bodega: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega no aprueba con una rectificación pendiente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin pendientes, Bodega aprueba"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/devolver: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El Autorizador revisa y cierra la OT corregida"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El cilindro retirado vuelve a Bodega como Vacío (DEF-04)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/entregas: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un cilindro Vacío no se puede retirar de Bodega para otra OT"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-A34E1E7E2CBA45D88DA2523F975FEA7A/recarga: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-A34E1E7E2CBA45D88DA2523F975FEA7A/recarga: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega registra la recarga con peso y foto: el cilindro vuelve a Disponible"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El reintento devuelve el mismo pesaje de recarga"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Repetir la misma recarga no duplica el registro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-5E61006556914A569E0120C0A03C0855/recarga: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "No se recarga un cilindro instalado en la sucursal"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT de agregado sin retiros se anula al terminar"
+    }
+  ],
+  "datos_creados": {
+    "cilindro_nuevo": "AFR-5E61006556914A569E0120C0A03C0855",
+    "ot_anulada": "OT-9534744825674075814C7C947AA6DC49",
+    "ot_reemplazo": "OT-0EBB07869B424B378B6D4D3C28B04412",
+    "ot_agregado": "OT-A36B6E2787704A9C9C9AB733084E5E54"
+  },
+  "intento_anterior": {
+    "fecha_utc": "2026-11-15T04:27:50.121Z",
+    "estado": "FALLO",
+    "error": "Un retirado 320 g sobre su último peso se rechaza",
+    "comprobaciones": [
+      {
+        "resultado": "OK",
+        "comprobacion": "Ingresan las cuentas de prueba de Bodega, Autorizador y Técnico"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "Existen la sucursal, el gas y el cilindro instalado del recorrido del 14/11"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "POST cilindros: HTTP 409"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "Un peso inicial mayor que la tara más la capacidad se rechaza"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "El cilindro nuevo aparece Disponible al buscarlo por serie"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "POST ordenes-trabajo/{id}/anular: HTTP 403"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "POST ordenes-trabajo/{id}/anular: HTTP 400"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "El Autorizador anula la OT con motivo y queda en el historial"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "Anular liberó el cilindro previsto: se reserva en la OT nueva"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "El técnico retira el cilindro de Bodega con peso y foto"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "POST ordenes-trabajo/{id}/anular: HTTP 409"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "POST ordenes-trabajo/{id}/operaciones/{id}/confirmar?version=3: HTTP 409"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "Un instalado de 13.000 g con salida de 14.990 g se rechaza (DEF-03)"
+      },
+      {
+        "resultado": "OK",
+        "comprobacion": "POST ordenes-trabajo/{id}/operaciones/{id}/confirmar?version=4: HTTP 409"
+      },
+      {
+        "resultado": "FALLO",
+        "comprobacion": "Un retirado 320 g sobre su último peso se rechaza"
+      }
+    ]
+  },
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 33
+}

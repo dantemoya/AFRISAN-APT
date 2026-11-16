@@ -32,7 +32,7 @@ else
         else if(cargando){<p role="status">Consultando configuración…</p>}
         else
         {
-            <p>El paquete incluye el proyecto editable del informe con cuatro páginas. Falta revisarlo en Power BI Desktop y publicarlo.</p>
+            <p>El paquete incluye el proyecto editable del informe con seis páginas. Falta revisarlo en Power BI Desktop y publicarlo.</p>
             <ol class="bi-steps"><li>Descarga el paquete y descomprímelo en una carpeta privada.</li><li>Abre Informe/AFRISAN.pbip en Power BI Desktop y sigue LEEME.md para conectar los CSV, actualizar y guardar el PBIX.</li><li>Publica el informe y configura su identificador en el servidor para verlo aquí.</li></ol>
             <p class="muted">El paquete incluye los registros completos al momento de descargarlo. Su actualización es manual.</p>
         }
@@ -76,7 +76,7 @@ else
         <p class="muted bi-cut" role="status">Corte: @resumen.GeneradoUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss") · Período: @resumen.Desde.ToString("dd/MM/yyyy") al @resumen.Hasta.ToString("dd/MM/yyyy") (Chile).</p>
         <div class="metric-grid" aria-busy="@cargando">
             <div class="metric"><span>Cilindros al corte</span><strong>@resumen.Cilindros</strong><small>@resumen.SinPesaje sin pesaje · no usa filtro de fecha</small></div>
-            <div class="metric"><span>OT abiertas</span><strong>@resumen.OrdenesAbiertas</strong><small>Creadas en el período · @resumen.OrdenesCerradas cerradas</small></div>
+            <div class="metric"><span>OT abiertas</span><strong>@resumen.OrdenesAbiertas</strong><small>Creadas en el período · @resumen.OrdenesCerradas cerradas@(resumen.OrdenesAnuladas > 0 ? $" · {resumen.OrdenesAnuladas} anuladas" : "")</small></div>
             <div class="metric"><span>Kg en cilindros instalados</span><strong>@Numero(resumen.KgInstalados)</strong><small>Operaciones confirmadas en el período</small></div>
             <div class="metric"><span>Retirados pendientes</span><strong>@resumen.RetiradosPendientes</strong><small>Reemplazos confirmados en el período, aún sin recepción</small></div>
             <div class="metric"><span>Incidencias abiertas</span><strong>@resumen.IncidenciasAbiertas</strong><small>Registradas en el período, aún sin revisión</small></div>
@@ -86,6 +86,7 @@ else
             @Grafico("Órdenes por estado",resumen.OrdenesPorEstado,"OT")
             @Grafico("Kg instalados por refrigerante",resumen.InstaladosPorRefrigerante,"kg")
         </div>
+        @Consumo(resumen.ConsumoPorSucursal ?? [])
         <div class="notice info mt">Los kilos representan el contenido neto medido al instalar el cilindro. Los estados y pendientes corresponden al corte actual. Para revisar todos los pendientes históricos, amplía el período.</div>
     }
     else if(cargando){<p role="status">Cargando indicadores…</p>}
@@ -103,6 +104,7 @@ else
     private TokenPowerBiResponse? token;
     private bool persistente=>Sesion.Entorno?.Modo=="PostgreSQL";
     private static string Numero(decimal n)=>n.ToString("N2",CultureInfo.GetCultureInfo("es-CL"));
+    private static string Entero(decimal n)=>n.ToString("N0",CultureInfo.GetCultureInfo("es-CL"));
     protected override Task OnInitializedAsync()=>persistente?Cargar():Task.CompletedTask;
     private async Task Cargar()
     {
@@ -167,11 +169,54 @@ else
         try{await JS.InvokeVoidAsync("navigator.clipboard.writeText",token.Token);mensaje="Token copiado. Pégalo en Power BI y no lo compartas.";}
         catch(JSException){error="El navegador no permitió copiar. Selecciona el token y cópialo con Ctrl+C.";}
     }
+    // D-45: consumo por sucursal (kg instalados) con los kg solicitados, por semana o mes; un color por empresa cliente.
+    private string periodo="Mes";
+    private static readonly string[] ColoresClientes=["#0b8b80","#d9822b","#4f6bd6","#b5487a","#6b8e23","#8a5cc2","#c0392b","#2e86ab"];
+    private static string Etiqueta(string periodo,DateOnly inicio)=>periodo=="Semana"
+        ?$"Semana del {inicio:dd/MM} al {inicio.AddDays(6):dd/MM/yyyy}"
+        :inicio.ToString("MMMM 'de' yyyy",CultureInfo.GetCultureInfo("es-CL"));
+    private static string Ancho(decimal valor,decimal maximo)=>
+        (valor<=0||maximo<=0?0m:Math.Max(1m,Math.Round(valor*100m/maximo,1))).ToString(CultureInfo.InvariantCulture)+"%";
+    private RenderFragment Consumo(BiConsumoResponse[] consumo)
+    {
+        var clientes=consumo.Select(x=>x.Cliente??"Sin cliente").Distinct().Order().ToArray();
+        string Color(string? cliente)=>ColoresClientes[Array.IndexOf(clientes,cliente??"Sin cliente")%ColoresClientes.Length];
+        var filas=consumo.Where(x=>x.Periodo==periodo).ToArray();
+        var maximo=filas.Length==0?0m:filas.Max(x=>Math.Max(x.KgInstalados,x.KgSolicitados));
+        return @<section class="panel bi-consumo mt" aria-labelledby="titulo-consumo">
+            <div class="section-heading"><h3 id="titulo-consumo">Consumo de refrigerante por sucursal</h3>
+                <div class="bi-toggle" role="group" aria-label="Agrupar el consumo por">
+                    @foreach(var p in new[]{"Semana","Mes"}){var opcion=p;<button type="button" class="btn @(periodo==opcion?"primary":"secondary")" aria-pressed="@(periodo==opcion?"true":"false")" @onclick="()=>periodo=opcion">@opcion</button>}
+                </div>
+            </div>
+            <p class="muted bi-nota">Barra de color: kg netos instalados en la sucursal, con la misma regla de los límites. Barra gris: kg solicitados por el cliente en OT no anuladas. Usa los filtros de arriba.</p>
+            @if(filas.Length==0){<p class="muted">Sin registros para estos filtros.</p>}
+            else
+            {
+                <div class="bi-leyenda" aria-label="Colores por empresa">@foreach(var c in clientes){<span><i style="background:@Color(c)"></i>@c</span>}<span><i class="sol"></i>Kg solicitados</span></div>
+                @foreach(var grupo in filas.GroupBy(x=>x.Inicio).OrderBy(g=>g.Key))
+                {
+                    <h4>@Etiqueta(periodo,grupo.Key)</h4>
+                    <ul aria-label="@Etiqueta(periodo,grupo.Key)">
+                        @foreach(var f in grupo)
+                        {
+                            <li><div><span>@f.Sucursal<small>@(f.Cliente??"Sin cliente")</small></span><strong>@Numero(f.KgInstalados) kg · solicitados @Numero(f.KgSolicitados) kg</strong></div>
+                                <div class="bi-barras" role="img" aria-label="@($"{f.Sucursal}: {Numero(f.KgInstalados)} kg instalados y {Numero(f.KgSolicitados)} kg solicitados")">
+                                    <span style="width:@Ancho(f.KgInstalados,maximo);background:@Color(f.Cliente)"></span><span class="sol" style="width:@Ancho(f.KgSolicitados,maximo)"></span>
+                                </div></li>
+                        }
+                    </ul>
+                }
+            }
+        </section>;
+    }
     private RenderFragment Grafico(string titulo,BiGrupoResponse[] grupos,string unidad)=>@<section class="panel bi-chart"><h3>@titulo</h3>
         @if(grupos.Length==0){<p class="muted">Sin registros para estos filtros.</p>}
         else
         {
-            <ul aria-label="@titulo">@foreach(var g in grupos){<li><div><span>@g.Nombre</span><strong>@Numero(g.Valor) @unidad</strong></div><meter min="0" max="@Math.Max(1m,grupos.Max(x=>x.Valor))" value="@g.Valor" aria-label="@($"{g.Nombre}: {Numero(g.Valor)} {unidad}")">@g.Valor</meter></li>}</ul>
+            // Los conteos (cilindros, OT) van sin decimales y con el nombre del estado que usa el resto de la aplicación.
+            var conteo=unidad!="kg";
+            <ul aria-label="@titulo">@foreach(var g in grupos){var nombre=conteo?Formato.Estado(g.Nombre):g.Nombre;var valor=conteo?Entero(g.Valor):Numero(g.Valor);<li><div><span>@nombre</span><strong>@valor @unidad</strong></div><meter min="0" max="@Math.Max(1m,grupos.Max(x=>x.Valor))" value="@g.Valor" aria-label="@($"{nombre}: {valor} {unidad}")">@g.Valor</meter></li>}</ul>
         }
     </section>;
 }

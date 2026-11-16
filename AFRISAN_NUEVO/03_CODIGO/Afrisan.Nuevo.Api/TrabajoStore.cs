@@ -219,6 +219,10 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             if (!ot.Entregas.Any(e => e.Codigo == nuevo.Codigo && e.Estado == "EnProcesoDespacho") || nuevo.Ubicacion != "Tecnico" || nuevo.Tecnico != ot.Tecnico) Fallar("El cilindro no está en la entrega/custodia de esta OT.", 409);
             ValidarPeso(nuevo, d.PesoInstaladoGr!.Value);
             if (!op.Fotos.Values.Any(f => f.Info.Grupo == "Instalado")) Fallar("Adjunta al menos una foto del pesaje del cilindro instalado.");
+            // D-42: entre la salida de Bodega y la instalación el cilindro no se abre; solo cabe el error de balanza.
+            var salida = ot.Entregas.Last(e => e.Codigo == nuevo.Codigo && e.Estado == "EnProcesoDespacho").PesoBrutoGr;
+            if (Math.Abs(d.PesoInstaladoGr!.Value - salida) > ReglasPeso.ToleranciaGr)
+                Fallar($"El peso instalado ({d.PesoInstaladoGr} g) difiere en más de {ReglasPeso.ToleranciaGr} g del peso de salida de Bodega ({salida} g). Vuelve a pesar el cilindro; si la diferencia es real, devuélvelo a Bodega sin usar.", 409);
             CilindroResponse? viejo = null;
             if (d.Tipo == "Reemplazo")
             {
@@ -228,6 +232,8 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
                 if (viejo.RefrigeranteId != nuevo.RefrigeranteId) Fallar("El reemplazo debe conservar el tipo de refrigerante del envase retirado.");
                 ValidarPeso(viejo, d.PesoRetiradoGr!.Value);
                 if (!op.Fotos.Values.Any(f => f.Info.Grupo == "Retirado")) Fallar("Adjunta al menos una foto del pesaje del cilindro retirado.");
+                if (viejo.PesajeRegistrado is { } ultimo && d.PesoRetiradoGr!.Value > ultimo.PesoBrutoGr + ReglasPeso.ToleranciaGr)
+                    Fallar($"El cilindro retirado pesa {d.PesoRetiradoGr} g, más que su último peso registrado ({ultimo.PesoBrutoGr} g). Un cilindro en uso no gana gas: vuelve a pesarlo.", 409);
             }
             if (ot.Operaciones.Values.Any(o => o != op && o.Estado == "Registrada" &&
                 (o.Datos.CodigoInstalado == nuevo.Codigo || viejo is not null && o.Datos.CodigoRetirado == viejo.Codigo))) Fallar("Uno de los cilindros ya se utilizó en otra operación de esta OT.", 409);
@@ -270,11 +276,39 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             var entrega = ot.Entregas.FindLastIndex(e => e.Codigo == c.Codigo && e.Estado == "EnProcesoDespacho");
             if (op is null && entrega < 0) Fallar("No hay retiro ni entrega sin uso pendiente de ese envase en esta OT.", 409);
             if (c.Ubicacion != "Tecnico" || c.Tecnico != ot.Tecnico) Fallar("El envase no está bajo esta custodia.", 409);
-            inventario.Ubicar(c.Codigo, "Bodega", dto.PesoBrutoGr == c.TaraGr ? "Vacio" : "Disponible", null, null, Actor(user), "Recepción de envase retirado", dto.PesoBrutoGr);
+            // D-43: el retirado de la sucursal vuelve vacío (pendiente de recarga); un despacho sin uso vuelve disponible.
+            inventario.Ubicar(c.Codigo, "Bodega", op is not null || dto.PesoBrutoGr == c.TaraGr ? "Vacio" : "Disponible", null, null, Actor(user), "Recepción de envase retirado", dto.PesoBrutoGr);
             if (op is not null) { op.Recibido = true; op.UsuarioRecepcion = Actor(user); op.FechaRecepcion = DateTimeOffset.UtcNow; op.PesoRecepcionGr = dto.PesoBrutoGr; op.ObservacionRecepcion = dto.Observacion?.Trim(); }
             else ot.Entregas[entrega] = ot.Entregas[entrega] with { Estado = "Devuelto", PesoRecepcionGr = dto.PesoBrutoGr, UsuarioRecepcion = Actor(user), FechaRecepcion = DateTimeOffset.UtcNow };
             Anotar(ot, user, "Recepción oficial de bodega", $"{c.Codigo}: {dto.PesoBrutoGr} g. {dto.Observacion}");
             return Ver(ot);
+        }
+    }
+
+    // D-43: Bodega reingresa un cilindro recargado con su nuevo peso y la foto de la balanza.
+    private readonly Dictionary<Guid, (string Codigo, long Peso, FotoGuardada Foto)> recargas = [];
+    public CilindroResponse Recargar(string codigo, RecargarCilindroRequest dto, ClaimsPrincipal user)
+    {
+        lock (inventario.SyncRoot)
+        {
+            if (dto.IdOperacion == Guid.Empty) Fallar("Falta el identificador de la recarga.");
+            var c = BuscarCilindro(codigo);
+            if (recargas.TryGetValue(dto.IdOperacion, out var previa))
+            {
+                if (previa.Codigo != c.Codigo || previa.Peso != dto.PesoBrutoGr) Fallar("La recarga ya se registró con otros datos.", 409);
+                return BuscarCilindro(codigo);
+            }
+            if (c.Ubicacion != "Bodega" || c.Estado is not ("Vacio" or "Disponible")) Fallar("Solo se recarga un cilindro en Bodega, vacío o disponible, y con gas.", 409);
+            ValidarPeso(c, dto.PesoBrutoGr);
+            if (dto.PesoBrutoGr <= c.TaraGr) Fallar("Solo se recarga un cilindro en Bodega, vacío o disponible, y con gas.", 409);
+            var foto = dto.Foto ?? throw new ReglaInventarioException("Adjunta la foto de la balanza con el peso recargado.");
+            if (foto.Id == Guid.Empty || string.IsNullOrWhiteSpace(foto.Nombre) || foto.Nombre.Length > 150) Fallar("Identificador o nombre de fotografía inválido.");
+            var datos = LeerImagen(new() { Id = foto.Id, Nombre = foto.Nombre, ContentType = foto.ContentType, Base64 = foto.Base64 });
+            if (bytesFotos + datos.Length > 256L * 1024 * 1024) Fallar("La memoria de evidencias está llena. No se registró la recarga.", 409);
+            var info = new FotoResponse(foto.Id, "Recarga", c.Codigo, Path.GetFileName(foto.Nombre), foto.ContentType, datos.Length, DateTimeOffset.UtcNow, Actor(user));
+            recargas.Add(dto.IdOperacion, (c.Codigo, dto.PesoBrutoGr, new(info, datos))); bytesFotos += datos.Length;
+            inventario.Ubicar(c.Codigo, "Bodega", "Disponible", null, null, Actor(user), $"Recarga en Bodega. {dto.Observacion}".Trim(), dto.PesoBrutoGr);
+            return BuscarCilindro(codigo);
         }
     }
 
@@ -302,8 +336,8 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
     {
         lock (inventario.SyncRoot)
         {
+            // D-41: las incidencias se responden en cualquier etapa abierta, para no trabar la aprobación de Bodega.
             var ot = Acceder(id, user); Abierta(ot);
-            if (ot.AprobacionBodega is null) Fallar("Bodega debe aprobar los cilindros y sus pesos antes de la revisión del Autorizador.", 409);
             var indice = ot.Incidencias.FindIndex(i => i.Id == incidenciaId);
             if (indice < 0) Fallar("Incidencia no encontrada.", 404);
             if (ot.Incidencias[indice].Respuesta is not null) Fallar("La revisión ya está registrada; no se sobrescribe.", 409);
@@ -337,10 +371,41 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             if (ot.AprobacionBodega is not null) return Ver(ot);
             if (ot.Estado != "PendienteBodega") Fallar("El técnico debe informar el término antes de la aprobación de Bodega.", 409);
             RecepcionesCompletas(ot);
+            if (ot.Incidencias.Any(i => i.Respuesta is null)) Fallar("Incidencias sin revisar: el Autorizador debe responderlas antes de la aprobación de Bodega, o devuelve la OT al técnico.");
             if (!dto.ConfirmoRevision) Fallar("Confirma que revisaste los cilindros, pesos y fotos antes de aprobar.");
             ot.AprobacionBodega = new(Actor(user), DateTimeOffset.UtcNow, dto.Observacion?.Trim());
             ot.Estado = "PendienteRevision";
             Anotar(ot, user, "Aprobación de Bodega", dto.Observacion ?? "Cilindros, pesos de recepción y evidencias revisados. Se habilita la revisión del Autorizador.");
+            return Ver(ot);
+        }
+    }
+
+    // D-39: Bodega devuelve al técnico una OT enviada a revisión, antes de aprobarla.
+    public OtResponse Devolver(Guid id, DevolverOtRequest dto, ClaimsPrincipal user)
+    {
+        lock (inventario.SyncRoot)
+        {
+            var ot = Acceder(id, user); var motivo = dto.Motivo?.Trim() ?? "";
+            if (ot.Estado == "EnTerreno" && ot.MotivoDevolucion == motivo) return Ver(ot);
+            if (ot.Estado != "PendienteBodega" || ot.AprobacionBodega is not null) Fallar("Solo se devuelve una OT pendiente de aprobación de Bodega.", 409);
+            if (motivo.Length < 5) Fallar("Explica por qué se devuelve la OT al técnico.");
+            ot.Estado = "EnTerreno"; ot.MotivoDevolucion = motivo;
+            Anotar(ot, user, "Devuelta al técnico por Bodega", motivo);
+            return Ver(ot);
+        }
+    }
+
+    // D-40: el Autorizador anula una OT sin retiros de Bodega ni trabajos registrados.
+    public OtResponse Anular(Guid id, AnularOtRequest dto, ClaimsPrincipal user)
+    {
+        lock (inventario.SyncRoot)
+        {
+            var ot = Acceder(id, user); var motivo = dto.Motivo?.Trim() ?? "";
+            if (ot.Estado == "Anulada") { if (ot.MotivoAnulacion != motivo) Fallar("La OT ya fue anulada con otro motivo.", 409); return Ver(ot); }
+            if (ot.Estado != "Asignada" || ot.Entregas.Count > 0 || ot.Operaciones.Count > 0) Fallar("Solo se anula una OT asignada, sin retiros de Bodega ni trabajos registrados.", 409);
+            if (motivo.Length < 5) Fallar("Indica el motivo de la anulación.");
+            ot.Estado = "Anulada"; ot.MotivoAnulacion = motivo;
+            Anotar(ot, user, "OT anulada", motivo);
             return Ver(ot);
         }
     }
@@ -403,7 +468,7 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
     private CilindroResponse BuscarCilindro(string codigo) => inventario.Cilindro(codigo) ?? throw new ReglaInventarioException($"Cilindro {codigo} no registrado.");
     private static Operacion OperacionDe(Orden ot, Guid id) => ot.Operaciones.GetValueOrDefault(id) ?? throw new ReglaInventarioException("Operación no encontrada.", 404);
     private static string Actor(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new ReglaInventarioException("Sesión inválida.", 401);
-    private static void Abierta(Orden ot) { if (ot.Estado == "Cerrada") Fallar("La OT ya está cerrada.", 409); }
+    private static void Abierta(Orden ot) { if (ot.Estado is "Cerrada" or "Anulada") Fallar(ot.Estado == "Anulada" ? "La OT fue anulada." : "La OT ya está cerrada.", 409); }
     private static bool EsEditable(Orden ot) => ot.Estado is "Asignada" or "EnProcesoDespacho" or "EnTerreno";
     private static void Editable(Orden ot) { if (!EsEditable(ot)) Fallar("La OT ya se envió a revisión o está cerrada. Solicita rectificación.", 409); }
     private static void AccesoEvidencias(Orden ot, ClaimsPrincipal user)
@@ -440,11 +505,11 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
         op.PesoRecepcionGr, op.ObservacionRecepcion);
     private static OtResponse Ver(Orden o) => new(o.Id, o.Codigo, o.Sucursal, o.Direccion, o.Descripcion, o.Tecnico, o.Estado, o.Autorizador,
         o.Fecha, o.Detalle.ToArray(), o.Retirar.ToArray(), o.Entregas.ToArray(), o.Operaciones.Values.Select(VerOperacion).ToArray(), o.Incidencias.ToArray(), o.Historial.ToArray(), o.ObservacionTermino,
-        o.AprobacionBodega, o.RevisionAutorizador);
+        o.AprobacionBodega, o.RevisionAutorizador, o.MotivoDevolucion, o.MotivoAnulacion);
     private sealed class Orden
     {
         public Guid Id; public string Codigo = "", Sucursal = "", Direccion = "", Descripcion = "", Tecnico = "", Autorizador = "", Estado = "Asignada";
-        public DateTimeOffset Fecha = DateTimeOffset.UtcNow; public string? ObservacionTermino;
+        public DateTimeOffset Fecha = DateTimeOffset.UtcNow; public string? ObservacionTermino, MotivoDevolucion, MotivoAnulacion;
         public RevisionTrabajoResponse? AprobacionBodega, RevisionAutorizador;
         public LineaOtResponse[] Detalle = []; public string[] Retirar = [];
         public Dictionary<Guid, (string Huella, FotoGuardada Foto)> Despachos = [];

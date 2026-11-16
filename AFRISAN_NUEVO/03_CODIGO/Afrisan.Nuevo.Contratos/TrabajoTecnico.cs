@@ -33,7 +33,18 @@ public sealed record OtResponse(Guid Id, string Codigo, string Sucursal, string 
     string TecnicoEmail, string Estado, string Autorizador, DateTimeOffset Fecha,
     LineaOtResponse[] Detalle, string[] CilindrosARetirar, EntregaResponse[] Entregas,
     OperacionResponse[] Operaciones, IncidenciaResponse[] Incidencias, EventoResponse[] Historial,
-    string? ObservacionTermino, RevisionTrabajoResponse? AprobacionBodega = null, RevisionTrabajoResponse? RevisionAutorizador = null);
+    string? ObservacionTermino, RevisionTrabajoResponse? AprobacionBodega = null, RevisionTrabajoResponse? RevisionAutorizador = null,
+    string? MotivoDevolucion = null, string? MotivoAnulacion = null);
+/// <summary>Bodega devuelve al técnico una OT enviada a revisión, antes de aprobarla (D-39).</summary>
+public sealed record DevolverOtRequest
+{
+    [Required, StringLength(2000, MinimumLength = 5)] public string Motivo { get; init; } = "";
+}
+/// <summary>El Autorizador anula una OT sin retiros ni trabajos registrados (D-40).</summary>
+public sealed record AnularOtRequest
+{
+    [Required, StringLength(2000, MinimumLength = 5)] public string Motivo { get; init; } = "";
+}
 /// <summary>Retiro físico de bodega registrado por el técnico asignado, con peso y foto.</summary>
 public sealed record EntregarCilindroRequest
 {

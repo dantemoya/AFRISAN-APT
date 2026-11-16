@@ -22,6 +22,7 @@
     <EmbeddedResource Include="../../02_BASE_DATOS/08_Rectificacion_Pesajes.sql" LogicalName="AFRISAN.Rectificaciones.sql" />
     <EmbeddedResource Include="../../02_BASE_DATOS/09_Mantenedores_Bajas.sql" LogicalName="AFRISAN.Mantenedores.sql" />
     <EmbeddedResource Include="../../02_BASE_DATOS/10_Costos_Limites.sql" LogicalName="AFRISAN.CostosLimites.sql" />
+    <EmbeddedResource Include="../../02_BASE_DATOS/11_Devolucion_Anulacion_Recarga.sql" LogicalName="AFRISAN.DevolucionRecarga.sql" />
     <EmbeddedResource Include="PowerBi/Plantilla/*" LogicalName="AFRISAN.PowerBI.%(Filename)%(Extension)" />
     <EmbeddedResource Include="PowerBi/Conexion/AfrisanApi.pq" LogicalName="AFRISAN.Conexion.AfrisanApi.pq" />
     <EmbeddedResource Include="../PowerBI/AFRISAN.pbip" LogicalName="AFRISAN.Informe.AFRISAN.pbip" />

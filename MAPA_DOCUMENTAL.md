@@ -40,7 +40,7 @@ revisión, o **Pendiente** si depende de un hecho que todavía no ocurre.
 | Registro de decisiones y cambios (D-01 a D-38) | `AFRISAN_NUEVO/04_SEGUIMIENTO/DECISIONES_Y_PENDIENTES.md` | Existente |
 | Tablero de seguimiento por sprints | `AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_08/Tablero_AFRISAN.md` | Existente |
 | Informes de Fase 1, avance y monitoreo | `Fase 1/…/05_…`, `Fase 2/Evidencias Proyecto/Evidencias de documentación/02_` y `03_` | Existente |
-| **Informe final del Proyecto APT** | `Fase 2/Evidencias Grupales/Informe_Final_Proyecto_APT_Afrisan_DM.docx` | Existente; movido el 14/11 a la carpeta que pide el docente |
+| **Informe final del Proyecto APT** | `Fase 2/Evidencias Grupales/Informe_Final_Proyecto_APT_Afrisan_DM.docx` | Existente; movido el 14/11 a la carpeta que pide el docente y actualizado al 15/11 (recorrido completo y correcciones D-39 a D-43) |
 | **Registro de riesgos, supuestos y lecciones aprendidas** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/10_Registro_de_Riesgos_y_Lecciones_Afrisan_DM.xlsx` | Nuevo (11/11) |
 | **Acta de cierre del proyecto** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/12_Acta_de_Cierre_del_Proyecto_Afrisan_DM.docx` | Nuevo (11/11), se firma al cierre |
 | **Estimación de costos de desarrollo y operación** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/13_Estimacion_de_Costos_Afrisan_DM.xlsx` | Nuevo (11/11); falta la tarifa por hora |
@@ -80,8 +80,8 @@ revisión, o **Pendiente** si depende de un hecho que todavía no ocurre.
 
 | Documento | Ubicación | Estado |
 | --- | --- | --- |
-| Plan de pruebas | `Fase 2/Evidencias Proyecto/Evidencias de documentación/06_Plan_de_Pruebas_Afrisan_DM.docx` | Existente (11/11) |
-| Matriz de casos, aceptación, satisfacción, trazabilidad y defectos | `Fase 2/Evidencias Proyecto/Evidencias de documentación/07_Matriz_de_Casos_de_Prueba_Afrisan_DM.xlsx` | Existente (11/11) |
+| Plan de pruebas | `Fase 2/Evidencias Proyecto/Evidencias de documentación/06_Plan_de_Pruebas_Afrisan_DM.docx` | Existente (versión 1.1 del 15/11, con el recorrido del 14/11) |
+| Matriz de casos, aceptación, satisfacción, trazabilidad y defectos | `Fase 2/Evidencias Proyecto/Evidencias de documentación/07_Matriz_de_Casos_de_Prueba_Afrisan_DM.xlsx` | Existente (15/11: 72 casos y 14 defectos) |
 | Pruebas automatizadas (xUnit) | `AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Pruebas/` y `.github/workflows/ci.yml` | Existente |
 | Evidencias de validación por incremento | `AFRISAN_NUEVO/04_SEGUIMIENTO/` | Existente |
 | Informe de resultados de pruebas | Se incorpora al informe final | Pendiente: después de ejecutar despliegue, terreno y aceptación |

@@ -10,13 +10,14 @@
 else if (ot is null) { <h1>No se pudo consultar la OT</h1><div class="notice error">@error</div><button class="btn secondary" @onclick="Cargar">Reintentar</button> }
 else
 {
-    <div class="page-heading"><div><span class="eyebrow">@ot.Sucursal</span><h1>@ot.Codigo</h1><p>@ot.Direccion · @ot.Descripcion</p><p>Técnico asignado: <strong>@ot.TecnicoEmail</strong></p></div><span class="badge large @(ot.Estado == "Cerrada" ? "success" : "pending")">@Formato.Estado(ot.Estado)</span></div>
+    <div class="page-heading"><div><span class="eyebrow">@ot.Sucursal</span><h1>@ot.Codigo</h1><p>@ot.Direccion · @ot.Descripcion</p><p>Técnico asignado: <strong>@ot.TecnicoEmail</strong></p></div><span class="badge large @(ot.Estado == "Cerrada" ? "success" : ot.Estado == "Anulada" ? "neutral" : "pending")">@Formato.Estado(ot.Estado)</span></div>
     @if (error is not null) { <div class="notice error" role="alert">@error</div> }
     @if (mensaje is not null) { <div class="notice success" role="status">@mensaje</div> }
     @if (Local.ConsultaOffline) { <div class="notice warning">Copia local. Los cambios y fotografías pueden guardarse en este dispositivo y enviarse cuando vuelva la conexión.</div> }
-    <div class="notice info">Esta revisión registra envases y pesajes. Todavía no evalúa los límites semanales/mensuales de la sucursal ni calcula emisiones a partir de una entrega.</div>
+    @if (ot.Estado == "Anulada") { <div class="notice warning" role="status"><strong>OT anulada por el Autorizador</strong><p>@ot.MotivoAnulacion</p></div> }
+    @if (ot.Estado == "EnTerreno" && ot.MotivoDevolucion is not null) { <div class="notice warning" role="status"><strong>Bodega devolvió esta OT al técnico</strong><p>@ot.MotivoDevolucion</p><p>Corrige lo indicado (por ejemplo, con una incidencia o una rectificación de peso) y vuelve a enviar el trabajo a Bodega.</p></div> }
     <div class="split-grid">
-        <section class="panel"><h2>Pedido y autorización</h2><div class="table-wrap"><table><thead><tr><th>Refrigerante</th><th>Solicitado</th><th>Autorizado</th></tr></thead><tbody>@foreach (var l in ot.Detalle) { <tr><td>@l.Refrigerante</td><td>@Formato.Gramos(l.GrSolicitados)</td><td>@Formato.Gramos(l.GrAutorizados)</td></tr> }</tbody></table></div><p class="field-help">Estos importes de masa son del pedido. No son límites semanales/mensuales ni una medición de consumo o emisiones.</p><h3>Cilindros previstos para retiro</h3><p>@(ot.CilindrosARetirar.Length == 0 ? "Sin retiros previstos: pedido para agregados." : string.Join(", ", ot.CilindrosARetirar))</p></section>
+        <section class="panel"><h2>Pedido y autorización</h2><div class="table-wrap"><table><thead><tr><th>Refrigerante</th><th>Solicitado</th><th>Autorizado</th></tr></thead><tbody>@foreach (var l in ot.Detalle) { <tr><td>@l.Refrigerante</td><td>@Formato.Gramos(l.GrSolicitados)</td><td>@Formato.Gramos(l.GrAutorizados)</td></tr> }</tbody></table></div><p class="field-help">Cantidades del pedido autorizado, en gramos. El consumo frente a los límites de la sucursal se revisa en «Límites por sucursal».</p><h3>Cilindros previstos para retiro</h3><p>@(ot.CilindrosARetirar.Length == 0 ? "Sin retiros previstos: pedido para agregados." : string.Join(", ", ot.CilindrosARetirar))</p></section>
         <section class="panel"><h2>Retiro de bodega por el técnico</h2>
             @if (ot.Entregas.Length == 0) { <p class="muted">El técnico todavía no ha registrado cilindros retirados.</p> }
             @foreach (var e in ot.Entregas) {
@@ -46,7 +47,7 @@ else
         @if (ot.Operaciones.Length == 0) { <p class="muted">No hay operaciones recibidas por la API. Los borradores locales se muestran debajo.</p> }
         @foreach (var op in ot.Operaciones)
         {
-            <article class="operation-card"><div class="panel-heading"><h3>@op.Tipo · @op.Estado</h3><span class="badge neutral">@op.Fotos.Length fotos</span></div><p><strong>Retirado:</strong> @(op.CodigoRetirado ?? "No aplica") · @Formato.Gramos(op.PesoRetiradoGr)<br /><strong>Instalado:</strong> @(op.CodigoInstalado ?? "Pendiente") · @Formato.Gramos(op.PesoInstaladoGr)</p>
+            <article class="operation-card"><div class="panel-heading"><h3>@op.Tipo · @op.Estado</h3><span class="badge neutral">@op.Fotos.Length @(op.Fotos.Length == 1 ? "foto" : "fotos")</span></div><p><strong>Retirado:</strong> @(op.CodigoRetirado ?? "No aplica") · @Formato.Gramos(op.PesoRetiradoGr)<br /><strong>Instalado:</strong> @(op.CodigoInstalado ?? "Pendiente") · @Formato.Gramos(op.PesoInstaladoGr)</p>
                 @if (!string.IsNullOrWhiteSpace(op.Observacion)) { <p>@op.Observacion</p> }
                 <div class="form-actions">
                     @if (EsTecnico && op.Estado == "Borrador" && Editable) { <a class="btn secondary" href="@($"ordenes/{Id}/operacion/{op.Id}")">Continuar borrador</a> }
@@ -64,28 +65,33 @@ else
         }
     </section>
     @if (fotosVisibles.Count > 0) { <section class="panel mt"><h2>Evidencias del trabajo seleccionado</h2><div class="photo-grid">@foreach (var f in fotosVisibles) { <figure><img src="@f.Url" alt="@($"Pesaje {f.Info.Grupo} de {f.Info.CodigoCilindro}")" /><figcaption>@f.Info.Grupo · @f.Info.CodigoCilindro<br />@f.Info.Nombre</figcaption></figure> }</div><button class="btn subtle" @onclick="() => fotosVisibles.Clear()">Ocultar fotos</button></section> }
-    @if (EsBodega && ot.AprobacionBodega is null && ot.Estado != "Cerrada")
+    @if (EsBodega && ot.AprobacionBodega is null && Abierta)
     {
         <section class="panel mt"><h2>Recepción oficial de bodega</h2><p class="muted">Recibe el envase retirado de sucursal o un cilindro entregado que no se utilizó.</p><div class="form-grid"><div><label for="recepcion-codigo">Código recibido</label><select id="recepcion-codigo" @bind="codigoRecepcion"><option value="">Selecciona un envase pendiente</option>@foreach (var codigo in RecepcionesPendientes) { <option value="@codigo">@codigo</option> }</select></div><div><label for="recepcion-peso">Peso bruto recibido (g)</label><InputNumber id="recepcion-peso" @bind-Value="pesoRecepcion" min="0" step="1" /></div></div><label for="recepcion-nota">Observación</label><textarea id="recepcion-nota" @bind="notaRecepcion" maxlength="1000"></textarea><button class="btn primary mt" disabled="@ocupado" @onclick="Recibir">Confirmar recepción física</button></section>
     }
-    @if ((EsTecnico || EsBodega) && ot.AprobacionBodega is null && ot.Estado != "Cerrada")
+    @if ((EsTecnico || EsBodega) && ot.AprobacionBodega is null && Abierta)
     {
         <section class="panel mt"><h2>Incidencia o solicitud de rectificación</h2><div class="form-grid"><div><label for="incidencia-tipo">Tipo</label><select id="incidencia-tipo" @bind="tipoIncidencia"><option>Incidencia</option></select></div><div><label for="incidencia-operacion">Trabajo relacionado (opcional)</label><select id="incidencia-operacion" @bind="operacionIncidencia"><option value="">Toda la OT</option>@foreach (var op in ot.Operaciones) { <option value="@op.Id">@op.Tipo · @op.CodigoInstalado</option> }</select></div></div><label for="incidencia-motivo">Hechos / motivo de corrección</label><textarea id="incidencia-motivo" @bind="motivoIncidencia" maxlength="2000"></textarea><button class="btn secondary mt" @onclick="Incidencia" disabled="@ocupado">Enviar para revisión</button><p class="field-help">Conserva el registro original. El Autorizador revisa; el técnico no sobrescribe ni borra los pesajes confirmados.</p></section>
     }
     <section class="panel mt"><h2>Revisión de incidencias</h2>
         @foreach (var pendiente in incidenciasLocales.Where(i => i.OtId == Id && i.Pendiente)) { <div class="notice warning"><strong>@pendiente.Datos.Tipo guardada en este dispositivo</strong><p>@pendiente.Datos.Motivo</p><p>@(pendiente.Error ?? "Pendiente de enviar a la API. No equivale a una revisión del Autorizador.")</p></div> }
         @if (ot.Incidencias.Length == 0) { <p class="muted">Sin incidencias registradas.</p> }
-        @foreach (var inc in ot.Incidencias) { <article class="operation-card"><strong>@inc.Tipo</strong><p>@inc.Motivo</p><small>@inc.Usuario · @inc.Fecha.ToLocalTime().ToString("dd/MM HH:mm")</small>@if (inc.Respuesta is not null) { <div class="notice info"><strong>Revisión: @inc.Revisor</strong><p>@inc.Respuesta</p></div> } else if (EsAutorizador && ot.AprobacionBodega is not null) { <label>Conclusión de revisión</label><textarea @bind="respuestas[inc.Id]" maxlength="2000"></textarea><button class="btn secondary mt" disabled="@ocupado" @onclick="() => Resolver(inc.Id)">Registrar conclusión</button> } else { <p class="field-help">Pendiente de aprobación de Bodega y revisión del Autorizador.</p> }</article> }
+        @foreach (var inc in ot.Incidencias) { <article class="operation-card"><strong>@inc.Tipo</strong><p>@inc.Motivo</p><small>@inc.Usuario · @inc.Fecha.ToLocalTime().ToString("dd/MM HH:mm")</small>@if (inc.Respuesta is not null) { <div class="notice info"><strong>Revisión: @inc.Revisor</strong><p>@inc.Respuesta</p></div> } else if (EsAutorizador && Abierta) { <label>Conclusión de revisión</label><textarea @bind="respuestas[inc.Id]" maxlength="2000"></textarea><button class="btn secondary mt" disabled="@ocupado" @onclick="() => Resolver(inc.Id)">Registrar conclusión</button> } else { <p class="field-help">Pendiente de aprobación de Bodega y revisión del Autorizador.</p> }</article> }
     </section>
     @if (EsTecnico && Editable)
     {
         <section class="panel mt"><h2>Informar término del trabajo</h2><p>Envía el trabajo a Bodega para confirmar los cilindros y sus pesos. Después de su aprobación revisa el Autorizador.</p><label for="termino-nota">Observaciones y pendientes</label><textarea id="termino-nota" @bind="notaTermino" maxlength="2000"></textarea><button class="btn primary mt" disabled="@ocupado" @onclick="Terminar">Enviar trabajo a revisión de Bodega</button></section>
+    }
+    @if (EsAutorizador && ot.Estado == "Asignada" && ot.Entregas.Length == 0 && ot.Operaciones.Length == 0)
+    {
+        <section class="panel mt"><h2>Anular OT</h2><p>Solo se anula una OT que todavía no tiene retiros de Bodega ni trabajos registrados; los cilindros reservados para retiro quedan libres.</p><label for="anulacion-motivo">Motivo de la anulación</label><textarea id="anulacion-motivo" @bind="motivoAnulacion" maxlength="2000"></textarea><button class="btn secondary mt" disabled="@ocupado" @onclick="Anular">Anular OT</button></section>
     }
     @if (ot.ObservacionTermino is not null) { <div class="notice info"><strong>Informe técnico</strong><p>@ot.ObservacionTermino</p></div> }
     @if (ot.AprobacionBodega is { } aprobacion) { <div class="notice success"><strong>Aprobado por Bodega:</strong> @aprobacion.Usuario · @aprobacion.Fecha.ToLocalTime().ToString("dd/MM HH:mm")<p>@aprobacion.Observacion</p></div> }
     @if (EsBodega && ot.Estado == "PendienteBodega")
     {
         <section class="panel mt"><h2>Aprobación de Bodega</h2><p>Revisa las fotos de salida y de terreno, los códigos y los pesos recibidos. Deben estar recibidos todos los envases pendientes.</p><label class="check-label"><input type="checkbox" @bind="confirmoBodega" /> Confirmo los cilindros, sus pesos y las evidencias de este trabajo</label><label for="revision-bodega-nota">Observación de Bodega</label><textarea id="revision-bodega-nota" @bind="notaBodega" maxlength="2000"></textarea><button class="btn primary mt" disabled="@(ocupado || !confirmoBodega)" @onclick="AprobarBodega">Aprobar y enviar al Autorizador</button></section>
+        <section class="panel mt"><h2>Devolver al técnico</h2><p>Si los cilindros, los pesos o las fotos no corresponden, devuelve la OT al técnico en vez de aprobarla. El técnico la corrige y la vuelve a enviar.</p><label for="devolucion-motivo">Motivo de la devolución</label><textarea id="devolucion-motivo" @bind="motivoDevolucion" maxlength="2000"></textarea><button class="btn secondary mt" disabled="@ocupado" @onclick="Devolver">Devolver la OT al técnico</button></section>
     }
     @if (ot.RevisionAutorizador is { } revision) { <div class="notice success"><strong>Fotos y registro revisados:</strong> @revision.Usuario · @revision.Fecha.ToLocalTime().ToString("dd/MM HH:mm")<p>@revision.Observacion</p></div> }
     @if (EsAutorizador && ot.Estado == "PendienteRevision")
@@ -163,6 +169,10 @@ else
     });
     private Task Recibir() => Ejecutar(async () => { if (pesoRecepcion is null) throw new InvalidOperationException("Ingresa el peso recibido."); await Api.RecibirAsync(Id, new() { Codigo = codigoRecepcion, PesoBrutoGr = pesoRecepcion.Value, Observacion = notaRecepcion }); codigoRecepcion = ""; pesoRecepcion = null; notaRecepcion = ""; });
     private Task AprobarBodega() => Ejecutar(async () => { await Api.AprobarBodegaAsync(Id, new() { ConfirmoRevision = confirmoBodega, Observacion = notaBodega }); confirmoBodega = false; });
+    private string motivoDevolucion = "", motivoAnulacion = "";
+    private bool Abierta => ot?.Estado is not ("Cerrada" or "Anulada");
+    private Task Devolver() => Ejecutar(async () => { await Api.DevolverAsync(Id, new() { Motivo = motivoDevolucion }); motivoDevolucion = ""; });
+    private Task Anular() => Ejecutar(async () => { await Api.AnularAsync(Id, new() { Motivo = motivoAnulacion }); motivoAnulacion = ""; });
     private Task RevisarAutorizador() => Ejecutar(async () => { await Api.RevisarAutorizadorAsync(Id, new() { ConfirmoRevision = confirmoAutorizador, Observacion = notaAutorizador }); confirmoAutorizador = false; });
     private Task InformarEntrega(Guid operacion) => Ejecutar(async () => { await Api.InformarEntregaAsync(Id, operacion); });
     private Task Sincronizar() => Ejecutar(async () => { await Local.SincronizarAsync(); });

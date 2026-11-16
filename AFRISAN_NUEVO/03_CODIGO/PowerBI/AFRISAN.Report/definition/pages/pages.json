@@ -5,7 +5,8 @@
     "Inventario",
     "Ejecucion",
     "Seguimiento",
-    "Costos"
+    "Costos",
+    "Consumo"
   ],
   "activePageName": "Resumen"
 }

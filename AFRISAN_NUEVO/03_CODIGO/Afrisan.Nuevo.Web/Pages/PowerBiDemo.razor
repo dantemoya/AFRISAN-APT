@@ -7,6 +7,8 @@
 @using Microsoft.JSInterop
 
 <PageTitle>Power BI · AFRISAN</PageTitle>
+@* Acceso a la vista con datos de AFRISAN; el menú «Power BI» abre esta demostración. *@
+<p><a class="btn secondary" href="power-bi/operativo">Ver indicadores operativos y consumo por sucursal →</a></p>
 <div class="page-heading">
     <div><span class="eyebrow">INFORMACIÓN PARA GESTIÓN</span><h1>Power BI</h1><p>Informe de demostración con datos simulados.</p></div>
     <button class="btn primary" @onclick="DescargarPlantilla" disabled="@descargando">@(descargando ? "Preparando plantilla…" : "Descargar plantilla para Desktop")</button>

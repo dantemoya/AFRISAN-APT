@@ -13,7 +13,7 @@ exportaciones de datos reales.
 
 Actualización **08/11/2026**: el resumen filtra y agrega en SQL; inventario y
 exportaciones usan los pesos vigentes de las rectificaciones aprobadas. La
-descarga incluye el [proyecto PBIP de cinco páginas](PowerBI/README.md), con
+descarga incluye el [proyecto PBIP de seis páginas](PowerBI/README.md), con
 modelo, visuales y medidas preparados. Falta revisión visual/actualización en
 Desktop, guardado PBIX, publicación y configuración del ReportId real. Esta
 actualización prevalece sobre las instrucciones de construcción manual de abajo.
@@ -60,7 +60,7 @@ contenido de '…/api/v1/power-bi/tablas/' (404)*. Desde el 12/11:
 4. Si pide credenciales, elige **Anónimo**, aplica la configuración a la dirección
    completa (la que termina en `/tablas/`) y pulsa **Conectar**. Privacidad: **Organizativo**.
 
-El proyecto trae el modelo, las cinco páginas y dos parámetros: `UrlApi` (la dirección
+El proyecto trae el modelo, las seis páginas y dos parámetros: `UrlApi` (la dirección
 base, terminada en `/`) y `TokenPowerBi`. Para renovar el token, descarga el proyecto
 otra vez o reemplaza el parámetro `TokenPowerBi`.
 
@@ -104,6 +104,11 @@ actualización en el servicio de Power BI. No compartas el PBIX con el parámetr
 
 ### Power BI en la web (requiere la API desplegada)
 
+**15/11/2026:** la API ya está publicada (D-46). La dirección para Power BI es
+`https://afrisan-api-dm.azurewebsites.net/api/v1/power-bi/tablas/`; el proyecto conectado que se
+descarga desde la web publicada ya trae esa dirección. Falta importar el informe en el servicio
+(requiere un PBIX guardado en Desktop o un área de trabajo de Fabric) y programar la actualización.
+
 La pantalla **Configuración de la conexión** de Power BI en la web necesita una
 dirección pública con HTTPS. Con la API solo en `localhost` no funciona, salvo que se
 instale una puerta de enlace de datos en este equipo y quede encendido. Después del
@@ -122,8 +127,26 @@ En modo Memoria (solo desarrollo) las tablas responden vacías.
 **Estado al 12/11/2026:** la secuencia de solicitudes de Power BI está probada contra
 la API (prueba de conexión 200, siete tablas 200 con token y 401 sin él, 403 fuera de
 las tablas) y con 439 pruebas xUnit. Falta ejecutar **Actualizar** dentro de Power BI
-Desktop (caso CP-57) y publicar el informe (CP-58), que depende del despliegue y de la
+Desktop (caso CDP-57) y publicar el informe (CDP-58), que depende del despliegue y de la
 licencia.
+
+**Estado al 15/11/2026:** el módulo se probó por primera vez con datos reales de prueba
+en Supabase (23 cilindros y 23 OT de los recorridos del 14 y 15/11), con la API y la web
+locales y la cuenta de prueba de Jefatura: 54 comprobaciones de API y 13 de pantalla
+correctas, y 451 pruebas xUnit (453 con las del consumo por sucursal). Los indicadores de la vista previa coinciden con los
+recalculados desde las siete tablas en siete combinaciones de filtros. Se corrigieron dos
+defectos: las OT anuladas ya no cuentan como abiertas (DEF-13, D-44) y los textos de
+`/power-bi/operativo` (DEF-14). Sigue pendiente **Actualizar** en Power BI Desktop
+(CDP-57), con los totales esperados ya calculados, y CDP-58 sigue bloqueado.
+[Evidencia del 15/11](../04_SEGUIMIENTO/POWER_BI_2026_11_15/README.md).
+
+**Consumo por sucursal (15/11/2026, D-45):** la vista previa y la página «06 · Consumo
+por sucursal» del proyecto muestran, por sucursal, los kg instalados con un color por
+empresa cliente y los kg solicitados por el cliente, por semana o por mes. Las tablas
+`ordenes` e `inventario` (y sus CSV) traen `ClienteId` y `Cliente`; el resumen agrega
+`ordenesAnuladas` y `consumoPorSucursal`. El modelo suma la tabla calculada `Calendario`
+(mes y semana) y dos medidas que la aplican con TREATAS. Los datos simulados usan
+empresas genéricas («Cliente A/B/C (simulado)»).
 
 ### Alternativas evaluadas y por qué no se usan todavía
 
@@ -185,7 +208,8 @@ automática con Supabase o Power BI Service en este incremento.
 | Indicador | Regla |
 | --- | --- |
 | Cilindros | Estado actual al corte; filtros de ubicación/sucursal, gas y custodio técnico. No usa fecha |
-| OT abiertas/cerradas | Estado actual de las OT creadas entre Desde y Hasta, ambos incluidos |
+| OT abiertas/cerradas | Estado actual de las OT creadas entre Desde y Hasta, ambos incluidos. Una OT `Anulada` (D-40) no es abierta ni cerrada: se informa aparte (D-44) |
+| Consumo por sucursal (D-45) | Kg netos instalados en cada sucursal por fecha de confirmación (misma regla de los límites), junto a los kg solicitados por el cliente en OT no anuladas por fecha de creación. Se agrupa por semana (lunes a domingo) o por mes, en hora de Chile, y cada empresa cliente tiene su color |
 | Kg instalados | Suma del peso neto medido al instalar, solo operaciones Registradas confirmadas en el período |
 | Retirados pendientes | Reemplazos confirmados en el período que todavía no tienen RecepcionBodega |
 | Incidencias abiertas | Registros del período sin FechaRevision; con filtro de gas se consideran OT que pidieron ese gas |
@@ -194,7 +218,8 @@ Los días corresponden a America/Santiago y las marcas horarias se conservan
 en UTC. Una OT creada fuera del período puede tener una operación dentro:
 los indicadores usan sus propias fechas. Para consultar todos los pendientes,
 ampliar el período. No se reconstruyen estados de inventario o pendientes a una
-fecha pasada. Kg instalados no significa consumo. No hay indicadores de
+fecha pasada. Kg instalados es el gas entregado al instalar; desde D-45 se usa como
+consumo por sucursal, igual que en los límites, y no mide fugas. No hay indicadores de
 límites/cumplimiento, costos ni emisiones mientras falte completar sus módulos.
 
 Tablas del ZIP: Inventario (cilindro), Ordenes (OT), DetalleOT (OT/gas),

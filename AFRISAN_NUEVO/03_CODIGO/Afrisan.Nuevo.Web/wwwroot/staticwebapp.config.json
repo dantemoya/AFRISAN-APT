@@ -1,0 +1,19 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/_framework/*", "/_content/*", "/css/*", "/js/*", "*.{css,js,json,wasm,dll,pdb,dat,blat,png,svg,ico,webmanifest,br,gz}"]
+  },
+  "mimeTypes": {
+    ".wasm": "application/wasm",
+    ".dat": "application/octet-stream",
+    ".blat": "application/octet-stream",
+    ".dll": "application/octet-stream"
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(self), microphone=(), geolocation=(), payment=()",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://afrisan-api-dm.azurewebsites.net; frame-src https://app.powerbi.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+  }
+}

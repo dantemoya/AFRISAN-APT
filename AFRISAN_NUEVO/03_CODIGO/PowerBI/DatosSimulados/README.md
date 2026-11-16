@@ -24,7 +24,7 @@ generador siempre produce los mismos archivos.
 1. Abrir `../AFRISAN.pbip`. El parámetro `CarpetaAfrisan` ya apunta a esta carpeta
    (`D:\Afrisan_REPO_OFICIAL\AFRISAN_NUEVO\03_CODIGO\PowerBI\DatosSimulados`); si el
    repositorio está en otra ruta, cambiarlo en **Transformar datos › Editar parámetros**.
-2. Pulsar **Actualizar**, revisar las cinco páginas y guardar como `.pbix`.
+2. Pulsar **Actualizar**, revisar las seis páginas y guardar como `.pbix`.
 3. Publicar y crear el enlace de «Publicar en la web» (requiere una licencia que lo
    permita), y pegarlo en `/power-bi` con el rol Administrador.
 

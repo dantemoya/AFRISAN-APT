@@ -81,7 +81,8 @@ suman importes originales de monedas distintas. El paquete operativo privado
 usa datos reales y exige Administrador/Jefatura.
 
 La plantilla de la demostración gratuita incluye **siete CSV de solo cabeceras**,
-cinco páginas, diez tablas, catorce relaciones y dieciocho medidas. No contiene
+seis páginas (desde el 15/11, con el consumo por sucursal de D-45), once tablas,
+catorce relaciones y veinte medidas. No contiene
 datos reales ni simulados. La carpeta de datos simulados sigue para después,
 como indicó el usuario. No se ha publicado un informe, guardado un PBIX ni
 revisado visualmente el proyecto en Power BI Desktop. No se necesita una cuenta

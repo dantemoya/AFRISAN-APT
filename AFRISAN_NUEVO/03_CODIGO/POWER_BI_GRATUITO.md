@@ -20,7 +20,7 @@ el modo de revisión en memoria como en el modo persistente.
 ## Conectar un informe
 
 El botón **Descargar plantilla para Desktop** entrega un ZIP autenticado con el
-proyecto PBIP de cinco páginas, modelo, medidas, siete CSV de solo cabeceras y
+proyecto PBIP de seis páginas, modelo, medidas, siete CSV de solo cabeceras y
 `LEEME_DEMO.md`. No consulta Supabase y no genera registros simulados. Puede
 usarse desde ahora en Power BI Desktop gratuito; los gráficos estarán vacíos
 hasta apuntar el parámetro `CarpetaAfrisan` a `PowerBI/DatosSimulados` del repositorio. No se requiere una cuenta Microsoft para editarlo localmente.

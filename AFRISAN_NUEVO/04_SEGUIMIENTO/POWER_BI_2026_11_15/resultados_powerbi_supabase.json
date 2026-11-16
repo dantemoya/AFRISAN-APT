@@ -1,0 +1,760 @@
+{
+ "fecha_utc": "2026-11-15T17:53:26.634Z",
+ "tipo": "API .NET 8 local en modo PostgreSQL + base de Supabase (CDP-54 a CDP-57)",
+ "api": "http://localhost:5181",
+ "comprobaciones": [
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /api/v1/power-bi/tablas sin credenciales responde 200 solo con los nombres de las 7 tablas",
+   "detalle": {
+    "http": 200
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /api/v1/power-bi/tablas/ sin credenciales responde 200 solo con los nombres de las 7 tablas",
+   "detalle": {
+    "http": 200
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Ingresa la cuenta de prueba de Jefatura (primer uso)"
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Configuración del informe privado: 200, sin ReportId configurado y con Cache-Control no-store",
+   "detalle": {
+    "http": 200,
+    "configurado": false
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "POST /power-bi/token: 200, vence en 30 días y declara 7 tablas",
+   "detalle": {
+    "http": 200,
+    "dias": 30
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "El token lleva el alcance powerbi y no incluye el correo de la cuenta",
+   "detalle": {
+    "claims": 10
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /power-bi/tablas/inventario con el token: 200, sin correos ni campos sensibles",
+   "detalle": {
+    "http": 200,
+    "filas": 23,
+    "campos": 14
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /power-bi/tablas/ordenes con el token: 200, sin correos ni campos sensibles",
+   "detalle": {
+    "http": 200,
+    "filas": 23,
+    "campos": 12
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /power-bi/tablas/detalle con el token: 200, sin correos ni campos sensibles",
+   "detalle": {
+    "http": 200,
+    "filas": 23,
+    "campos": 5
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /power-bi/tablas/operaciones con el token: 200, sin correos ni campos sensibles",
+   "detalle": {
+    "http": 200,
+    "filas": 15,
+    "campos": 14
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /power-bi/tablas/despachos con el token: 200, sin correos ni campos sensibles",
+   "detalle": {
+    "http": 200,
+    "filas": 18,
+    "campos": 11
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /power-bi/tablas/incidencias con el token: 200, sin correos ni campos sensibles",
+   "detalle": {
+    "http": 200,
+    "filas": 2,
+    "campos": 7
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /power-bi/tablas/costos con el token: 200, sin correos ni campos sensibles",
+   "detalle": {
+    "http": 200,
+    "filas": 0,
+    "campos": 0
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Ordenes e inventario traen la empresa cliente de su sucursal (D-45)",
+   "detalle": {
+    "clientes": 2
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "El nombre de la tabla no distingue mayúsculas",
+   "detalle": {
+    "http": 200
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Tabla sin token: 401",
+   "detalle": {
+    "http": 401
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token con la firma alterada: 401",
+   "detalle": {
+    "http": 401
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token con el rol cambiado sin volver a firmar: 401",
+   "detalle": {
+    "http": 401
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en GET /api/v1/ordenes-trabajo: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en GET /api/v1/cilindros: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en GET /api/v1/usuarios: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en GET /api/v1/power-bi/resumen: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en GET /api/v1/power-bi/paquete: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en POST /api/v1/power-bi/token: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en POST /api/v1/power-bi/proyecto-conectado: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en POST /api/v1/power-bi/tablas/ordenes: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Token de Power BI en DELETE /api/v1/power-bi/tablas/ordenes: 403",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Tabla inexistente (usuarios) con el token: 404 y sin datos",
+   "detalle": {
+    "http": 404
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Tecnico: 403 en token, resumen, tablas, paquete, proyecto conectado y demostración",
+   "detalle": {
+    "http": [
+     403,
+     403,
+     403,
+     403,
+     403,
+     403
+    ]
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Bodega: 403 en token, resumen, tablas, paquete, proyecto conectado y demostración",
+   "detalle": {
+    "http": [
+     403,
+     403,
+     403,
+     403,
+     403,
+     403
+    ]
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Autorizador: 403 en token, resumen, tablas, paquete, proyecto conectado y demostración",
+   "detalle": {
+    "http": [
+     403,
+     403,
+     403,
+     403,
+     403,
+     403
+    ]
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Demostración: Jefatura consulta el estado (sin enlace público configurado)",
+   "detalle": {
+    "http": 200,
+    "configurado": false
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Demostración: Jefatura no puede guardar el enlace público (solo Administrador)",
+   "detalle": {
+    "http": 403
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Demostración: la plantilla gratuita se descarga con su proyecto y sin tokens",
+   "detalle": {
+    "http": 200,
+    "archivos": 61
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Resumen «Sin filtros (últimos 30 días)» igual a lo calculado desde las 7 tablas",
+   "detalle": {
+    "http": 200,
+    "api": {
+     "cilindros": 23,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 15,
+     "ordenesCerradas": 6,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 133.34,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Consumo por sucursal «Sin filtros (últimos 30 días)» (semana y mes) igual al calculado desde las tablas",
+   "detalle": {
+    "filas": 4
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Resumen «Todo el historial» igual a lo calculado desde las 7 tablas",
+   "detalle": {
+    "http": 200,
+    "api": {
+     "cilindros": 23,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 15,
+     "ordenesCerradas": 6,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 133.34,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Consumo por sucursal «Todo el historial» (semana y mes) igual al calculado desde las tablas",
+   "detalle": {
+    "filas": 4
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Resumen «Sucursal de prueba (Id 3)» igual a lo calculado desde las 7 tablas",
+   "detalle": {
+    "http": 200,
+    "api": {
+     "cilindros": 2,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 3,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 27.74,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Consumo por sucursal «Sucursal de prueba (Id 3)» (semana y mes) igual al calculado desde las tablas",
+   "detalle": {
+    "filas": 2
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Resumen «Gas de prueba (Id 5)» igual a lo calculado desde las 7 tablas",
+   "detalle": {
+    "http": 200,
+    "api": {
+     "cilindros": 4,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 3,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 27.74,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Consumo por sucursal «Gas de prueba (Id 5)» (semana y mes) igual al calculado desde las tablas",
+   "detalle": {
+    "filas": 2
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Resumen «Técnico de prueba» igual a lo calculado desde las 7 tablas",
+   "detalle": {
+    "http": 200,
+    "api": {
+     "cilindros": 0,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 3,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 27.74,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Consumo por sucursal «Técnico de prueba» (semana y mes) igual al calculado desde las tablas",
+   "detalle": {
+    "filas": 2
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Resumen «Sucursal + gas + técnico, solo 15/11» igual a lo calculado desde las 7 tablas",
+   "detalle": {
+    "http": 200,
+    "api": {
+     "cilindros": 0,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 1,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 9.96,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Consumo por sucursal «Sucursal + gas + técnico, solo 15/11» (semana y mes) igual al calculado desde las tablas",
+   "detalle": {
+    "filas": 2
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Resumen «Período sin datos (enero)» igual a lo calculado desde las 7 tablas",
+   "detalle": {
+    "http": 200,
+    "api": {
+     "cilindros": 23,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 0,
+     "ordenesAnuladas": 0,
+     "kgInstalados": 0,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Consumo por sucursal «Período sin datos (enero)» (semana y mes) igual al calculado desde las tablas",
+   "detalle": {
+    "filas": 0
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Los gráficos por estado suman lo mismo que los indicadores"
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Las listas de filtros (sucursal, gas, técnico) vienen con opciones",
+   "detalle": {
+    "sucursales": 2,
+    "gases": 4,
+    "tecnicos": 2
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Rango invertido o filtro con Id 0: se rechaza",
+   "detalle": {
+    "http": [
+     400,
+     400
+    ]
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "DEF-13: las OT anuladas se informan aparte y no cuentan como abiertas",
+   "detalle": {
+    "abiertas": 15,
+    "cerradas": 6,
+    "anuladas": 2
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "GET /power-bi/paquete: ZIP con los 7 CSV y el manifiesto",
+   "detalle": {
+    "http": 200,
+    "archivos": 64
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Filas de cada CSV = manifiesto = tabla JSON de Power BI",
+   "detalle": {
+    "filas": {
+     "Inventario": 23,
+     "Ordenes": 23,
+     "DetalleOT": 23,
+     "Operaciones": 15,
+     "Despachos": 18,
+     "Incidencias": 2,
+     "Costos": 0
+    }
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "El paquete no contiene correos, tokens ni columnas de contraseña"
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "El paquete trae el proyecto Informe/AFRISAN.pbip con 6 páginas",
+   "detalle": {
+    "archivos": 64,
+    "proyecto": true,
+    "paginas": 6
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "Ninguna celda de los CSV empieza con = + o @ (neutralización de fórmulas)"
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "POST /power-bi/proyecto-conectado: ZIP con AFRISAN.pbip, LEEME y UrlApi apuntando a la API local",
+   "detalle": {
+    "http": 200,
+    "archivos": 53,
+    "urlApi": "http://localhost:5181/api/v1/power-bi/tablas/"
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "El modelo conectado ya no lee la carpeta de CSV simulados"
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "DEF-13: la medida «OT abiertas» del proyecto excluye las anuladas"
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "El token incluido en el proyecto lee la tabla inventario",
+   "detalle": {
+    "http": 200
+   }
+  },
+  {
+   "resultado": "OK",
+   "comprobacion": "El proyecto trae 6 páginas (con «06 · Consumo por sucursal»), 38 visuales y 20 medidas",
+   "detalle": {
+    "paginas": 6,
+    "visuales": 38,
+    "medidas": 20,
+    "tablas": [
+     "Inventario",
+     "Ordenes",
+     "DetalleOT",
+     "Operaciones",
+     "Despachos",
+     "Incidencias",
+     "Costos",
+     "Sucursales",
+     "Tecnicos",
+     "Gases",
+     "Calendario"
+    ]
+   }
+  }
+ ],
+ "datos": {
+  "filas_por_tabla": {
+   "inventario": 23,
+   "ordenes": 23,
+   "detalle": 23,
+   "operaciones": 15,
+   "despachos": 18,
+   "incidencias": 2,
+   "costos": 0
+  },
+  "resumenes": [
+   {
+    "escenario": "Sin filtros (últimos 30 días)",
+    "desde": "2026-10-17",
+    "hasta": "2026-11-15",
+    "api": {
+     "cilindros": 23,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 15,
+     "ordenesCerradas": 6,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 133.34,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   },
+   {
+    "escenario": "Todo el historial",
+    "desde": "2026-01-01",
+    "hasta": "2026-11-15",
+    "api": {
+     "cilindros": 23,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 15,
+     "ordenesCerradas": 6,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 133.34,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   },
+   {
+    "escenario": "Sucursal de prueba (Id 3)",
+    "desde": "2026-01-01",
+    "hasta": "2026-11-15",
+    "api": {
+     "cilindros": 2,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 3,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 27.74,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   },
+   {
+    "escenario": "Gas de prueba (Id 5)",
+    "desde": "2026-01-01",
+    "hasta": "2026-11-15",
+    "api": {
+     "cilindros": 4,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 3,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 27.74,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   },
+   {
+    "escenario": "Técnico de prueba",
+    "desde": "2026-01-01",
+    "hasta": "2026-11-15",
+    "api": {
+     "cilindros": 0,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 3,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 27.74,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   },
+   {
+    "escenario": "Sucursal + gas + técnico, solo 15/11",
+    "desde": "2026-11-15",
+    "hasta": "2026-11-15",
+    "api": {
+     "cilindros": 0,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 1,
+     "ordenesAnuladas": 2,
+     "kgInstalados": 9.96,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   },
+   {
+    "escenario": "Período sin datos (enero)",
+    "desde": "2026-01-01",
+    "hasta": "2026-01-31",
+    "api": {
+     "cilindros": 23,
+     "sinPesaje": 0,
+     "ordenesAbiertas": 0,
+     "ordenesCerradas": 0,
+     "ordenesAnuladas": 0,
+     "kgInstalados": 0,
+     "retiradosPendientes": 0,
+     "incidenciasAbiertas": 0
+    }
+   }
+  ],
+  "ordenes_por_estado": {
+   "Cerrada": 6,
+   "Asignada": 3,
+   "EnProcesoDespacho": 3,
+   "EnTerreno": 3,
+   "PendienteBodega": 3,
+   "PendienteRevision": 3,
+   "Anulada": 2
+  },
+  "paquete": {
+   "archivos": 64,
+   "proyecto": true,
+   "paginas": 6
+  },
+  "proyecto_conectado": {
+   "paginas": 6,
+   "visuales": 38,
+   "medidas": 20,
+   "tablas": [
+    "Inventario",
+    "Ordenes",
+    "DetalleOT",
+    "Operaciones",
+    "Despachos",
+    "Incidencias",
+    "Costos",
+    "Sucursales",
+    "Tecnicos",
+    "Gases",
+    "Calendario"
+   ]
+  },
+  "totales_esperados_desktop": {
+   "filas_por_tabla": {
+    "inventario": 23,
+    "ordenes": 23,
+    "detalle": 23,
+    "operaciones": 15,
+    "despachos": 18,
+    "incidencias": 2,
+    "costos": 0
+   },
+   "cilindros": 23,
+   "sinPesaje": 0,
+   "ordenesAbiertas": 15,
+   "ordenesCerradas": 6,
+   "ordenesAnuladas": 2,
+   "kgInstalados": 133.34,
+   "retiradosPendientes": 0,
+   "incidenciasAbiertas": 0,
+   "kgSolicitados": 212,
+   "kgAutorizados": 211.2,
+   "consumoPorSucursal": [
+    {
+     "sucursal": "Sucursal DEMO",
+     "cliente": "Cliente ficticio DEMO AFRISAN",
+     "kgInstalados": 105.6,
+     "kgSolicitados": 162
+    },
+    {
+     "sucursal": "Local Maipú (prueba)",
+     "cliente": "Supermercados Prueba 1411 Ltda.",
+     "kgInstalados": 27.74,
+     "kgSolicitados": 30
+    }
+   ],
+   "kgDespachados": 164.77,
+   "totalClp": 0
+  }
+ },
+ "estado": "CORRECTO",
+ "resumen": {
+  "comprobaciones": 62,
+  "ok": 62,
+  "fallos": 0
+ }
+}

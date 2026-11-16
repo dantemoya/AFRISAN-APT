@@ -76,7 +76,7 @@ En otra terminal:
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Web
 ```
 
-**Pruebas:** `dotnet test AFRISAN.slnx` (439 pruebas xUnit).
+**Pruebas:** `dotnet test AFRISAN.slnx` (453 pruebas xUnit).
 
 ---
 
@@ -123,7 +123,7 @@ Tres proyectos .NET 8 y un proyecto de pruebas:
   rol y el acceso a PostgreSQL y Storage.
 - **`Afrisan.Nuevo.Pruebas`:** pruebas xUnit.
 
-Diagrama de despliegue (Azure está decidido, pero falta desplegar):
+Diagrama de despliegue (publicado en Azure el 15/11/2026: web en https://ambitious-field-0d951cb0f.6.azurestaticapps.net y API en https://afrisan-api-dm.azurewebsites.net; ver [DESPLIEGUE.md](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md)):
 
 ```mermaid
 flowchart LR
@@ -132,7 +132,7 @@ flowchart LR
     end
     subgraph Azure["Microsoft Azure · East US"]
         SWA["Static Web Apps<br/>archivos de la web"]
-        API["App Service<br/>API ASP.NET Core 8"]
+        API["App Service B1 Linux<br/>API ASP.NET Core 8 autocontenida"]
     end
     subgraph Supabase["Supabase · us-east-1"]
         PG[("PostgreSQL 16<br/>esquema afrisan · RLS")]
@@ -181,9 +181,14 @@ vida. También están el [manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUA
 1. **Base de datos:** el esquema único `afrisan` está instalado en Supabase con 32 tablas y
    9 vistas (`05`, `07` y, desde el 09/11/2026, las migraciones `08` a `10`), rol restringido
    `afrisan_api`, TLS `VerifyFull` y RLS en todas las tablas
-   ([registro](AFRISAN_NUEVO/04_SEGUIMIENTO/SUPABASE_2026_11_09.md)).
+   ([registro](AFRISAN_NUEVO/04_SEGUIMIENTO/SUPABASE_2026_11_09.md)). La migración `11`
+   se aplicó en Supabase el 15/11/2026, después de probarla en PostgreSQL embebido; la API
+   de esta versión la necesita para consultar las OT.
 2. **Operación:** OT por reemplazo o agregado físico, fotos en Storage privado y borradores
-   sin conexión en IndexedDB.
+   sin conexión en IndexedDB. Bodega puede devolver una OT al técnico, el Autorizador puede
+   anular una OT sin trabajos, el peso se compara entre etapas con 200 g de tolerancia y el
+   cilindro retirado vuelve «Vacío» hasta su recarga (D-39 a D-43, a partir del
+   [recorrido completo del 14/11](AFRISAN_NUEVO/04_SEGUIMIENTO/CORRECCIONES_2026_11_14/README.md)).
 3. **Módulos del 08/11/2026:** gestión de usuarios, correcciones de peso con aprobación,
    mantenedores, bajas de cilindros, costos en CLP, EUR, USD y UF, límites por sucursal y
    gas, y Power BI. Sus reglas las definió el responsable del proyecto y falta validarlas
@@ -194,10 +199,10 @@ vida. También están el [manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUA
 5. **Power BI:** lee las tablas desde la API con un token de solo lectura de 30 días, y la
    web descarga el proyecto ya conectado ([POWER_BI.md](AFRISAN_NUEVO/03_CODIGO/POWER_BI.md)).
 6. **Pendiente:**
-   - despliegue público ([guía](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md));
+   - revisar en el despliegue de Azure (15/11) los casos que dependían de él (CDP-39 y CDP-64) y llevar las fotos a Supabase Storage (DEF-11) ([guía](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md));
    - pruebas en Android (G05) y aceptación con usuarios (G09); la contraparte de AFRISAN no
      está disponible desde el 11/11 (D-36);
-   - actualizar el informe en Power BI Desktop (CP-57) y publicarlo;
+   - actualizar el informe en Power BI Desktop (CDP-57) y publicarlo;
    - Defontana y certificados, diferidos.
 
 ---
@@ -206,10 +211,13 @@ vida. También están el [manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUA
 
 | Tipo | Cómo ejecutar | Resultado |
 | --- | --- | --- |
-| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 439 pruebas aprobadas al 12/11/2026; 32 % de cobertura de líneas |
+| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 453 pruebas aprobadas al 15/11/2026; 32 % de cobertura de líneas (medida el 12/11) |
 | Integración sobre PostgreSQL embebido y navegador | `AFRISAN_NUEVO/04_SEGUIMIENTO/MODULOS_2026_11_08/Validar-Modulos.ps1` (requiere Node.js) | Resultados JSON fechados en `AFRISAN_NUEVO/04_SEGUIMIENTO/` |
+| Correcciones del recorrido del 14/11 (migración `11`) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/CORRECCIONES_2026_11_14/validar_correcciones.mjs` | 40 comprobaciones correctas el 15/11/2026 |
+| Recorrido completo contra Supabase (CDP-67) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/CORRECCIONES_2026_11_14/recorrido_supabase.mjs` (API local contra Supabase) | 33 comprobaciones correctas el 15/11/2026 |
+| Power BI contra Supabase (CDP-54 a CDP-57) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/POWER_BI_2026_11_15/validar_powerbi_supabase.mjs` (API local contra Supabase) | 62 comprobaciones correctas el 15/11/2026, incluido el consumo por sucursal |
 | Integración continua | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Compila y ejecuta xUnit en cada push a `main` |
-| Plan de pruebas | `Evidencias de documentación/06_…` y `07_…` | 66 casos: 53 aprobados, 12 pendientes y 1 bloqueado |
+| Plan de pruebas | `Evidencias de documentación/06_…` y `07_…` | 72 casos (CDP-01 a CDP-72): 59 aprobados, 12 pendientes y 1 bloqueado; recorrido completo del 14/11, repetido en Supabase el 15/11, y 14 defectos registrados |
 
 La capa PostgreSQL se prueba con las baterías de integración y no entra en la cobertura de
 xUnit. Por eso la cobertura todavía no llega a la meta del 80 % del acta.

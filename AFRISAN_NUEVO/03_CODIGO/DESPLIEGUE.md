@@ -22,8 +22,10 @@ en `localhost`. Por eso las pruebas de terreno (G05) requieren este despliegue.
 
 **Estado:** las migraciones `08`, `09` y `10` se aplicaron en el proyecto
 Supabase de AFRISAN el 09/11/2026, desde el editor SQL del panel
-([registro y verificación](../04_SEGUIMIENTO/SUPABASE_2026_11_09.md)). Este paso
-solo se repite en una instancia nueva o de pruebas.
+([registro y verificación](../04_SEGUIMIENTO/SUPABASE_2026_11_09.md)). La `11` se
+aplicó el 15/11/2026 con el comando de la API
+([registro](../04_SEGUIMIENTO/CORRECCIONES_2026_11_14/README.md)). Este paso solo se
+repite en una instancia nueva o de pruebas.
 
 Para otra instancia, aplicar las migraciones **en este orden**, con la conexión de
 propietario configurada localmente (`ConnectionStrings:Supabase`, ver
@@ -34,7 +36,14 @@ ejecuta en una transacción y puede repetirse:
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-rectificaciones   # 08
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-mantenedores      # 09
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-costos-limites    # 10
+dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-devolucion-recarga # 11
 ```
+
+La migración `11` (devolución, anulación, tolerancia de peso y recarga, D-39 a D-43)
+se aplicó en Supabase el 15/11/2026 con el último comando, después de probarla en
+PostgreSQL embebido. `--verificar-supabase` y `--verificar-persistencia` terminaron sin
+errores. La API de esta versión la exige: en una instancia sin `11`,
+`--verificar-supabase` informa «migración 11».
 
 Si falla, el mensaje incluye el SQLSTATE y no queda ningún cambio parcial.
 La conexión de propietario **no** se configura en el servidor público.
@@ -54,6 +63,7 @@ y definir estas variables de entorno en el hosting (nunca en Git):
 | `Cors__Origins__0` | URL HTTPS exacta de la web publicada |
 | `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | `true` si el hosting termina TLS en un proxy (Azure App Service, Render, etc.) |
 | `Seguridad__LoginPorMinuto` | Opcional; 10 por defecto |
+| `Seguridad__ApiPorMinuto` | Opcional; límite global por usuario/IP, 300/min por defecto (0 lo desactiva) |
 | `PowerBi__ReportId`, `PowerBi__TenantId` | Opcional; informe privado de la empresa |
 
 Comprobar después de publicar:
@@ -99,7 +109,47 @@ La web solo necesita su URL en `Cors__Origins__0` de la API.
 (los pasos `dotnet publish` de los Dockerfile) termina sin errores. En este equipo
 no hay Docker, así que no se construyeron ni ejecutaron las imágenes.
 
-## 6. Después del despliegue
+## 6. Despliegue vigente en Azure (15/11/2026, D-46)
+
+| Pieza | Recurso | Dirección |
+| --- | --- | --- |
+| Grupo de recursos | `rg-afrisan` (East US), suscripción Azure for Students | — |
+| API | App Service `afrisan-api-dm`, plan `plan-afrisan` **B1 Linux** con *Always On* | https://afrisan-api-dm.azurewebsites.net |
+| Web | Static Web App `afrisan-web` (**Free**, East US 2) | https://ambitious-field-0d951cb0f.6.azurestaticapps.net |
+| Base y fotos | Supabase us-east-1 (sin cambios) | — |
+
+- **API autocontenida:** App Service ya no ofrece .NET 8 (su soporte terminó el 10/11/2026), así
+  que la API se publica con `-r linux-x64 --self-contained true` y su propio runtime .NET 8, sobre
+  la imagen Linux de .NET 10. Comando de inicio: `chmod +x /home/site/wwwroot/Afrisan.Nuevo.Api && /home/site/wwwroot/Afrisan.Nuevo.Api`.
+- **Certificado de Supabase:** el paquete incluye `certificates/supabase.crt` (certificado público de
+  la CA) y la conexión usa `Root Certificate=/home/site/wwwroot/certificates/supabase.crt`.
+- **Ajustes:** `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`,
+  `ASPNETCORE_URLS=http://+:8080`, `WEBSITES_PORT=8080`, `Persistencia__FotosPath=/home/afrisan/fotos`,
+  `Cors__Origins__0` con la dirección de la web. Los secretos (`ConnectionStrings__AfrisanRuntime` y
+  una `Persistencia__JwtKey` propia de producción) los carga el autor con un script local que no los
+  muestra. Sin claves de Storage, las fotos quedan en el disco persistente del App Service (DEF-11).
+- **Web:** se publica con `dotnet publish` y, solo en la copia que se sube, `appsettings.json` apunta a
+  `https://afrisan-api-dm.azurewebsites.net/api/v1/` (con el hash del *service worker* actualizado). El repositorio sigue apuntando a
+  localhost para las baterías locales. `wwwroot/staticwebapp.config.json` define las rutas de la SPA.
+- **Plan:** F1 (gratis) se descartó el mismo día: un arranque fallido en bucle agotó sus 60 minutos
+  diarios de CPU y Azure detuvo la API. B1 cuesta unos US$13 al mes y se descuenta del crédito de
+  estudiante (USD 100, vence el 21/04/2027); se puede volver a F1 después de la presentación.
+- **Verificado el 15/11:** `/health/ready` 200 con `"supabase": true`; `/swagger` 404; HTTP redirige a
+  HTTPS (301); CORS solo para la web; la web lee `entorno` desde la API; el guion de Power BI aprueba
+  62 de 62 contra la API de Azure ([resultados](../04_SEGUIMIENTO/POWER_BI_2026_11_15/resultados_powerbi_supabase_azure.json)).
+
+Para volver a publicar (Azure CLI con sesión iniciada):
+
+```powershell
+dotnet publish AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -c Release -r linux-x64 --self-contained true -o <carpeta>/api
+# copiar el certificado público de Supabase a <carpeta>/api/certificates/supabase.crt y comprimir el contenido de <carpeta>/api en api.zip
+az webapp deploy -g rg-afrisan -n afrisan-api-dm --src-path <carpeta>/api.zip --type zip
+```
+
+La web se publica con `npx @azure/static-web-apps-cli deploy <carpeta>/web/wwwroot --env production`,
+con el token de despliegue en la variable `SWA_CLI_DEPLOYMENT_TOKEN` (`az staticwebapp secrets list`).
+
+## 7. Después del despliegue
 
 - Registrar la URL pública en el informe final y en el README raíz.
 - Ejecutar G05 (sin red y con cámara en Android) y G09 (aceptación con usuarios).

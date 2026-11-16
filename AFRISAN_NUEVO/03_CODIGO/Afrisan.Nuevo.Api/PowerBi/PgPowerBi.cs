@@ -27,10 +27,12 @@ public sealed partial class PgPowerBi(PgDatabase database)
               c."Id_Refrigerante" AS "RefrigeranteId",r."CodigoRefrigerante" AS "Refrigerante",
               c."Estado",c."Ubicacion",c."Id_Sucursal" AS "SucursalId",s."NombreSucursal" AS "Sucursal",
               c."Id_Tecnico" AS "TecnicoId",t."Nombre"||' '||t."Apellido" AS "Tecnico",
-              (p."PesoBrutoGr"-c."TaraGr")/1000.0 AS "KgSegunUltimoPesaje",p."Fecha" AS "FechaPesaje"
+              (p."PesoBrutoGr"-c."TaraGr")/1000.0 AS "KgSegunUltimoPesaje",p."Fecha" AS "FechaPesaje",
+              s."Id_Cliente" AS "ClienteId",cl."NombreEmpresa" AS "Cliente"
             FROM afrisan."Cilindros" c JOIN afrisan."Refrigerantes" r USING("Id_Refrigerante")
             LEFT JOIN afrisan."PesajeVigente" p ON p."Id_Pesaje"=c."Id_UltimoPesaje"
             LEFT JOIN afrisan."Sucursales" s USING("Id_Sucursal")
+            LEFT JOIN afrisan."Cliente" cl ON cl."Id_Cliente"=s."Id_Cliente"
             LEFT JOIN afrisan."Usuario" t ON t."Id_Usuario"=c."Id_Tecnico"
             ORDER BY c."Id_Cilindro"
             """);
@@ -38,8 +40,10 @@ public sealed partial class PgPowerBi(PgDatabase database)
             SELECT o."Id_OrdenTrabajo" AS "OtId",o."CodigoOT" AS "Codigo",o."Id_Sucursal" AS "SucursalId",
               s."NombreSucursal" AS "Sucursal",o."Id_Tecnico" AS "TecnicoId",
               t."Nombre"||' '||t."Apellido" AS "Tecnico",o."Estado",o."FechaCreacion",
-              (o."FechaCreacion" AT TIME ZONE 'America/Santiago')::date AS "DiaCreacion",o."FechaCierre"
+              (o."FechaCreacion" AT TIME ZONE 'America/Santiago')::date AS "DiaCreacion",o."FechaCierre",
+              s."Id_Cliente" AS "ClienteId",cl."NombreEmpresa" AS "Cliente"
             FROM afrisan."OrdenTrabajo" o JOIN afrisan."Sucursales" s USING("Id_Sucursal")
+            JOIN afrisan."Cliente" cl ON cl."Id_Cliente"=s."Id_Cliente"
             JOIN afrisan."Usuario" t ON t."Id_Usuario"=o."Id_Tecnico" ORDER BY o."Id_OrdenTrabajo"
             """);
         var detalle = await Read<BiDetalle>("""
@@ -122,13 +126,37 @@ public sealed partial class PgPowerBi(PgDatabase database)
         static BiGrupoResponse[] Contar(IEnumerable<string> source) => source.GroupBy(x => x)
             .Select(g => new BiGrupoResponse(g.Key,g.Count())).OrderByDescending(x => x.Valor).ThenBy(x => x.Nombre).ToArray();
         return new(d.GeneradoUtc,inicio,fin,inv.Length,inv.Count(x => x.KgSegunUltimoPesaje is null),
-            ordenes.Count(x => x.Estado != "Cerrada"),ordenes.Count(x => x.Estado == "Cerrada"),
+            ordenes.Count(x => x.Estado is not ("Cerrada" or "Anulada")),ordenes.Count(x => x.Estado == "Cerrada"),
             ops.Sum(x => x.KgInstalados),ops.Count(x => x.PendienteRecepcion),inc.Count(x => x.Abierta),
             Contar(inv.Select(x => x.Estado)),Contar(ordenes.Select(x => x.Estado)),
             ops.GroupBy(x => x.Refrigerante).Select(g => new BiGrupoResponse(g.Key,g.Sum(x => x.KgInstalados))).OrderBy(x => x.Nombre).ToArray(),
             d.Ordenes.Select(x => new BiOpcionResponse(x.SucursalId,x.Sucursal)).Distinct().OrderBy(x => x.Nombre).ToArray(),
             d.Detalle.Select(x => new BiOpcionResponse(x.RefrigeranteId,x.Refrigerante))
                 .Concat(d.Inventario.Select(x => new BiOpcionResponse(x.RefrigeranteId,x.Refrigerante))).Distinct().OrderBy(x => x.Nombre).ToArray(),
-            d.Ordenes.Select(x => new BiOpcionResponse(x.TecnicoId,x.Tecnico)).Distinct().OrderBy(x => x.Nombre).ToArray());
+            d.Ordenes.Select(x => new BiOpcionResponse(x.TecnicoId,x.Tecnico)).Distinct().OrderBy(x => x.Nombre).ToArray(),
+            ordenes.Count(x => x.Estado == "Anulada"),
+            Consumo(d.Ordenes,ops,ordenes,d.Detalle,refrigeranteId));
+    }
+
+    /// <summary>D-45: kg instalados por fecha de confirmación (regla de los límites) y kg solicitados por fecha de
+    /// creación de la OT, sin las OT anuladas; agrupados por sucursal, semana (lunes a domingo) y mes.</summary>
+    public static BiConsumoResponse[] Consumo(IEnumerable<BiOrden> todas, IEnumerable<BiOperacion> ops,
+        IEnumerable<BiOrden> ordenes, IEnumerable<BiDetalle> detalle, long? refrigeranteId)
+    {
+        var porOt = todas.ToDictionary(o => o.OtId);
+        var instalados = ops.Select(x => (Orden: porOt[x.OtId], Dia: x.DiaConfirmacion, Inst: x.KgInstalados, Sol: 0m));
+        var pedidas = ordenes.Where(o => o.Estado != "Anulada").ToDictionary(o => o.OtId);
+        var solicitados = detalle.Where(x => pedidas.ContainsKey(x.OtId) && (refrigeranteId is null || x.RefrigeranteId == refrigeranteId))
+            .Select(x => (Orden: pedidas[x.OtId], Dia: pedidas[x.OtId].DiaCreacion, Inst: 0m, Sol: x.KgSolicitados));
+        var filas = instalados.Concat(solicitados).ToArray();
+        static DateOnly Semana(DateOnly d) => d.AddDays(-(((int)d.DayOfWeek + 6) % 7));
+        static DateOnly Mes(DateOnly d) => new(d.Year, d.Month, 1);
+        IEnumerable<BiConsumoResponse> Agrupar(string periodo, Func<DateOnly, DateOnly> inicio) => filas
+            .GroupBy(x => (Inicio: inicio(x.Dia), x.Orden.SucursalId))
+            .Select(g => { var o = g.First().Orden;
+                return new BiConsumoResponse(periodo, g.Key.Inicio, o.SucursalId, o.Sucursal, o.ClienteId, o.Cliente,
+                    g.Sum(x => x.Inst), g.Sum(x => x.Sol)); });
+        return Agrupar("Mes", Mes).Concat(Agrupar("Semana", Semana))
+            .OrderBy(x => x.Periodo).ThenBy(x => x.Inicio).ThenBy(x => x.Cliente).ThenBy(x => x.Sucursal).ToArray();
     }
 }

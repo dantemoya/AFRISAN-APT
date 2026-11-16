@@ -7,10 +7,12 @@ ficticios generados con la misma exportación de la API. Las instrucciones sigui
 describen el informe operativo con datos reales; no publicar sus exportaciones
 reales como demostración. La descarga operativa se conserva en `/power-bi/operativo`.
 
-`AFRISAN.pbip` es el proyecto editable del informe: cinco páginas, 34 visuales,
-siete tablas de origen, tres dimensiones, catorce relaciones y dieciocho medidas.
-La quinta página muestra valoraciones de refrigerante con conversiones manuales
-históricas a CLP. Se incluye también en la descarga, dentro de `Informe/`.
+`AFRISAN.pbip` es el proyecto editable del informe: seis páginas, 38 visuales,
+siete tablas de origen, tres dimensiones, la tabla calculada `Calendario`, catorce
+relaciones y veinte medidas. La quinta página muestra valoraciones de refrigerante
+con conversiones manuales históricas a CLP. La sexta (15/11, D-45) muestra el consumo
+por sucursal: columnas de kg instalados con un color por empresa cliente, una línea
+con los kg solicitados por el cliente y filtros de mes, semana y empresa. Se incluye también en la descarga, dentro de `Informe/`.
 
 El proyecto fue validado con los esquemas oficiales PBIP/PBIR y el modelo se
 deserializó con Microsoft Analysis Services. **No se ha revisado visualmente
@@ -24,7 +26,7 @@ Para completar el informe en Desktop:
 1. Descargar el paquete desde AFRISAN y descomprimirlo en una carpeta privada.
 2. Abrir `Informe/AFRISAN.pbip`. En Editar parámetros cambiar `CarpetaAfrisan`
    a la carpeta de los siete CSV y pulsar Actualizar.
-3. Revisar las cinco páginas y guardar como `AFRISAN_Operativo.pbix`.
+3. Revisar las seis páginas y guardar como `AFRISAN_Operativo.pbix`.
 4. Publicar en el área privada de la empresa y conceder los accesos acordados.
 5. Ejecutar `03_CODIGO/Configurar-PowerBI.ps1 -ReportId GUID` (y, si corresponde,
    `-TenantId GUID`), reiniciar la API y verificar el enlace con una cuenta autorizada.

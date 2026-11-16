@@ -1,8 +1,8 @@
 # Diccionario del esquema `afrisan` (vigente)
 
-- **Fuente:** `05_Crear_Afrisan_Sin_Emisiones.sql` (mismo esquema que `06`) más las migraciones aditivas `07_Habilitar_Persistencia.sql`, `08_Rectificacion_Pesajes.sql`, `09_Mantenedores_Bajas.sql` y `10_Costos_Limites.sql`.
+- **Fuente:** `05_Crear_Afrisan_Sin_Emisiones.sql` (mismo esquema que `06`) más las migraciones aditivas `07_Habilitar_Persistencia.sql`, `08_Rectificacion_Pesajes.sql`, `09_Mantenedores_Bajas.sql`, `10_Costos_Limites.sql` y `11_Devolucion_Anulacion_Recarga.sql`.
 - **Contenido:** 32 tablas y 9 vistas en PostgreSQL 16 (Supabase): 30 tablas y 8 vistas del modelo base más `RectificacionPesaje` (`08`), `TiposCambio` (`10`) y la vista `PesajeVigente` (`08`).
-- **Estado de instalación:** el modelo base y `07` están aplicados en Supabase desde el 02/11/2026 (`04_SEGUIMIENTO/PERSISTENCIA_2026_11_02`); `08`, `09` y `10` se aplicaron el 09/11/2026 (`04_SEGUIMIENTO/SUPABASE_2026_11_09.md`).
+- **Estado de instalación:** el modelo base y `07` están aplicados en Supabase desde el 02/11/2026 (`04_SEGUIMIENTO/PERSISTENCIA_2026_11_02`); `08`, `09` y `10` se aplicaron el 09/11/2026 (`04_SEGUIMIENTO/SUPABASE_2026_11_09.md`); `11` se aplicó el 15/11/2026 (`04_SEGUIMIENTO/CORRECCIONES_2026_11_14`).
 - **Generado con:** `perl generar_diccionario.pl > DICCIONARIO_ESQUEMA_AFRISAN.md`. Si cambia el SQL, vuelve a generarlo en vez de editarlo a mano.
 - **Convenciones:** PK = clave primaria, FK = clave foránea, UQ = único. Las masas se guardan en gramos enteros y las fechas en `timestamptz`.
 - **Seguridad:** RLS está activo en las 32 tablas y no hay acceso para `PUBLIC`, `anon` ni `authenticated`. La columna *Acceso API* indica los permisos del rol `afrisan_api` después de `10`; 2 tablas siguen sin acceso porque su módulo quedó diferido.
@@ -17,7 +17,7 @@
 | 4 | [`Sucursales`](#Sucursales) | Operación | 6 | SELECT, INSERT, UPDATE |
 | 5 | [`Refrigerantes`](#Refrigerantes) | Operación | 5 | SELECT, INSERT, UPDATE |
 | 6 | [`Cilindros`](#Cilindros) | Operación | 13 | SELECT, INSERT, UPDATE |
-| 7 | [`OrdenTrabajo`](#OrdenTrabajo) | Operación | 15 | SELECT, INSERT, UPDATE |
+| 7 | [`OrdenTrabajo`](#OrdenTrabajo) | Operación | 18 | SELECT, INSERT, UPDATE |
 | 8 | [`DetalleOT`](#DetalleOT) | Operación | 4 | SELECT, INSERT |
 | 9 | [`RetiroPrevisto`](#RetiroPrevisto) | Operación | 3 | SELECT, INSERT, UPDATE |
 | 10 | [`Pesaje`](#Pesaje) | Operación | 8 | SELECT, INSERT, UPDATE |
@@ -165,7 +165,7 @@ Cada envase físico: código QR, un solo refrigerante, tara y capacidad en gramo
 <a id="OrdenTrabajo"></a>
 ### `OrdenTrabajo`
 
-OT creada por el Autorizador y asignada a un técnico. Estados: Asignada → EnProcesoDespacho → EnTerreno → PendienteBodega → PendienteRevision → Cerrada.
+OT creada por el Autorizador y asignada a un técnico. Estados: Asignada → EnProcesoDespacho → EnTerreno → PendienteBodega → PendienteRevision → Cerrada. Bodega puede devolverla de PendienteBodega a EnTerreno con un motivo, y el Autorizador puede anularla (Anulada) mientras siga Asignada y sin retiros ni trabajos.
 
 | Columna | Tipo | Nulo | Clave | Notas |
 | --- | --- | --- | --- | --- |
@@ -178,16 +178,19 @@ OT creada por el Autorizador y asignada a un técnico. Estados: Asignada → EnP
 | `Id_Tecnico` | `integer` | No | FK → `Usuario` |  |
 | `Id_Autorizador` | `integer` | No | FK → `Usuario` |  |
 | `Descripcion` | `varchar(2000)` | No |  | CHECK `btrim(Descripcion)<>''` |
-| `Estado` | `varchar(40)` | No |  | Default `'Asignada'`; CHECK `Estado IN ('Asignada', 'EnProcesoDespacho', 'EnTerreno', 'PendienteBodega', 'PendienteRevision', 'Cerrada')` |
+| `Estado` | `varchar(40)` | No |  | Default `'Asignada'` |
 | `FechaCreacion` | `timestamptz` | No |  | Default `clock_timestamp()` |
 | `FechaTerminoTecnico` | `timestamptz` | Sí |  |  |
 | `ObservacionTermino` | `text` | Sí |  |  |
 | `FechaCierre` | `timestamptz` | Sí |  |  |
 | `HuellaCreacion` | `text` | Sí |  | Agregada por `07` |
+| `MotivoDevolucion` | `text` | Sí |  | Agregada por `11` |
+| `MotivoAnulacion` | `text` | Sí |  | Agregada por `11` |
+| `FechaAnulacion` | `timestamptz` | Sí |  | Agregada por `11` |
 
 - **Claves foráneas:** `Id_Sucursal` → `Sucursales`; `Id_Tecnico` → `Usuario`; `Id_Autorizador` → `Usuario`
 - **Índices:** Único `UX_OT_Externa`: `Origen, CodigoExterno` `WHERE CodigoExterno IS NOT NULL`
-- **Reglas CHECK de la tabla:** `Origen<>'Defontana' OR coalesce(btrim(CodigoExterno), '')<>''`; `(Estado='Cerrada')=(FechaCierre IS NOT NULL)`; `Estado NOT IN ('PendienteBodega', 'PendienteRevision', 'Cerrada') OR FechaTerminoTecnico IS NOT NULL`
+- **Reglas CHECK de la tabla:** `Origen<>'Defontana' OR coalesce(btrim(CodigoExterno), '')<>''`; `(Estado='Cerrada')=(FechaCierre IS NOT NULL)`; `Estado NOT IN ('PendienteBodega', 'PendienteRevision', 'Cerrada') OR FechaTerminoTecnico IS NOT NULL`; `Estado IN ('Asignada', 'EnProcesoDespacho', 'EnTerreno', 'PendienteBodega', 'PendienteRevision', 'Cerrada', 'Anulada') (desde `11`)`; `((Estado='Anulada')=(FechaAnulacion IS NOT NULL)) AND (Estado<>'Anulada' OR length(btrim(MotivoAnulacion))>=5) (desde `11`)`
 - **Triggers:** `OT_Validar` (BEFORE INSERT/UPDATE/DELETE); `OT_Cierre_Aplicar` (AFTER UPDATE); `OT_Rectificaciones` (BEFORE UPDATE, desde `08`); `Catalogo_Referencia` (BEFORE INSERT, desde `09`); `Auditar_OrdenTrabajo` (AFTER INSERT/UPDATE/DELETE)
 - **Acceso API:** SELECT, INSERT, UPDATE · política `BackendConfiable`
 
@@ -228,14 +231,14 @@ Cilindros instalados en la sucursal que la OT prevé retirar. Un cilindro solo p
 <a id="Pesaje"></a>
 ### `Pesaje`
 
-Toda lectura de balanza en gramos: Inicial, Despacho, Instalado, Retirado o Recepcion. Inmutable.
+Toda lectura de balanza en gramos: Inicial, Despacho, Instalado, Retirado, Recepcion o Recarga. Inicial y Recarga no pertenecen a una OT. Inmutable.
 
 | Columna | Tipo | Nulo | Clave | Notas |
 | --- | --- | --- | --- | --- |
 | `Id_Pesaje` | `uuid` | No | PK | Default `gen_random_uuid()` |
 | `Id_Cilindro` | `bigint` | No | FK → `Cilindros` |  |
 | `Id_OrdenTrabajo` | `bigint` | Sí | FK → `OrdenTrabajo` |  |
-| `Tipo` | `varchar(20)` | No |  | CHECK `Tipo IN ('Inicial', 'Despacho', 'Retirado', 'Instalado', 'Recepcion')` |
+| `Tipo` | `varchar(20)` | No |  |  |
 | `PesoBrutoGr` | `bigint` | No |  | CHECK `PesoBrutoGr>=0` |
 | `Id_Usuario` | `integer` | No | FK → `Usuario` |  |
 | `Fecha` | `timestamptz` | No |  | Default `clock_timestamp()` |
@@ -244,7 +247,7 @@ Toda lectura de balanza en gramos: Inicial, Despacho, Instalado, Retirado o Rece
 - **Claves foráneas:** `Id_Cilindro` → `Cilindros`; `Id_OrdenTrabajo` → `OrdenTrabajo`; `Id_Usuario` → `Usuario`
 - **Únicos compuestos:** `(Id_Pesaje, Id_Cilindro)`
 - **Índices:** Único `UX_Pesaje_Inicial`: `Id_Cilindro` `WHERE Tipo='Inicial'`; Consulta `IX_Pesaje_Cilindro_Fecha`: `Id_Cilindro, Fecha`
-- **Reglas CHECK de la tabla:** `(Tipo='Inicial')=(Id_OrdenTrabajo IS NULL)`
+- **Reglas CHECK de la tabla:** `(Tipo IN ('Inicial', 'Recarga'))=(Id_OrdenTrabajo IS NULL) (desde `11`)`; `Tipo IN ('Inicial', 'Despacho', 'Retirado', 'Instalado', 'Recepcion', 'Recarga') (desde `11`)`
 - **Triggers:** `Pesaje_Validar` (BEFORE INSERT); `Pesaje_Inicial_Aplicar` (AFTER INSERT); `Inmutable_Pesaje` (BEFORE UPDATE/DELETE); `Auditar_Pesaje` (AFTER INSERT/UPDATE/DELETE)
 - **Acceso API:** SELECT, INSERT, UPDATE · política `BackendConfiable`
 
@@ -385,7 +388,7 @@ Revisiones obligatorias en orden Bodega → Autorizador; una por etapa. Inmutabl
 
 - **Claves foráneas:** `Id_OrdenTrabajo` → `OrdenTrabajo`; `Id_Usuario` → `Usuario`
 - **Únicos compuestos:** `(Id_OrdenTrabajo, Etapa)`
-- **Triggers:** `Revision_Validar` (BEFORE INSERT); `Revision_Aplicar` (AFTER INSERT); `Revision_Rectificaciones` (BEFORE INSERT, desde `08`); `Inmutable_RevisionOT` (BEFORE UPDATE/DELETE); `Auditar_RevisionOT` (AFTER INSERT/UPDATE/DELETE)
+- **Triggers:** `Revision_Validar` (BEFORE INSERT); `Revision_Aplicar` (AFTER INSERT); `Revision_Rectificaciones` (BEFORE INSERT, desde `11`); `Inmutable_RevisionOT` (BEFORE UPDATE/DELETE); `Auditar_RevisionOT` (AFTER INSERT/UPDATE/DELETE)
 - **Acceso API:** SELECT, INSERT · política `BackendConfiable`
 
 <a id="Incidencia"></a>

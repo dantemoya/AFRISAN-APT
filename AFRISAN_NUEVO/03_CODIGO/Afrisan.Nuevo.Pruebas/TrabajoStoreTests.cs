@@ -55,7 +55,8 @@ public sealed class TrabajoStoreTests
 
         Assert.Equal("Cerrada", ot.Estado);
         var devuelto = inventario.Cilindro(instalado.Codigo)!;
-        Assert.Equal(("Bodega", "Disponible"), (devuelto.Ubicacion, devuelto.Estado));
+        // D-43: el retirado de la sucursal vuelve vacío, pendiente de recarga.
+        Assert.Equal(("Bodega", "Vacio"), (devuelto.Ubicacion, devuelto.Estado));
         Assert.Contains(ot.Historial, h => h.Accion == "Cierre administrativo");
     }
 

@@ -52,15 +52,24 @@ public sealed record BiResumenResponse(DateTimeOffset GeneradoUtc, DateOnly Desd
     decimal KgInstalados, int RetiradosPendientes, int IncidenciasAbiertas,
     BiGrupoResponse[] InventarioPorEstado, BiGrupoResponse[] OrdenesPorEstado,
     BiGrupoResponse[] InstaladosPorRefrigerante, BiOpcionResponse[] Sucursales,
-    BiOpcionResponse[] Refrigerantes, BiOpcionResponse[] Tecnicos);
+    BiOpcionResponse[] Refrigerantes, BiOpcionResponse[] Tecnicos,
+    int OrdenesAnuladas = 0, // D-40: las OT anuladas no cuentan como abiertas ni cerradas (DEF-13).
+    BiConsumoResponse[]? ConsumoPorSucursal = null);
+
+/// <summary>Consumo por sucursal (D-45): kg netos instalados, con la regla de los límites, y kg solicitados
+/// en OT no anuladas, por semana (lunes a domingo) o mes, en hora de Chile. Periodo es "Semana" o "Mes".</summary>
+public sealed record BiConsumoResponse(string Periodo, DateOnly Inicio, int SucursalId, string Sucursal,
+    int? ClienteId, string? Cliente, decimal KgInstalados, decimal KgSolicitados);
 
 // Tablas del paquete Power BI. Sin correos, fotografías ni credenciales.
 public sealed record BiInventario(long CilindroId, string Codigo, long RefrigeranteId,
     string Refrigerante, string Estado, string Ubicacion, int? SucursalId, string? Sucursal,
-    int? TecnicoId, string? Tecnico, decimal? KgSegunUltimoPesaje, DateTimeOffset? FechaPesaje);
+    int? TecnicoId, string? Tecnico, decimal? KgSegunUltimoPesaje, DateTimeOffset? FechaPesaje,
+    int? ClienteId = null, string? Cliente = null);
 public sealed record BiOrden(long OtId, string Codigo, int SucursalId, string Sucursal,
     int TecnicoId, string Tecnico, string Estado, DateTimeOffset FechaCreacion,
-    DateOnly DiaCreacion, DateTimeOffset? FechaCierre);
+    DateOnly DiaCreacion, DateTimeOffset? FechaCierre,
+    int? ClienteId = null, string? Cliente = null);
 public sealed record BiDetalle(long OtId, long RefrigeranteId, string Refrigerante,
     decimal KgSolicitados, decimal KgAutorizados);
 public sealed record BiOperacion(Guid OperacionId, long OtId, string Tipo,

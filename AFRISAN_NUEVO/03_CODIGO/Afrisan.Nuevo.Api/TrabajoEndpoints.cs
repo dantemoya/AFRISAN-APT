@@ -60,5 +60,11 @@ public static class TrabajoEndpoints
             .RequireAuthorization(p => p.RequireRole("Autorizador"));
         grupo.MapPost("/{id:guid}/cerrar", (Guid id, TrabajoStore store, ClaimsPrincipal user) => TypedResults.Ok(store.Cerrar(id, user)))
             .RequireAuthorization(p => p.RequireRole("Autorizador"));
+        grupo.MapPost("/{id:guid}/devolver", (Guid id, DevolverOtRequest dto, TrabajoStore store, ClaimsPrincipal user) => TypedResults.Ok(store.Devolver(id, dto, user)))
+            .RequireAuthorization(p => p.RequireRole("Bodega"));
+        grupo.MapPost("/{id:guid}/anular", (Guid id, AnularOtRequest dto, TrabajoStore store, ClaimsPrincipal user) => TypedResults.Ok(store.Anular(id, dto, user)))
+            .RequireAuthorization(p => p.RequireRole("Autorizador"));
+        app.MapPost("/api/v1/cilindros/{codigo}/recarga", (string codigo, RecargarCilindroRequest dto, TrabajoStore store, ClaimsPrincipal user) => TypedResults.Ok(store.Recargar(codigo, dto, user)))
+            .RequireAuthorization(p => p.RequireRole(Roles.AltaCilindro.Split(','))).AddEndpointFilter<ValidarInventarioFilter>().WithTags("Inventario");
     }
 }

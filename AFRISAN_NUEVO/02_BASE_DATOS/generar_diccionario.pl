@@ -3,7 +3,7 @@
 # Uso (desde 02_BASE_DATOS, con el Perl de Git para Windows):
 #   perl generar_diccionario.pl > DICCIONARIO_ESQUEMA_AFRISAN.md
 # Lee 05_Crear_Afrisan_Sin_Emisiones.sql (mismo esquema que 06) y las migraciones
-# aditivas 07 a 10, en el orden en que se aplican.
+# aditivas 07 a 11, en el orden en que se aplican.
 # Solo lee archivos: no se conecta a ninguna base de datos.
 use strict;
 use warnings;
@@ -16,7 +16,7 @@ sub leer { my ($f) = @_; open(my $h, '<:encoding(UTF-8)', "$dir/$f") or die "No 
 my $sql05 = leer('05_Crear_Afrisan_Sin_Emisiones.sql');
 my $sql07 = leer('07_Habilitar_Persistencia.sql');
 # Migraciones posteriores: número => contenido.
-my @migraciones = (['08', leer('08_Rectificacion_Pesajes.sql')], ['09', leer('09_Mantenedores_Bajas.sql')], ['10', leer('10_Costos_Limites.sql')]);
+my @migraciones = (['08', leer('08_Rectificacion_Pesajes.sql')], ['09', leer('09_Mantenedores_Bajas.sql')], ['10', leer('10_Costos_Limites.sql')], ['11', leer('11_Devolucion_Anulacion_Recarga.sql')]);
 
 # Descripción funcional de cada tabla (redactada a partir de las reglas del SQL).
 my %desc = (
@@ -26,10 +26,10 @@ my %desc = (
   'Sucursales' => 'Sucursales de cada cliente, donde quedan instalados los cilindros.',
   'Refrigerantes' => 'Catálogo de tipos de gas. El código es único sin distinguir mayúsculas.',
   'Cilindros' => 'Cada envase físico: código QR, un solo refrigerante, tara y capacidad en gramos. La ubicación y el estado deben ser coherentes (CHECK) y solo cambian mediante los registros operativos (trigger).',
-  'OrdenTrabajo' => 'OT creada por el Autorizador y asignada a un técnico. Estados: Asignada → EnProcesoDespacho → EnTerreno → PendienteBodega → PendienteRevision → Cerrada.',
+  'OrdenTrabajo' => 'OT creada por el Autorizador y asignada a un técnico. Estados: Asignada → EnProcesoDespacho → EnTerreno → PendienteBodega → PendienteRevision → Cerrada. Bodega puede devolverla de PendienteBodega a EnTerreno con un motivo, y el Autorizador puede anularla (Anulada) mientras siga Asignada y sin retiros ni trabajos.',
   'DetalleOT' => 'Refrigerantes y gramos solicitados y autorizados por cada OT. Inmutable después de la asignación.',
   'RetiroPrevisto' => 'Cilindros instalados en la sucursal que la OT prevé retirar. Un cilindro solo puede estar reservado en una OT a la vez.',
-  'Pesaje' => 'Toda lectura de balanza en gramos: Inicial, Despacho, Instalado, Retirado o Recepcion. Inmutable.',
+  'Pesaje' => 'Toda lectura de balanza en gramos: Inicial, Despacho, Instalado, Retirado, Recepcion o Recarga. Inicial y Recarga no pertenecen a una OT. Inmutable.',
   'EvidenciaPesaje' => 'Metadatos de cada fotografía de balanza guardada en Storage privado (ruta, tipo, tamaño y SHA-256). Máximo ocho por pesaje. Inmutable.',
   'Despacho' => 'Retiro de un cilindro desde Bodega por el técnico asignado, con su pesaje y foto de salida. Se crea con la función `afrisan.retirar_cilindro`.',
   'OperacionTerreno' => 'Trabajo en la sucursal: Reemplazo (instalado y retirado) o Agregado (solo instalado). Es un borrador versionado hasta que el técnico lo confirma.',
@@ -137,9 +137,17 @@ tablas($_->[1], $_->[0]) for @migraciones;
 while ($sql05 =~ /ALTER TABLE afrisan\."(\w+)" ADD FOREIGN KEY\s*\(([^)]*)\)\s*REFERENCES afrisan\."(\w+)"\s*\(([^)]*)\)/g) {
   fkCompuesta($1, $2, $3, $4);
 }
-# Columnas y restricciones modificadas por 07 a 10
+# Columnas y restricciones modificadas por 07 a 11
 for my $m (['07', $sql07], @migraciones) {
   my ($origen, $sql) = @$m;
+  # CHECK eliminados en un bloque DO según su definición (LIKE '%texto%' y NOT LIKE '%texto%')
+  while ($sql =~ /conrelid='afrisan\."(\w+)"'::regclass AND contype='c'(.*?) LOOP/sg) {
+    my ($t, $filtro) = ($1, $2); my (@si, @no);
+    while ($filtro =~ /(NOT )?LIKE '%(.*?)%'(?!')/g) { my ($neg, $x) = ($1, $2); $x =~ s/''/'/g; $x =~ s/"//g; push @{$neg ? \@no : \@si}, $x; }
+    my $cae = sub { my ($s) = @_; return (grep { index($s, $_) >= 0 } @si) && !(grep { index($s, $_) >= 0 } @no); };
+    @{$_->{notas}} = grep { !(/^CHECK / && $cae->($_)) } @{$_->{notas}} for @{$tabla{$t}{cols}};
+    @{$tabla{$t}{ck}} = grep { !$cae->($_) } @{$tabla{$t}{ck}};
+  }
   while ($sql =~ /ALTER TABLE afrisan\."(\w+)"\s+(.*?);/sg) {
     my ($t, $resto) = ($1, $2);
     for my $e (partir($resto)) {
@@ -152,7 +160,7 @@ for my $m (['07', $sql07], @migraciones) {
         next;
       }
       if ($e =~ /^DROP CONSTRAINT IF EXISTS "\Q$t\E_(\w+)_check"$/) {   # CHECK de columna reemplazado
-        my ($col) = grep { $_->{nombre} eq $1 } @{$tabla{$t}{cols}} or die "No se encontró la columna $1 de $t";
+        my ($col) = grep { $_->{nombre} eq $1 } @{$tabla{$t}{cols}} or next;   # CHECK de tabla con nombre: se agrega a continuación
         @{$col->{notas}} = grep { !/^CHECK / } @{$col->{notas}};
         next;
       }
@@ -172,7 +180,12 @@ for my $m (['', $sql05], @migraciones) {
 # Triggers declarados y generados en bloques DO
 my $plano = $sql05; $plano =~ s/\s+/ /g;
 my %trgVisto;
-sub trigger { my ($t, $texto) = @_; push @{$tabla{$t}{trg}}, $texto unless $trgVisto{$t}{$texto}++; }
+sub trigger {   # un trigger recreado con el mismo nombre reemplaza al anterior en su posición
+  my ($t, $texto) = @_; return if $trgVisto{$t}{$texto}++;
+  my ($nombre) = $texto =~ /^(`\w+`)/; my $lista = $tabla{$t}{trg};
+  my ($i) = grep { index($lista->[$_], "$nombre ") == 0 } 0 .. $#$lista;
+  if (defined $i) { $lista->[$i] = $texto; } else { push @$lista, $texto; }
+}
 while ($plano =~ /CREATE TRIGGER "(\w+)" (BEFORE|AFTER) ([A-Z ]+?) ON afrisan\."(\w+)"/g) { trigger($4, "`$1` ($2 " . join('/', split / OR /, $3) . ')'); }
 for my $m (@migraciones) {
   my ($origen, $sql) = @$m; (my $p = $sql) =~ s/\s+/ /g;
@@ -237,9 +250,9 @@ sub acceso { my ($t) = @_; return '**Sin acceso** (diferido)' unless $permiso{$t
 
 # Salida
 print "# Diccionario del esquema `afrisan` (vigente)\n\n";
-print "- **Fuente:** `05_Crear_Afrisan_Sin_Emisiones.sql` (mismo esquema que `06`) más las migraciones aditivas `07_Habilitar_Persistencia.sql`, `08_Rectificacion_Pesajes.sql`, `09_Mantenedores_Bajas.sql` y `10_Costos_Limites.sql`.\n";
+print "- **Fuente:** `05_Crear_Afrisan_Sin_Emisiones.sql` (mismo esquema que `06`) más las migraciones aditivas `07_Habilitar_Persistencia.sql`, `08_Rectificacion_Pesajes.sql`, `09_Mantenedores_Bajas.sql`, `10_Costos_Limites.sql` y `11_Devolucion_Anulacion_Recarga.sql`.\n";
 print "- **Contenido:** " . scalar(@orden) . ' tablas y ' . scalar(@vistas) . " vistas en PostgreSQL 16 (Supabase): $base tablas y 8 vistas del modelo base más `RectificacionPesaje` (`08`), `TiposCambio` (`10`) y la vista `PesajeVigente` (`08`).\n";
-print "- **Estado de instalación:** el modelo base y `07` están aplicados en Supabase desde el 02/11/2026 (`04_SEGUIMIENTO/PERSISTENCIA_2026_11_02`); `08`, `09` y `10` se aplicaron el 09/11/2026 (`04_SEGUIMIENTO/SUPABASE_2026_11_09.md`).\n";
+print "- **Estado de instalación:** el modelo base y `07` están aplicados en Supabase desde el 02/11/2026 (`04_SEGUIMIENTO/PERSISTENCIA_2026_11_02`); `08`, `09` y `10` se aplicaron el 09/11/2026 (`04_SEGUIMIENTO/SUPABASE_2026_11_09.md`); `11` se aplicó el 15/11/2026 (`04_SEGUIMIENTO/CORRECCIONES_2026_11_14`).\n";
 print "- **Generado con:** `perl generar_diccionario.pl > DICCIONARIO_ESQUEMA_AFRISAN.md`. Si cambia el SQL, vuelve a generarlo en vez de editarlo a mano.\n";
 print "- **Convenciones:** PK = clave primaria, FK = clave foránea, UQ = único. Las masas se guardan en gramos enteros y las fechas en `timestamptz`.\n";
 print "- **Seguridad:** RLS está activo en las " . scalar(@orden) . " tablas y no hay acceso para `PUBLIC`, `anon` ni `authenticated`. La columna *Acceso API* indica los permisos del rol `afrisan_api` después de `10`; $sinAcceso tablas siguen sin acceso porque su módulo quedó diferido.\n\n";

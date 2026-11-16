@@ -27,6 +27,9 @@ public sealed partial class InventarioClient
     public Task<OtResponse> IncidenciaAsync(Guid id, CrearIncidenciaRequest dto) => EnviarAsync<OtResponse>(OtRuta(id) + "/incidencias", dto);
     public Task<OtResponse> ResolverAsync(Guid id, Guid incidencia, ResolverIncidenciaRequest dto) => EnviarAsync<OtResponse>(OtRuta(id) + $"/incidencias/{incidencia}/resolver", dto);
     public Task<OtResponse> TerminarAsync(Guid id, TerminarTrabajoRequest dto) => EnviarAsync<OtResponse>(OtRuta(id) + "/termino-tecnico", dto);
+    public Task<OtResponse> DevolverAsync(Guid id, DevolverOtRequest dto) => EnviarAsync<OtResponse>(OtRuta(id) + "/devolver", dto);
+    public Task<OtResponse> AnularAsync(Guid id, AnularOtRequest dto) => EnviarAsync<OtResponse>(OtRuta(id) + "/anular", dto);
+    public Task<CilindroResponse> RecargarAsync(string codigo, RecargarCilindroRequest dto) => EnviarAsync<CilindroResponse>($"cilindros/{Uri.EscapeDataString(codigo)}/recarga", dto);
     public Task<EntornoResponse> EntornoAsync() => ObtenerAsync<EntornoResponse>("entorno");
     public Task<OperacionResponse> SubirFotoAsync(Guid id, Guid operacion, SubirFotoRequest dto) => EnviarAsync<OperacionResponse>(OtRuta(id) + $"/operaciones/{operacion}/fotos", dto);
     public async Task<OperacionResponse> GuardarOperacionAsync(Guid id, GuardarOperacionRequest dto)

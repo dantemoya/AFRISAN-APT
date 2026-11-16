@@ -18,7 +18,7 @@
     <a class="workflow-card" href="@(Sesion.PuedeRegistrar ? "cilindros/nuevo" : "inventario")"><span class="step">02</span><h3>Identificar los cilindros</h3><p>Un único refrigerante, su capacidad, tara y un código QR que acompaña al envase.</p><span class="card-link">@(Sesion.PuedeRegistrar ? "Registrar cilindro →" : "Consultar cilindros →")</span></a>
     <a class="workflow-card" href="inventario"><span class="step">03</span><h3>Consultar el inventario</h3><p>Busca por código, serie, refrigerante o estado. Revisa el último peso realmente medido.</p><span class="card-link">Ver inventario →</span></a>
 </div>
-<div class="notice info"><strong>Flujo de trabajo</strong><p>Inventario, pesajes y OT: retiro del Técnico, recepción de Bodega y revisión del Autorizador. Los límites e integraciones adicionales siguen su planificación.</p></div>
+<div class="notice info"><strong>Flujo de trabajo</strong><p>Inventario, pesajes y OT: retiro del Técnico, recepción de Bodega y revisión del Autorizador. Los límites por sucursal y los costos tienen sus propios módulos; la integración con Defontana y los certificados de disposición están diferidos.</p></div>
 
 @code {
     private CilindroResponse[] cilindros = [];

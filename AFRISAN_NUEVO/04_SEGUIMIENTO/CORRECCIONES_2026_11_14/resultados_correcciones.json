@@ -1,0 +1,168 @@
+{
+  "fecha_utc": "2026-11-15T03:54:04.645Z",
+  "tipo": "API .NET 8 + PostgreSQL embebido (05, 07, 08, 09, 10 y 11)",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Los scripts 05, 07, 08, 09, 10 y 11 se aplican en orden sobre una base vacía"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La migración 11 se puede aplicar dos veces sin error"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/40063a52-34f2-4bef-9159-81b7d80f49cc/anular: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/40063a52-34f2-4bef-9159-81b7d80f49cc/anular: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El Autorizador anula una OT asignada con motivo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La anulación queda en el historial de la OT"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/40063a52-34f2-4bef-9159-81b7d80f49cc/entregas: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Anular libera la reserva: el mismo cilindro se reserva en otra OT"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/a4468614-f3bb-449b-af95-94dc29f2bb7b/anular: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/a4468614-f3bb-449b-af95-94dc29f2bb7b/operaciones/1a6ad451-d7ea-422b-bea6-855c5133c34a/confirmar?version=3: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un retirado que pesa 300 g más que su último peso se rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/a4468614-f3bb-449b-af95-94dc29f2bb7b/operaciones/1a6ad451-d7ea-422b-bea6-855c5133c34a/confirmar?version=4: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un instalado 400 g bajo el peso de salida se rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Con 100 g de diferencia (dentro de la tolerancia) el cambio se confirma"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico envía la OT a Bodega"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El envío a Bodega queda en el historial"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/a4468614-f3bb-449b-af95-94dc29f2bb7b/aprobar-bodega: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega no aprueba con una incidencia abierta"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/a4468614-f3bb-449b-af95-94dc29f2bb7b/devolver: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/a4468614-f3bb-449b-af95-94dc29f2bb7b/devolver: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega devuelve la OT al técnico con el motivo"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La devolución queda en el historial"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El Autorizador responde la incidencia antes de la aprobación de Bodega"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico reenvía la OT a Bodega"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/a4468614-f3bb-449b-af95-94dc29f2bb7b/aprobar-bodega: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega no aprueba con una rectificación pendiente"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin pendientes, Bodega aprueba"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/a4468614-f3bb-449b-af95-94dc29f2bb7b/devolver: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT devuelta y corregida se cierra"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El cilindro retirado de la sucursal vuelve a Bodega como Vacio"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/dccb5568-5aa9-43ac-b76f-29b35c96f1c9/entregas: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un cilindro vacío no se puede retirar de Bodega para una OT"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E1F86B90A1324633B14DD76E498FA8FE/recarga: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-E1F86B90A1324633B14DD76E498FA8FE/recarga: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega recarga el cilindro vacío con peso y foto, y vuelve a Disponible"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Reintentar la misma recarga no duplica el pesaje"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AFR-172AE09A6C244B09B9ED6F23884B34D6/recarga: HTTP 409"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "No se recarga un cilindro instalado en una sucursal"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La base guarda un solo pesaje de recarga"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "RLS sigue habilitado en todas las tablas después de la migración 11"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 40
+}

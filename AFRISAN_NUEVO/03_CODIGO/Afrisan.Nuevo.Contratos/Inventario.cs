@@ -42,6 +42,22 @@ public sealed record RegistrarPesajeInicialRequest
     [StringLength(1000)] public string? Observacion { get; init; }
 }
 
+/// <summary>Reingreso a Bodega de un cilindro recargado: nuevo peso bruto con foto de la balanza (D-43).</summary>
+public sealed record RecargarCilindroRequest
+{
+    public Guid IdOperacion { get; init; }
+    [Range(1, long.MaxValue)] public long PesoBrutoGr { get; init; }
+    [Required] public FotoPesajeRequest? Foto { get; init; }
+    [StringLength(1000)] public string? Observacion { get; init; }
+}
+
+/// <summary>Tolerancias de balanza definidas por el responsable del proyecto (D-42).</summary>
+public static class ReglasPeso
+{
+    /// <summary>Diferencia máxima entre el peso de salida de Bodega y el peso instalado, en gramos.</summary>
+    public const long ToleranciaGr = 200;
+}
+
 /// <summary>Evidencia de un registro de balanza inicial: fecha, actor y lectura.</summary>
 public sealed record PesajeResponse(long PesoBrutoGr, DateTimeOffset Fecha, string Usuario, string? Observacion);
 

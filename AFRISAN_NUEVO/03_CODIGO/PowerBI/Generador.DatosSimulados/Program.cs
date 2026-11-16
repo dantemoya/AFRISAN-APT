@@ -13,7 +13,10 @@ var zona = TimeZoneInfo.FindSystemTimeZoneById("America/Santiago");
 var corte = new DateTimeOffset(2026, 11, 8, 15, 0, 0, TimeSpan.Zero);
 
 var gases = new (long Id, string Codigo, decimal ClpPorGramo)[] { (1, "R410A", 28m), (2, "R32", 24m), (3, "R404A", 35m), (4, "R134A", 22m) };
-var sucursales = new (int Id, string Nombre)[] { (1, "Sucursal Norte (simulada)"), (2, "Sucursal Centro (simulada)"), (3, "Sucursal Sur (simulada)"), (4, "Sucursal Oriente (simulada)"), (5, "Sucursal Poniente (simulada)") };
+// Empresas cliente genéricas (D-45): el informe colorea el consumo de cada sucursal según su empresa.
+var sucursales = new (int Id, string Nombre, int ClienteId, string Cliente)[] { (1, "Sucursal Norte (simulada)", 1, "Cliente A (simulado)"),
+    (2, "Sucursal Centro (simulada)", 1, "Cliente A (simulado)"), (3, "Sucursal Sur (simulada)", 2, "Cliente B (simulado)"),
+    (4, "Sucursal Oriente (simulada)", 2, "Cliente B (simulado)"), (5, "Sucursal Poniente (simulada)", 3, "Cliente C (simulado)") };
 var tecnicos = new (int Id, string Nombre)[] { (101, "Técnico A (simulado)"), (102, "Técnico B (simulado)"), (103, "Técnico C (simulado)"), (104, "Técnico D (simulado)") };
 const decimal UsdSimulado = 950m; // CLP por USD inventado; no es una cotización.
 
@@ -29,9 +32,10 @@ var ordenes = new List<BiOrden>(); var detalle = new List<BiDetalle>(); var desp
 var operaciones = new List<BiOperacion>(); var incidencias = new List<BiIncidencia>(); var inventario = new List<BiInventario>();
 var costos = new List<BiCosto>();
 long cilindroId = 0;
-void Cilindro(string codigo, (long Id, string Codigo, decimal) gas, string estado, string ubicacion, (int Id, string Nombre)? sucursal,
+void Cilindro(string codigo, (long Id, string Codigo, decimal) gas, string estado, string ubicacion, (int Id, string Nombre, int ClienteId, string Cliente)? sucursal,
     (int Id, string Nombre)? tecnico, decimal? kg, DateTimeOffset? fecha) =>
-    inventario.Add(new(++cilindroId, codigo, gas.Id, gas.Codigo, estado, ubicacion, sucursal?.Id, sucursal?.Nombre, tecnico?.Id, tecnico?.Nombre, kg, fecha));
+    inventario.Add(new(++cilindroId, codigo, gas.Id, gas.Codigo, estado, ubicacion, sucursal?.Id, sucursal?.Nombre, tecnico?.Id, tecnico?.Nombre, kg, fecha,
+        sucursal?.ClienteId, sucursal?.Cliente));
 
 var inicio = new DateOnly(2026, 8, 3);
 var dias = Dia(corte).DayNumber - inicio.DayNumber;
@@ -102,7 +106,7 @@ for (var n = 1; n <= 60; n++)
         }
     }
     DateTimeOffset? cierre = estado == "Cerrada" ? ultimaFecha.AddDays(1) : null;
-    ordenes.Add(new(n, $"OT-{n:D6}", suc.Id, suc.Nombre, tec.Id, tec.Nombre, estado, creada, Dia(creada), cierre));
+    ordenes.Add(new(n, $"OT-{n:D6}", suc.Id, suc.Nombre, tec.Id, tec.Nombre, estado, creada, Dia(creada), cierre, suc.ClienteId, suc.Cliente));
     if (r.NextDouble() < 0.15)
     {
         var fecha = creada.AddDays(1);

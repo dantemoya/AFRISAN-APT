@@ -41,6 +41,16 @@ else
             </EditForm>
         </section>
     }
+    @if (cilindro.Ubicacion == "Bodega" && cilindro.Estado is "Vacio" or "Disponible" && cilindro.PesajeRegistrado is not null && Sesion.PuedeRegistrar)
+    {
+        <section class="panel mt"><h2>Registrar recarga</h2><p class="muted">Cuando el cilindro vuelve recargado, pésalo en Bodega y adjunta la foto de la balanza. Queda «Disponible» para nuevas órdenes.</p>
+            <fieldset disabled="@guardando"><div class="form-grid">
+                <div><label for="recarga-peso">Peso bruto recargado (g)</label><input id="recarga-peso" type="number" step="1" min="1" @bind="pesoRecarga" @bind:after="NuevaRecarga" /></div>
+                <div><label for="recarga-foto">Foto de la balanza</label><InputFile id="recarga-foto" accept="image/jpeg,image/png,image/webp" OnChange="CargarFotoRecarga" /></div>
+                <div><label for="recarga-observacion">Observación (opcional)</label><input id="recarga-observacion" maxlength="1000" @bind="notaRecarga" /></div>
+            </div><button class="btn primary" @onclick="Recargar">@(guardando ? "Guardando…" : "Registrar recarga")</button></fieldset>
+        </section>
+    }
     <section class="panel mt"><h2>Historial del registro</h2>
         <ol class="timeline">@foreach (var evento in historial) { <li><span>@evento.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @evento.Usuario</span><strong>@evento.Accion</strong><p>@evento.Descripcion</p></li> }</ol>
     </section>
@@ -76,6 +86,35 @@ else
             try { qr = await Api.QrAsync(Codigo); }
             catch (Exception ex) { error = Formato.Error(ex); }
         }
+    }
+    private long? pesoRecarga;
+    private string? notaRecarga;
+    private FotoPesajeRequest? fotoRecarga;
+    private Guid idRecarga = Guid.NewGuid();
+    private void NuevaRecarga() => idRecarga = Guid.NewGuid();
+    private async Task CargarFotoRecarga(InputFileChangeEventArgs args)
+    {
+        error = null; fotoRecarga = null; idRecarga = Guid.NewGuid();
+        const long maximo = 4 * 1024 * 1024;
+        if (args.File.Size > maximo) { error = "La foto supera 4 MiB."; return; }
+        await using var origen = args.File.OpenReadStream(maximo);
+        using var memoria = new MemoryStream();
+        await origen.CopyToAsync(memoria);
+        fotoRecarga = new() { Id = Guid.NewGuid(), Nombre = args.File.Name, ContentType = args.File.ContentType, Base64 = Convert.ToBase64String(memoria.ToArray()) };
+    }
+    private async Task Recargar()
+    {
+        if (guardando) return;
+        if (pesoRecarga is null || fotoRecarga is null) { error = "Ingresa el peso recargado y adjunta la foto de la balanza."; return; }
+        guardando = true; error = null; mensaje = null;
+        try
+        {
+            await Api.RecargarAsync(Codigo, new() { IdOperacion = idRecarga, PesoBrutoGr = pesoRecarga.Value, Foto = fotoRecarga, Observacion = notaRecarga });
+            pesoRecarga = null; notaRecarga = null; fotoRecarga = null; idRecarga = Guid.NewGuid();
+            await Cargar(); mensaje = "Recarga registrada: el cilindro quedó disponible en Bodega.";
+        }
+        catch (Exception ex) { error = Formato.Error(ex); }
+        finally { guardando = false; }
     }
     private async Task GuardarPesaje()
     {

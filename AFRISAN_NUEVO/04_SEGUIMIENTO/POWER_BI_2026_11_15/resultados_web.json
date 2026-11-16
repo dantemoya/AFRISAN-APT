@@ -1,0 +1,105 @@
+{
+ "fecha": "2026-11-15",
+ "tipo": "Web Blazor local (http://localhost:5286) + API local en modo PostgreSQL contra Supabase, navegador integrado de la aplicación de escritorio de Claude",
+ "sesion": "Cuenta de prueba de Jefatura del 14/11 (primer uso) y cuenta de prueba de Técnico. La sesión se entregó al navegador desde un proceso local, sin escribir la clave en la pantalla ni en el registro.",
+ "descargas": "Para no dejar en disco el proyecto conectado (contiene un token), la función afrisanBi.descargar se reemplazó en la página por una que solo mide el archivo recibido. El flujo de la pantalla, la llamada a la API y el mensaje de confirmación son los reales.",
+ "resumen": {
+  "comprobaciones": 16,
+  "ok": 16,
+  "fallos": 0
+ },
+ "comprobaciones": [
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi (Jefatura)",
+   "comprobacion": "Muestra la demostración en estado «Pendiente de publicación», sin campos para configurar el enlace (solo Administrador puede hacerlo) y con «Descargar plantilla para Desktop»"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/demo (Jefatura)",
+   "comprobacion": "La plantilla gratuita se descarga: AFRISAN_PowerBI_Plantilla_Gratuita.zip, 34.710 bytes"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura)",
+   "comprobacion": "Vista previa sin filtros (17/10 al 15/11): 23 cilindros, 133,34 kg instalados, 0 retirados pendientes, 0 incidencias abiertas; igual al resumen de la API y a lo calculado desde las 7 tablas"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura)",
+   "comprobacion": "Listas de filtros con datos reales: 2 sucursales, 4 refrigerantes y 2 técnicos"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura)",
+   "comprobacion": "Filtro Desde 01/01/2026 + sucursal «Local Maipú (prueba)»: 2 cilindros, 3 OT cerradas, 27,74 kg; igual a la API"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura)",
+   "comprobacion": "«Descargar paquete Power BI» entrega AFRISAN_PowerBI_20261115_160439.zip (44.612 bytes, ZIP válido)"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura)",
+   "comprobacion": "«Descargar Power BI conectado» entrega AFRISAN_PowerBI_Conectado_20261115_1304.zip (35.738 bytes) y muestra «Proyecto descargado. Descomprímelo, abre AFRISAN.pbip en Power BI Desktop y pulsa Actualizar.»"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura)",
+   "comprobacion": "«Generar token para Power BI» muestra un token una sola vez, con vencimiento 15/12/2026 13:04, la dirección de las tablas y la indicación de autenticación Anónima"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura)",
+   "comprobacion": "Al recargar la página el token ya no aparece y no queda guardado en localStorage"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi y /power-bi/operativo (Técnico)",
+   "comprobacion": "El menú no muestra Power BI y ambas direcciones responden «Acceso restringido. Tu rol no tiene acceso a esta pantalla.»"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura, después de la corrección)",
+   "comprobacion": "DEF-13: la tarjeta muestra 15 OT abiertas con «Creadas en el período · 6 cerradas · 2 anuladas»; el gráfico por estado suma 23"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura, después de la corrección)",
+   "comprobacion": "DEF-14: dice «proyecto editable del informe con cinco páginas»"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura, después de la corrección)",
+   "comprobacion": "DEF-14: los gráficos de conteo muestran «14 cilindros», «6 OT» y los estados como en el resto de la aplicación («En proceso de despacho», «Pendiente de aprobación de Bodega»); los kilos siguen con dos decimales («39,20 kg»)"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura, D-45)",
+   "comprobacion": "Panel «Consumo de refrigerante por sucursal» en vista Mes (noviembre de 2026): Sucursal DEMO 105,60 kg instalados y 162,00 kg solicitados; Local Maipú (prueba) 27,74 y 30,00 kg; igual a la API. Un color por empresa cliente con su leyenda y barra gris para los kg solicitados"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura, D-45)",
+   "comprobacion": "El botón Semana agrupa por semanas de lunes a domingo («Semana del 02/11 al 08/11/2026» y «Semana del 09/11 al 15/11/2026») y marca el botón activo (aria-pressed)"
+  },
+  {
+   "resultado": "OK",
+   "pantalla": "/power-bi/operativo (Jefatura, D-45, 375 px)",
+   "comprobacion": "En ancho de celular el panel no genera desplazamiento horizontal y la leyenda y las barras se acomodan"
+  }
+ ],
+ "antes_de_la_correccion": [
+  {
+   "id": "DEF-13",
+   "gravedad": "Media",
+   "observado": "La tarjeta mostraba 17 OT abiertas (6 cerradas) y, con el filtro de la sucursal de prueba, 2 abiertas cuando sus 5 OT estaban 3 cerradas y 2 anuladas."
+  },
+  {
+   "id": "DEF-14",
+   "gravedad": "Baja",
+   "observado": "El texto decía «cuatro páginas»; los gráficos mostraban «14,00 cilindros», «6,00 OT» y estados con su nombre interno (EnProcesoDespacho, PendienteBodega)."
+  }
+ ]
+}

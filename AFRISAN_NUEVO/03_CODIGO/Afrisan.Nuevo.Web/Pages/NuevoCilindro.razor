@@ -6,7 +6,7 @@
 
 <PageTitle>Registrar cilindro · AFRISAN</PageTitle>
 <a class="back-link" href="inventario">← Volver al inventario</a>
-<div class="page-heading"><div><span class="eyebrow">PN-01 / REGISTRO DEL ENVASE</span><h1>Registrar cilindro</h1><p>Un envase físico, un solo refrigerante y un identificador permanente.</p></div></div>
+<div class="page-heading"><div><span class="eyebrow">INVENTARIO / REGISTRO DEL ENVASE</span><h1>Registrar cilindro</h1><p>Un envase físico, un solo refrigerante y un identificador permanente.</p></div></div>
 @if (error is not null) { <div class="notice error" role="alert">@error</div> }
 @if (cargando) { <p class="loading" role="status">Cargando catálogo…</p> }
 else if (falloCarga) { <button class="btn secondary" @onclick="Cargar">Reintentar consulta de refrigerantes</button> }
@@ -42,7 +42,7 @@ else
                 <div class="calculation-result"><span>Contenido según pesaje</span><strong>@Contenido</strong></div>
                 <p class="field-help">Contenido = peso bruto − tara. El código y el QR se generan al confirmar el alta.</p>
             </section>
-            <div class="notice info"><strong>Decisión provisional</strong><p>El ingreso sin pesaje está habilitado para revisar el flujo. La obligatoriedad del pesaje y su fotografía aún deben confirmarse.</p></div>
+            <div class="notice info"><strong>Sin pesaje inicial</strong><p>Si no registras el peso, el cilindro queda «Pendiente de pesaje» y no se puede retirar para una orden de trabajo hasta pesarlo.</p></div>
         </aside>
     </div>
 }

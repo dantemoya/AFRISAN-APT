@@ -9,10 +9,11 @@ Manifiesto.json indica cuándo se obtuvo y cuántas filas contiene.
 1. Descomprimir todo el ZIP y abrir `Informe/AFRISAN.pbip` en Power BI Desktop.
 2. En Transformar datos > Editar parámetros, cambiar `CarpetaAfrisan` a la
    carpeta que contiene los siete CSV de este paquete (no la carpeta Informe).
-3. Actualizar y revisar las cinco páginas: Operación actual, Inventario y
-   custodia, Ejecución y pesajes, OT e incidencias y Valoración de refrigerante.
-   El proyecto contiene siete fuentes, tres dimensiones, catorce relaciones de
-   dirección única y dieciocho medidas. No crear relaciones automáticas adicionales.
+3. Actualizar y revisar las seis páginas: Operación actual, Inventario y
+   custodia, Ejecución y pesajes, OT e incidencias, Valoración de refrigerante y
+   Consumo por sucursal. El proyecto contiene siete fuentes, tres dimensiones, la
+   tabla calculada Calendario (sin relaciones), catorce relaciones de dirección
+   única y veinte medidas. No crear relaciones automáticas adicionales.
 4. Guardar como `AFRISAN_Operativo.pbix` y publicar en el área privada de la empresa.
    Obtener ReportId para `Configurar-PowerBI.ps1`. La cuenta y los permisos
    de Microsoft se configuran en Power BI, no se incluyen en este paquete.
@@ -63,6 +64,7 @@ y su seguimiento. No representan una reconstrucción del inventario histórico.
 | Órdenes | Tarjetas de OT abiertas/cerradas; barras de OT por Estado y Sucursal; kilos solicitados/autorizados por refrigerante en DetalleOT | Ordenes: DiaCreacion, Sucursal, Tecnico. Refrigerante de DetalleOT solo filtra sus kilos |
 | Trabajo en terreno | Tarjeta de Kg en cilindros instalados; barras por Operaciones[Refrigerante]; serie por DiaConfirmacion; tabla de retirados pendientes | Operaciones: DiaConfirmacion, Refrigerante, Tipo. Ordenes: Sucursal y Tecnico. No añadir DiaCreacion aquí |
 | Incidencias | Tarjeta de incidencias abiertas; barras por Tipo; tabla de fechas de registro/revisión | Incidencias: Dia, Tipo, Abierta. Ordenes: Sucursal y Tecnico |
+| Consumo por sucursal (D-45) | Gráfico de columnas y línea: eje Sucursales[Sucursal], columnas «Consumo kg (gas instalado)» con leyenda Sucursales[Cliente] (un color por empresa) y línea «Kg solicitados por el cliente» | Calendario: Mes y Semana (desde el lunes). Sucursales: Cliente. Las medidas aplican el Calendario con TREATAS |
 
 Fechas de día calculadas en America/Santiago, con cambios de horario. Marcas
 horarias completas en UTC. Las fechas significan cosas distintas: creación de

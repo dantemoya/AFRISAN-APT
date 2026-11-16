@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -18,7 +19,13 @@ public static class Seguridad
     public static int LoginPorMinuto(IConfiguration configuration, IHostEnvironment environment) =>
         configuration.GetValue<int?>("Seguridad:LoginPorMinuto") ?? (environment.IsDevelopment() ? 0 : 10);
 
-    public static IServiceCollection AddLimiteLogin(this IServiceCollection services, int porMinuto)
+    // Límite global por usuario autenticado (o por IP si no hay sesión): frena el abuso de un
+    // token válido contra listados y subidas de fotos. Generoso para no molestar al uso normal.
+    // En Development queda desactivado para no interferir con las baterías locales.
+    public static int ApiPorMinuto(IConfiguration configuration, IHostEnvironment environment) =>
+        configuration.GetValue<int?>("Seguridad:ApiPorMinuto") ?? (environment.IsDevelopment() ? 0 : 300);
+
+    public static IServiceCollection AddLimiteLogin(this IServiceCollection services, int porMinuto, int apiPorMinuto = 0)
     {
         return services.AddRateLimiter(o =>
         {
@@ -27,13 +34,23 @@ public static class Seguridad
             {
                 context.HttpContext.Response.Headers.RetryAfter = "60";
                 await Results.Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "Demasiados intentos",
-                    detail: "Hay demasiados intentos de inicio de sesión desde esta red. Espera un minuto e inténtalo otra vez.")
+                    detail: "Hay demasiadas solicitudes desde esta sesión o red. Espera un minuto e inténtalo otra vez.")
                     .ExecuteAsync(context.HttpContext);
             };
             o.AddPolicy(PoliticaLogin, http => porMinuto <= 0
                 ? RateLimitPartition.GetNoLimiter("sin-limite")
                 : RateLimitPartition.GetFixedWindowLimiter(http.Connection.RemoteIpAddress?.ToString() ?? "desconocido",
                     _ => new FixedWindowRateLimiterOptions { PermitLimit = porMinuto, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            o.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(http =>
+            {
+                // El sondeo de salud no se limita; el resto se parte por usuario o por IP.
+                if (apiPorMinuto <= 0 || http.Request.Path.StartsWithSegments("/health"))
+                    return RateLimitPartition.GetNoLimiter("sin-limite");
+                var clave = http.User.FindFirstValue(ClaimTypes.NameIdentifier) is { Length: > 0 } id
+                    ? "u:" + id : "ip:" + (http.Connection.RemoteIpAddress?.ToString() ?? "desconocido");
+                return RateLimitPartition.GetFixedWindowLimiter(clave,
+                    _ => new FixedWindowRateLimiterOptions { PermitLimit = apiPorMinuto, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 });
+            });
         });
     }
 }

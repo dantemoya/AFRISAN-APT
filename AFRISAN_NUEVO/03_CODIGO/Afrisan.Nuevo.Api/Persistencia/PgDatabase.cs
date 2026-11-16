@@ -50,7 +50,8 @@ public sealed record PesajeRow(Guid Id, long CilindroId, string Tipo, long Peso,
     string Usuario, string? Observacion);
 public sealed record OtRow(long Id, Guid Publico, string Codigo, int SucursalId, string Sucursal,
     string Direccion, string Descripcion, int TecnicoId, string Tecnico, string Estado,
-    string Autorizador, DateTimeOffset Fecha, string? ObservacionTermino, string? Huella);
+    string Autorizador, DateTimeOffset Fecha, string? ObservacionTermino, string? Huella,
+    string? MotivoDevolucion, string? MotivoAnulacion);
 public sealed record OperacionRow(Guid Id, long OtId, string Tipo, int Version, string Estado,
     string Datos, string Fotos, DateTimeOffset Fecha, DateTimeOffset? Confirmacion,
     DateTimeOffset? Entrega, Guid? PesajeInstalado, Guid? PesajeRetirado);

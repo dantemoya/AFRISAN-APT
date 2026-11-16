@@ -32,7 +32,8 @@ public sealed partial class PgPowerBi
               WHERE (f.sucursal IS NULL OR c."Id_Sucursal"=f.sucursal)
                 AND (f.gas IS NULL OR c."Id_Refrigerante"=f.gas)
                 AND (f.tecnico IS NULL OR c."Id_Tecnico"=f.tecnico)),
-            operaciones AS (SELECT op."Tipo",g."CodigoRefrigerante" gas,
+            operaciones AS (SELECT op."Tipo",g."CodigoRefrigerante" gas,o."Id_Sucursal" sucursal,
+                (op."FechaConfirmacion" AT TIME ZONE 'America/Santiago')::date dia,
                 (p."PesoBrutoGr"-c."TaraGr")/1000.0 kilos,
                 (op."Tipo"='Reemplazo' AND NOT EXISTS(SELECT 1 FROM afrisan."RecepcionBodega" r WHERE r."Id_Operacion"=op."Id_Operacion")) pendiente
               FROM afrisan."OperacionTerreno" op JOIN elegibles o USING("Id_OrdenTrabajo")
@@ -50,8 +51,9 @@ public sealed partial class PgPowerBi
         var c = await u.One<BiConteosSql>(conjunto + """
             SELECT (SELECT count(*)::int FROM inventario) AS "Cilindros",
               (SELECT count(*)::int FROM inventario WHERE "Id_UltimoPesaje" IS NULL) AS "SinPesaje",
-              (SELECT count(*)::int FROM ordenes WHERE "Estado"<>'Cerrada') AS "Abiertas",
+              (SELECT count(*)::int FROM ordenes WHERE "Estado" NOT IN ('Cerrada','Anulada')) AS "Abiertas",
               (SELECT count(*)::int FROM ordenes WHERE "Estado"='Cerrada') AS "Cerradas",
+              (SELECT count(*)::int FROM ordenes WHERE "Estado"='Anulada') AS "Anuladas",
               (SELECT coalesce(sum(kilos),0) FROM operaciones) AS "Kilos",
               (SELECT count(*)::int FROM operaciones WHERE pendiente) AS "Pendientes",
               (SELECT count(*)::int FROM incidencias WHERE "FechaRevision" IS NULL) AS "Incidencias"
@@ -59,6 +61,23 @@ public sealed partial class PgPowerBi
         var inv = await u.Query<BiGrupoResponse>(conjunto + "SELECT \"Estado\" AS \"Nombre\",count(*)::numeric AS \"Valor\" FROM inventario GROUP BY 1 ORDER BY 2 DESC,1",filtros);
         var ord = await u.Query<BiGrupoResponse>(conjunto + "SELECT \"Estado\" AS \"Nombre\",count(*)::numeric AS \"Valor\" FROM ordenes GROUP BY 1 ORDER BY 2 DESC,1",filtros);
         var ops = await u.Query<BiGrupoResponse>(conjunto + "SELECT gas AS \"Nombre\",sum(kilos) AS \"Valor\" FROM operaciones GROUP BY 1 ORDER BY 1",filtros);
+        // D-45: consumo por sucursal = kg instalados (regla de los límites) junto a los kg solicitados en OT no
+        // anuladas, por semana (lunes a domingo) y por mes, con los mismos filtros de los indicadores.
+        var consumo = await u.Query<BiConsumoResponse>(conjunto + """
+            ,solicitados AS (SELECT o."Id_Sucursal" sucursal,(o."FechaCreacion" AT TIME ZONE 'America/Santiago')::date dia,
+                d."GrSolicitados"/1000.0 kilos
+              FROM ordenes o JOIN afrisan."DetalleOT" d ON d."Id_OrdenTrabajo"=o."Id_OrdenTrabajo" CROSS JOIN filtro f
+              WHERE o."Estado"<>'Anulada' AND (f.gas IS NULL OR d."Id_Refrigerante"=f.gas)),
+            base AS (SELECT sucursal,dia,kilos inst,0::numeric sol FROM operaciones
+              UNION ALL SELECT sucursal,dia,0::numeric,kilos FROM solicitados),
+            periodos AS (SELECT 'Semana' periodo,date_trunc('week',dia::timestamp)::date inicio,sucursal,inst,sol FROM base
+              UNION ALL SELECT 'Mes',date_trunc('month',dia::timestamp)::date,sucursal,inst,sol FROM base)
+            SELECT p.periodo AS "Periodo",p.inicio AS "Inicio",s."Id_Sucursal" AS "SucursalId",s."NombreSucursal" AS "Sucursal",
+              s."Id_Cliente" AS "ClienteId",cl."NombreEmpresa" AS "Cliente",sum(p.inst) AS "KgInstalados",sum(p.sol) AS "KgSolicitados"
+            FROM periodos p JOIN afrisan."Sucursales" s ON s."Id_Sucursal"=p.sucursal
+            JOIN afrisan."Cliente" cl ON cl."Id_Cliente"=s."Id_Cliente"
+            GROUP BY 1,2,3,4,5,6 ORDER BY 1,2,6,4
+            """,filtros);
         var sucursales = await u.Query<BiOpcionResponse>("""
             SELECT DISTINCT s."Id_Sucursal"::bigint AS "Id",s."NombreSucursal" AS "Nombre"
             FROM afrisan."OrdenTrabajo" o JOIN afrisan."Sucursales" s USING("Id_Sucursal") ORDER BY 2
@@ -73,7 +92,7 @@ public sealed partial class PgPowerBi
             FROM afrisan."OrdenTrabajo" o JOIN afrisan."Usuario" t ON t."Id_Usuario"=o."Id_Tecnico" ORDER BY 2
             """);
         return new(generado,inicio,fin,c.Cilindros,c.SinPesaje,c.Abiertas,c.Cerradas,c.Kilos,c.Pendientes,c.Incidencias,
-            inv,ord,ops,sucursales,gases,tecnicos);
+            inv,ord,ops,sucursales,gases,tecnicos,c.Anuladas,consumo);
     }
 }
-public sealed record BiConteosSql(int Cilindros,int SinPesaje,int Abiertas,int Cerradas,decimal Kilos,int Pendientes,int Incidencias);
+public sealed record BiConteosSql(int Cilindros,int SinPesaje,int Abiertas,int Cerradas,int Anuladas,decimal Kilos,int Pendientes,int Incidencias);

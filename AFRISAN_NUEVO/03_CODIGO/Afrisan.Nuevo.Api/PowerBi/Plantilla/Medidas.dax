@@ -9,7 +9,7 @@ Cilindros disponibles bodega = CALCULATE(COUNTROWS(Inventario), Inventario[Ubica
 
 OT registradas = DISTINCTCOUNT(Ordenes[OtId])
 
-OT abiertas = CALCULATE(DISTINCTCOUNT(Ordenes[OtId]), KEEPFILTERS(Ordenes[Estado] <> "Cerrada"))
+OT abiertas = CALCULATE(DISTINCTCOUNT(Ordenes[OtId]), KEEPFILTERS(NOT (Ordenes[Estado] IN {"Cerrada", "Anulada"})))
 
 OT cerradas = CALCULATE(DISTINCTCOUNT(Ordenes[OtId]), KEEPFILTERS(Ordenes[Estado] = "Cerrada"))
 
@@ -29,7 +29,8 @@ Incidencias abiertas = CALCULATE(COUNTROWS(Incidencias), KEEPFILTERS(Incidencias
 
 Despachos pendientes uso o devolucion = CALCULATE(COUNTROWS(Despachos), KEEPFILTERS(Despachos[Estado] = "EnProcesoDespacho"))
 
-// Kg en cilindros instalados corresponde al pesaje neto al instalar, NO a consumo.
+// Kg en cilindros instalados corresponde al pesaje neto al instalar. Desde D-45 es también la medida
+// de consumo por sucursal (misma regla de los límites); no mide fugas ni el gas que queda en el cilindro.
 // No sumar columnas de inventario para inferir existencias históricas.
 
 Costo refrigerante CLP = SUM(Costos[TotalClp])
@@ -39,3 +40,16 @@ Gramos valorados = SUM(Costos[Gramos])
 Operaciones valoradas = DISTINCTCOUNT(Costos[OperacionId])
 
 Valoraciones sin conversion = COUNTROWS(FILTER(Costos, ISBLANK(Costos[TotalClp])))
+
+// D-45 · Consumo por sucursal. Crear la tabla calculada Calendario (sin relaciones):
+//   Calendario = VAR i1 = MIN(Operaciones[DiaConfirmacion]) VAR i2 = MIN(Ordenes[DiaCreacion])
+//     VAR f1 = MAX(Operaciones[DiaConfirmacion]) VAR f2 = MAX(Ordenes[DiaCreacion])
+//     VAR Inicio = COALESCE(IF(ISBLANK(i1) || (NOT ISBLANK(i2) && i2 < i1), i2, i1), TODAY())
+//     VAR Fin = COALESCE(IF(ISBLANK(f1) || (NOT ISBLANK(f2) && f2 > f1), f2, f1), TODAY())
+//     RETURN SELECTCOLUMNS(CALENDAR(DATE(YEAR(Inicio), MONTH(Inicio), 1), EOMONTH(Fin, 0)), "Fecha", [Date],
+//       "Mes", FORMAT([Date], "mmmm yyyy"), "MesOrden", YEAR([Date]) * 100 + MONTH([Date]), "Semana", [Date] - WEEKDAY([Date], 2) + 1)
+// Semana empieza el lunes, como los límites. Ordenar Mes por MesOrden.
+
+Consumo kg (gas instalado) = CALCULATE(SUM(Operaciones[KgInstalados]), TREATAS(VALUES(Calendario[Fecha]), Operaciones[DiaConfirmacion]))
+
+Kg solicitados por el cliente = CALCULATE(SUM(DetalleOT[KgSolicitados]), TREATAS(VALUES(Calendario[Fecha]), Ordenes[DiaCreacion]), KEEPFILTERS(Ordenes[Estado] <> "Anulada"))

@@ -55,7 +55,7 @@ public sealed class PowerBiProyectoConectadoTests(ApiMemoria api) : IClassFixtur
         Assert.EndsWith("/", urlBase.AbsolutePath);
         Assert.Equal(HttpStatusCode.OK, (await api.CreateClient().GetAsync(urlBase.AbsolutePath)).StatusCode);
         Assert.DoesNotContain("CarpetaAfrisan", modelo.ToJsonString());
-        Assert.Equal(10, modelo["model"]!["tables"]!.AsArray().Count);
+        Assert.Equal(11, modelo["model"]!["tables"]!.AsArray().Count); // 7 tablas de datos, 3 dimensiones y Calendario (D-45)
 
         // El token incluido es de solo lectura para Power BI y sirve para leer las tablas.
         var token = Expresion(modelo, "TokenPowerBi")!.Split('"')[1];

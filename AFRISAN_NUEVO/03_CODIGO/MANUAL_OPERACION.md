@@ -94,7 +94,7 @@ permite comprobar después que la copia está íntegra.
 | Retención | Las últimas 4 copias semanales y la de cada fin de mes durante 12 meses |
 | Ubicación | Fuera de Supabase, en un almacenamiento de AFRISAN con acceso restringido y cifrado |
 | Responsable | Administrador técnico; la contraparte de AFRISAN verifica que exista la copia mensual |
-| Prueba | Restaurar una copia en un proyecto de prueba una vez por mes (caso CP-61 del plan de pruebas) |
+| Prueba | Restaurar una copia en un proyecto de prueba una vez por mes (caso CDP-61 del plan de pruebas) |
 
 ## 5. Recuperación
 

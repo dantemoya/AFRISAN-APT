@@ -38,6 +38,12 @@ if (args.Contains("--actualizar-costos-limites"))
     catch (Exception ex) { Console.Error.WriteLine(FalloActualizacion(ex, "10")); Environment.ExitCode=1; }
     return;
 }
+if (args.Contains("--actualizar-devolucion-recarga"))
+{
+    try { await PrepararPersistencia.ActualizarDevolucionRecarga(builder.Configuration); }
+    catch (Exception ex) { Console.Error.WriteLine(FalloActualizacion(ex, "11")); Environment.ExitCode=1; }
+    return;
+}
 if (args.Contains("--actualizar-mantenedores"))
 {
     try { await PrepararPersistencia.ActualizarMantenedores(builder.Configuration); }
@@ -121,8 +127,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 });
 builder.Services.AddAuthorization();
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() is { Length: > 0 } cfgOrigins ? cfgOrigins : ["http://localhost:5286"];
-builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod()));
-builder.Services.AddLimiteLogin(Seguridad.LoginPorMinuto(builder.Configuration, builder.Environment));
+// Solo los orígenes configurados, y solo los métodos y encabezados que usa la web. Sin credenciales de cookie.
+builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(corsOrigins)
+    .WithMethods("GET", "POST", "PUT", "DELETE").WithHeaders("Authorization", "Content-Type")));
+builder.Services.AddLimiteLogin(Seguridad.LoginPorMinuto(builder.Configuration, builder.Environment),
+    Seguridad.ApiPorMinuto(builder.Configuration, builder.Environment));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
 {
@@ -191,6 +200,19 @@ if(persistente)
     }
 }
 app.UseExceptionHandler();
+// Cabeceras de seguridad en toda respuesta de la API (las respuestas no son HTML navegable;
+// una CSP estricta no rompe nada y evita que la API se use como marco o se interprete su tipo).
+var apiCsp = !app.Environment.IsDevelopment(); // En Development, Swagger UI necesita cargar sus recursos.
+app.Use(async (context, next) =>
+{
+    var h = context.Response.Headers;
+    h.XContentTypeOptions = "nosniff";
+    h.XFrameOptions = "DENY";
+    h["Referrer-Policy"] = "no-referrer";
+    h["Cross-Origin-Resource-Policy"] = "cross-origin"; // la web (otro origen) consume fotos y QR por fetch con CORS
+    if (apiCsp) h["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'";
+    await next();
+});
 if (app.Environment.IsDevelopment())
 {
     // La documentación interactiva solo se publica en desarrollo (OWASP A05).
@@ -205,8 +227,8 @@ else
     app.UseHttpsRedirection();
 }
 app.UseCors();
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter(); // después de autenticar: el límite global se parte por usuario, no solo por IP
 app.UseAlcancePowerBi();
 app.UseAuthorization();
 if(persistente) { app.MapPersistencia(); app.MapPowerBi(); }

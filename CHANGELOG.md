@@ -8,6 +8,34 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 ## Sin publicar
 
 ### Agregado
+- Endurecimiento de seguridad (15/11): cabeceras `Content-Security-Policy` (web y API), `X-Frame-Options`,
+  `Referrer-Policy`, `Permissions-Policy` y `Cross-Origin-Resource-Policy`; límite global de solicitudes por
+  usuario autenticado o IP (`Seguridad__ApiPorMinuto`, 300/min); CORS acotado a los métodos y encabezados
+  usados. Desplegado y verificado en Azure. El registro del service worker salió a `js/sw-register.js`
+  para permitir una CSP sin `unsafe-inline` en scripts.
+- Despliegue en Azure (D-35, D-46): API en App Service B1 Linux (`afrisan-api-dm`, autocontenida
+  con .NET 8 y el certificado de Supabase) y web en Static Web Apps Free (`afrisan-web`), con
+  `staticwebapp.config.json`. El guion de Power BI aprueba 62 de 62 contra la API publicada.
+- Gráfico de consumo de refrigerante por sucursal (D-45), en `/power-bi/operativo` y en la
+  página nueva «06 · Consumo por sucursal» del proyecto PBIP: kg instalados con un color por
+  empresa cliente y kg solicitados por el cliente, por semana o mes. Las tablas de Power BI
+  traen la empresa cliente; el modelo suma la tabla `Calendario` y dos medidas. Dos pruebas
+  xUnit nuevas (453 en total) y datos simulados con empresas genéricas.
+- Pruebas del módulo Power BI con los datos de prueba de Supabase (15/11):
+  `validar_powerbi_supabase.mjs` con 62 comprobaciones de API (token, siete tablas, rechazos
+  401/403/404, otros roles, resumen con siete combinaciones de filtros cuadrado contra las
+  tablas, paquete y proyecto conectado) y 13 de pantalla.
+- Devolución de la OT por Bodega con un motivo (`POST /api/v1/ordenes-trabajo/{id}/devolver`,
+  D-39) y anulación por el Autorizador de una OT asignada sin trabajos (`…/{id}/anular`,
+  estado `Anulada`, D-40).
+- Pesaje de recarga con foto para reingresar un cilindro «Vacío» a Bodega
+  (`POST /api/v1/cilindros/{codigo}/recarga`, D-43).
+- Migración `11_Devolucion_Anulacion_Recarga.sql` y comando `--actualizar-devolucion-recarga`.
+  Probada en PostgreSQL embebido (40 comprobaciones) y aplicada en Supabase el 15/11/2026.
+- Recorrido completo de la aplicación conectada a Supabase (14/11) en el plan de pruebas:
+  casos CDP-67 a CDP-72, sección 11.4 y 12 defectos en la matriz; 11 pruebas xUnit nuevas
+  (450 en total). El recorrido se repitió en Supabase el 15/11 con las correcciones
+  (`recorrido_supabase.mjs`, 33 comprobaciones).
 - La web se conecta sola cuando la API termina de arrancar: muestra "Conectando con la
   API…" y reintenta, sin que el usuario deba pulsar botones.
 - Botón **Descargar Power BI conectado** en `/power-bi/operativo`: entrega el proyecto
@@ -26,6 +54,11 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 - Archivo `LICENSE`: el código es propiedad del autor, todos los derechos reservados.
 
 ### Cambiado
+- La página `/power-bi` (demostración) enlaza a `/power-bi/operativo`, donde están los indicadores
+  y el consumo por sucursal; antes solo se llegaba escribiendo la dirección.
+- Informe final de la Fase 2 actualizado al 15/11/2026: 450 pruebas xUnit, plan de 72 casos
+  (59 aprobados), recorrido completo sobre Supabase y correcciones D-39 a D-43 en etapas,
+  dificultades, ajustes, pruebas, metas, trabajo pendiente, conclusiones y anexo A.
 - El proyecto de Power BI conectado usa la dirección base tal cual (`UrlApi` termina en
   `/`), como exige el servicio de Power BI para programar la actualización.
 - El plan de implantación incluye un plan alternativo porque la contraparte de AFRISAN
@@ -33,8 +66,23 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 - Informe final de la Fase 2 (04) actualizado al corte del 12/11/2026: 439 pruebas y
   32 % de cobertura, plan de pruebas de 66 casos, Power BI conectado a la API,
   decisiones D-32 a D-36, etapas del 9 al 12/11 y pendientes de la Fase 3.
+- Los casos de prueba se identifican como `CDP-NN` (caso de prueba) en vez de `CP-NN` en
+  todos los documentos (06 a 12, informe final, README y seguimiento).
+- El cilindro retirado de una sucursal vuelve a Bodega como «Vacío» y no se entrega a otra
+  OT hasta su recarga; el despachado que no se usó vuelve «Disponible» (D-43).
+- El Autorizador responde las incidencias en cualquier etapa abierta de la OT (D-41).
 
 ### Corregido
+- Las OT anuladas ya no cuentan como «OT abiertas» en la vista previa ni en el informe
+  de Power BI; se informan aparte (DEF-13, D-44), con una prueba xUnit nueva.
+- Textos de `/power-bi/operativo`: el informe tiene cinco páginas, los gráficos de
+  conteo van sin decimales y los estados con su nombre visible (DEF-14).
+- Bodega ya no aprueba una OT con incidencias sin conclusión o rectificaciones pendientes
+  (D-41).
+- El peso instalado no puede diferir en más de 200 g del peso de salida de Bodega, y el
+  retirado no puede superar en más de 200 g su último peso (D-42).
+- Textos desactualizados en pantalla: códigos internos (PN-01, PN-02), «Preparar OT de
+  revisión», «1 fotos», «los kilos» en campos de gramos y avisos de módulos que ya existen.
 - La dirección `…/api/v1/power-bi/tablas/` ya no responde 404. Con ese error, Power BI
   Desktop detenía la conexión al probar el origen, antes de pedir las credenciales.
 

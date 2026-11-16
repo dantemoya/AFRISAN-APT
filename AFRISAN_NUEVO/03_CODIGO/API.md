@@ -88,6 +88,7 @@ cada uno puede ver (por ejemplo, el Técnico solo recibe sus OT).
 | GET | `/api/v1/cilindros/{codigo}/historial` | Autenticado | Eventos del cilindro en orden |
 | GET | `/api/v1/cilindros/{codigo}/pesaje-inicial` | Autenticado | Pesaje inicial, si existe |
 | POST | `/api/v1/cilindros/{codigo}/pesaje-inicial` | Alta de cilindro | Registra el pesaje inicial una sola vez |
+| POST | `/api/v1/cilindros/{codigo}/recarga` | Alta de cilindro | Pesaje de recarga con foto de un cilindro de Bodega «Vacío» o «Disponible»; queda «Disponible». Repetir el mismo `IdOperacion` no duplica el pesaje |
 | GET | `/api/v1/cilindros/{codigo}/qr` | Autenticado | Imagen PNG del código QR |
 
 ## 5. Órdenes de trabajo
@@ -105,16 +106,18 @@ cambios de estado fuera de orden (ver la ERS, sección del modelo de estados).
 | PUT | `/{id}/operaciones` | Técnico | Guarda o sincroniza el borrador de un reemplazo o agregado |
 | POST | `/{id}/operaciones/{operacion}/fotos` | Técnico | Adjunta una foto de pesaje (JPEG, PNG o WebP de hasta 4 MiB) |
 | DELETE | `/{id}/operaciones/{operacion}/fotos/{foto}` | Técnico | Quita una foto de un borrador (requiere `version`) |
-| POST | `/{id}/operaciones/{operacion}/confirmar` | Técnico | Confirma el cambio; después ya no se edita |
+| POST | `/{id}/operaciones/{operacion}/confirmar` | Técnico | Confirma el cambio; después ya no se edita. El peso instalado no puede diferir en más de 200 g del peso de salida de Bodega, y el retirado no puede superar en más de 200 g su último peso |
 | POST | `/{id}/operaciones/{operacion}/informar-entrega` | Técnico | Informa la entrega del cilindro retirado en Bodega |
 | POST | `/{id}/operaciones/{operacion}/descartar` | Técnico | Descarta un borrador conservando su historial |
 | POST | `/{id}/recepciones` | Bodega | Recepción física con peso recibido independiente |
 | POST | `/{id}/incidencias` | Técnico, Bodega | Registra una incidencia o solicitud de rectificación |
-| POST | `/{id}/incidencias/{incidencia}/resolver` | Autorizador | Registra la conclusión de una incidencia |
+| POST | `/{id}/incidencias/{incidencia}/resolver` | Autorizador | Registra la conclusión de una incidencia en cualquier etapa abierta |
 | POST | `/{id}/termino-tecnico` | Técnico | Envía la OT a revisión de Bodega |
-| POST | `/{id}/aprobar-bodega` | Bodega | Aprueba la OT y la pasa al Autorizador |
+| POST | `/{id}/aprobar-bodega` | Bodega | Aprueba la OT y la pasa al Autorizador. Responde 409 si hay incidencias sin conclusión o rectificaciones pendientes |
+| POST | `/{id}/devolver` | Bodega | Devuelve la OT al técnico (`EnTerreno`) con un motivo de al menos 5 caracteres |
 | POST | `/{id}/revision-autorizador` | Autorizador | Aprueba fotos y registros |
 | POST | `/{id}/cerrar` | Autorizador | Cierra la OT |
+| POST | `/{id}/anular` | Autorizador | Anula una OT `Asignada` sin retiros ni trabajos, con un motivo; libera los cilindros previstos |
 | GET | `/{id}/entregas/{entrega}/foto` | Autenticado | Foto del retiro; la API verifica que el usuario pueda ver esa OT |
 | GET | `/{id}/operaciones/{operacion}/fotos/{foto}` | Autenticado | Foto de un pesaje en terreno, con la misma verificación |
 
@@ -201,5 +204,6 @@ No abren el servidor web; terminan con código 0 si todo salió bien.
 | `--actualizar-rectificaciones` | Aplica la migración 08 |
 | `--actualizar-mantenedores` | Aplica la migración 09 |
 | `--actualizar-costos-limites` | Aplica la migración 10 |
+| `--actualizar-devolucion-recarga` | Aplica la migración 11 |
 
 Ejemplo: `dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --verificar-supabase`
