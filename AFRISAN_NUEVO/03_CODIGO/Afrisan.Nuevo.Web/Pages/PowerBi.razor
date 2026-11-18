@@ -170,8 +170,10 @@ else
         catch(JSException){error="El navegador no permitió copiar. Selecciona el token y cópialo con Ctrl+C.";}
     }
     // D-45: consumo por sucursal (kg instalados) con los kg solicitados, por semana o mes; un color por empresa cliente.
+    // Sin estilos en línea, para que la CSP pueda quedar en style-src 'self' (Plan_mitigacion_CSP.md): el color de cada
+    // empresa es una de las clases .cliente-0 a .cliente-7 de app.css y el ancho de cada barra va en el atributo width de un rect SVG.
     private string periodo="Mes";
-    private static readonly string[] ColoresClientes=["#0b8b80","#d9822b","#4f6bd6","#b5487a","#6b8e23","#8a5cc2","#c0392b","#2e86ab"];
+    private const int ColoresClientes=8;
     private static string Etiqueta(string periodo,DateOnly inicio)=>periodo=="Semana"
         ?$"Semana del {inicio:dd/MM} al {inicio.AddDays(6):dd/MM/yyyy}"
         :inicio.ToString("MMMM 'de' yyyy",CultureInfo.GetCultureInfo("es-CL"));
@@ -180,7 +182,7 @@ else
     private RenderFragment Consumo(BiConsumoResponse[] consumo)
     {
         var clientes=consumo.Select(x=>x.Cliente??"Sin cliente").Distinct().Order().ToArray();
-        string Color(string? cliente)=>ColoresClientes[Array.IndexOf(clientes,cliente??"Sin cliente")%ColoresClientes.Length];
+        string Color(string? cliente)=>$"cliente-{Array.IndexOf(clientes,cliente??"Sin cliente")%ColoresClientes}";
         var filas=consumo.Where(x=>x.Periodo==periodo).ToArray();
         var maximo=filas.Length==0?0m:filas.Max(x=>Math.Max(x.KgInstalados,x.KgSolicitados));
         return @<section class="panel bi-consumo mt" aria-labelledby="titulo-consumo">
@@ -193,7 +195,7 @@ else
             @if(filas.Length==0){<p class="muted">Sin registros para estos filtros.</p>}
             else
             {
-                <div class="bi-leyenda" aria-label="Colores por empresa">@foreach(var c in clientes){<span><i style="background:@Color(c)"></i>@c</span>}<span><i class="sol"></i>Kg solicitados</span></div>
+                <div class="bi-leyenda" aria-label="Colores por empresa">@foreach(var c in clientes){<span><i class="@Color(c)"></i>@c</span>}<span><i class="sol"></i>Kg solicitados</span></div>
                 @foreach(var grupo in filas.GroupBy(x=>x.Inicio).OrderBy(g=>g.Key))
                 {
                     <h4>@Etiqueta(periodo,grupo.Key)</h4>
@@ -202,7 +204,8 @@ else
                         {
                             <li><div><span>@f.Sucursal<small>@(f.Cliente??"Sin cliente")</small></span><strong>@Numero(f.KgInstalados) kg · solicitados @Numero(f.KgSolicitados) kg</strong></div>
                                 <div class="bi-barras" role="img" aria-label="@($"{f.Sucursal}: {Numero(f.KgInstalados)} kg instalados y {Numero(f.KgSolicitados)} kg solicitados")">
-                                    <span style="width:@Ancho(f.KgInstalados,maximo);background:@Color(f.Cliente)"></span><span class="sol" style="width:@Ancho(f.KgSolicitados,maximo)"></span>
+                                    <svg width="100%" height="14" aria-hidden="true" focusable="false"><rect class="@Color(f.Cliente)" width="@Ancho(f.KgInstalados,maximo)" height="14" rx="4" /></svg>
+                                    <svg class="sol" width="100%" height="6" aria-hidden="true" focusable="false"><rect width="@Ancho(f.KgSolicitados,maximo)" height="6" rx="3" /></svg>
                                 </div></li>
                         }
                     </ul>

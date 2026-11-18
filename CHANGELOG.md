@@ -65,6 +65,13 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 - Archivo `LICENSE`: el código es propiedad del autor, todos los derechos reservados.
 
 ### Cambiado
+- Gráfico «Consumo por sucursal» sin estilos en línea (18/11, acciones A1 a A3 del
+  [plan de mitigación de la CSP](AFRISAN_NUEVO/04_SEGUIMIENTO/PRUEBAS_2026_11_17/Plan_mitigacion_CSP.md)):
+  el color de cada empresa es una clase de `app.css` (`.cliente-0` a `.cliente-7`) y cada barra es un SVG
+  con el ancho en el atributo `width`. La prueba `SinEstilosEnLineaTests` falla si la web vuelve a tener un
+  `style=`, un `<style>` o un `setAttribute("style", …)`; 12 pruebas xUnit nuevas (488 en total). Verificado en
+  local con `style-src 'self'`: mismos anchos y colores, sin violaciones de CSP. Todavía no se publica; la CSP
+  publicada no cambia hasta A4 a A6, después del 19/11.
 - La página `/power-bi` (demostración) enlaza a `/power-bi/operativo`, donde están los indicadores
   y el consumo por sucursal; antes solo se llegaba escribiendo la dirección.
 - Informe final de la Fase 2 actualizado al 15/11/2026: 450 pruebas xUnit, plan de 72 casos
