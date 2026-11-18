@@ -1,0 +1,158 @@
+{
+  "fecha_utc": "2026-11-17T22:04:26.629Z",
+  "tipo": "CDP-64 por rol contra http://localhost:5181 (solo lectura)",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "La API responde con la base PostgreSQL de Supabase"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin sesión la API responde 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresa la cuenta de prueba de Bodega"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresa la cuenta de prueba de Autorizador"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresa la cuenta de prueba de Tecnico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresa la cuenta de prueba de Jefatura"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET costos responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET costos responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET costos responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET costos responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET limites responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET limites responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET limites responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET limites responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: POST ordenes-trabajo responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: POST ordenes-trabajo responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: POST ordenes-trabajo responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: POST cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: POST cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: POST cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET cilindros/{código}/pesajes responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET cilindros/{código}/pesajes responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET cilindros/{código}/pesajes responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET cilindros/{código}/pesajes responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico solo lista sus propias OT"
+    }
+  ],
+  "datos_creados": {},
+  "fotografias": "DiscoPrivado",
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 37
+}

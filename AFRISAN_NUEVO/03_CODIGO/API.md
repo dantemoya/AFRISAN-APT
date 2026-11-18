@@ -83,11 +83,13 @@ cada uno puede ver (por ejemplo, el Técnico solo recibe sus OT).
 | GET | `/api/v1/refrigerantes/{id}` | Lectura | Un gas |
 | POST | `/api/v1/refrigerantes` | Catálogo | Crea un gas; el código se normaliza y no se repite |
 | GET | `/api/v1/cilindros` | Lectura | Inventario de cilindros |
-| GET | `/api/v1/cilindros/{codigo}` | Autenticado | Ficha del cilindro |
-| POST | `/api/v1/cilindros` | Alta de cilindro | Registra un cilindro con un gas, tara y capacidad |
+| GET | `/api/v1/cilindros/{codigo}` | Autenticado | Ficha del cilindro. Busca por código sin distinguir mayúsculas y, si no hay uno igual, por número de serie; si no existe responde 404 |
+| POST | `/api/v1/cilindros` | Alta de cilindro | Registra un cilindro con un gas, tara y capacidad. Si trae `PesoInicialGr` exige `Foto` de la balanza (D-48). El código lo asigna la base: `AF-00001` (D-47) |
 | GET | `/api/v1/cilindros/{codigo}/historial` | Autenticado | Eventos del cilindro en orden |
 | GET | `/api/v1/cilindros/{codigo}/pesaje-inicial` | Autenticado | Pesaje inicial, si existe |
-| POST | `/api/v1/cilindros/{codigo}/pesaje-inicial` | Alta de cilindro | Registra el pesaje inicial una sola vez |
+| POST | `/api/v1/cilindros/{codigo}/pesaje-inicial` | Alta de cilindro | Registra el pesaje inicial una sola vez, con `Foto` obligatoria (D-48) |
+| GET | `/api/v1/cilindros/{codigo}/pesajes` | Lectura | Pesajes del cilindro (tipo, peso bruto, fecha, usuario, OT) con la lista de sus fotos, del más reciente al más antiguo (D-48). El Técnico recibe 403 |
+| GET | `/api/v1/cilindros/{codigo}/pesajes/fotos/{foto}` | Lectura | Imagen de una foto de pesaje de ese cilindro (`Cache-Control: no-store`); una foto de otro cilindro responde 404 |
 | POST | `/api/v1/cilindros/{codigo}/recarga` | Alta de cilindro | Pesaje de recarga con foto de un cilindro de Bodega «Vacío» o «Disponible»; queda «Disponible». Repetir el mismo `IdOperacion` no duplica el pesaje |
 | GET | `/api/v1/cilindros/{codigo}/qr` | Autenticado | Imagen PNG del código QR |
 
@@ -100,7 +102,7 @@ cambios de estado fuera de orden (ver la ERS, sección del modelo de estados).
 | --- | --- | --- | --- |
 | GET | `` | Autenticado | OT visibles para el usuario (el Técnico solo ve las suyas) |
 | GET | `/{id}` | Autenticado | Detalle de una OT |
-| POST | `` | Autorizador | Crea la OT con sucursal, técnico, pedido por gas y cilindros a retirar |
+| POST | `` | Autorizador | Crea la OT con sucursal, técnico, pedido por gas y cilindros a retirar. Exige `Solicitante` (3 a 150 caracteres), `Prioridad` (`Baja`, `Normal`, `Alta` o `Urgente`) y `FechaProgramada` desde hoy en hora de Chile (D-49). El código lo asigna la base: `OT-00001` (D-47) |
 | GET | `/{id}/cilindros-disponibles` | Técnico | Cilindros de Bodega elegibles para el gas encargado |
 | POST | `/{id}/entregas` | Técnico | Retiro desde Bodega con peso bruto y foto de la balanza |
 | PUT | `/{id}/operaciones` | Técnico | Guarda o sincroniza el borrador de un reemplazo o agregado |
@@ -109,7 +111,7 @@ cambios de estado fuera de orden (ver la ERS, sección del modelo de estados).
 | POST | `/{id}/operaciones/{operacion}/confirmar` | Técnico | Confirma el cambio; después ya no se edita. El peso instalado no puede diferir en más de 200 g del peso de salida de Bodega, y el retirado no puede superar en más de 200 g su último peso |
 | POST | `/{id}/operaciones/{operacion}/informar-entrega` | Técnico | Informa la entrega del cilindro retirado en Bodega |
 | POST | `/{id}/operaciones/{operacion}/descartar` | Técnico | Descarta un borrador conservando su historial |
-| POST | `/{id}/recepciones` | Bodega | Recepción física con peso recibido independiente |
+| POST | `/{id}/recepciones` | Bodega | Recepción física con peso recibido independiente y `Foto` obligatoria de la balanza (D-48) |
 | POST | `/{id}/incidencias` | Técnico, Bodega | Registra una incidencia o solicitud de rectificación |
 | POST | `/{id}/incidencias/{incidencia}/resolver` | Autorizador | Registra la conclusión de una incidencia en cualquier etapa abierta |
 | POST | `/{id}/termino-tecnico` | Técnico | Envía la OT a revisión de Bodega |

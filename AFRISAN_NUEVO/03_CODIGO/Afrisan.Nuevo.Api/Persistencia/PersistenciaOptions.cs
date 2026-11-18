@@ -56,6 +56,15 @@ public static class PrepararPersistencia
         await using var cmd=new NpgsqlCommand(await new StreamReader(stream).ReadToEndAsync(),connection);await cmd.ExecuteNonQueryAsync();
         Console.WriteLine("Actualización 11 aplicada: devolución y anulación de OT, tolerancia de peso y recarga. No se modifican registros existentes.");
     }
+    public static async Task ActualizarCodigosFotosPedido(IConfiguration config)
+    {
+        var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Falta la conexión de propietario.");
+        var parsed=new NpgsqlConnectionStringBuilder(owner){SslMode=SslMode.VerifyFull,IncludeErrorDetail=false,PersistSecurityInfo=false};
+        await using var connection=new NpgsqlConnection(parsed.ConnectionString);await connection.OpenAsync();
+        using var stream=typeof(PrepararPersistencia).Assembly.GetManifestResourceStream("AFRISAN.CodigosFotosPedido.sql")!;
+        await using var cmd=new NpgsqlCommand(await new StreamReader(stream).ReadToEndAsync(),connection);await cmd.ExecuteNonQueryAsync();
+        Console.WriteLine("Actualización 12 aplicada: códigos cortos, foto obligatoria en todo pesaje y datos del pedido en la OT. No se modifican registros existentes.");
+    }
     public static async Task ActualizarCostosLimites(IConfiguration config)
     {
         var owner=config.GetConnectionString("Supabase")??throw new InvalidOperationException("Falta la conexión de propietario.");

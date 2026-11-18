@@ -37,6 +37,7 @@ dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-r
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-mantenedores      # 09
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-costos-limites    # 10
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-devolucion-recarga # 11
+dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -- --actualizar-codigos-fotos-pedido # 12
 ```
 
 La migración `11` (devolución, anulación, tolerancia de peso y recarga, D-39 a D-43)
@@ -44,6 +45,12 @@ se aplicó en Supabase el 15/11/2026 con el último comando, después de probarl
 PostgreSQL embebido. `--verificar-supabase` y `--verificar-persistencia` terminaron sin
 errores. La API de esta versión la exige: en una instancia sin `11`,
 `--verificar-supabase` informa «migración 11».
+
+La migración `12` (códigos cortos, foto obligatoria en todo pesaje y datos del pedido en la
+OT, D-47 a D-49) se probó el 16/11/2026 en PostgreSQL embebido
+([registro](../04_SEGUIMIENTO/DEFECTOS_2026_11_16/README.md)) y se **aplicó en Supabase el
+17/11/2026**, justo antes de publicar la API nueva en Azure. La API de esta versión la exige;
+sin `12`, `--verificar-supabase` informa «migración 12».
 
 Si falla, el mensaje incluye el SQLSTATE y no queda ningún cambio parcial.
 La conexión de propietario **no** se configura en el servidor público.
@@ -148,6 +155,14 @@ az webapp deploy -g rg-afrisan -n afrisan-api-dm --src-path <carpeta>/api.zip --
 
 La web se publica con `npx @azure/static-web-apps-cli deploy <carpeta>/web/wwwroot --env production`,
 con el token de despliegue en la variable `SWA_CLI_DEPLOYMENT_TOKEN` (`az staticwebapp secrets list`).
+El comando se ejecuta desde `<carpeta>/web`: desde la raíz de una unidad la herramienta intenta leer
+carpetas del sistema y falla.
+
+**Publicación del 17/11/2026:** API y web con D-47 a D-49 y la búsqueda por código corregida, después
+de aplicar la migración `12`. Verificado: `/health/ready` 200 con `"supabase": true`, `/swagger` 404,
+HTTP a HTTPS 301, CORS solo para la web, la ruta nueva `/pesajes` existe (401 sin sesión), la web
+publicada apunta a la API de Azure, carga sin errores de consola bajo la CSP e incluye las pantallas
+nuevas.
 
 ## 7. Después del despliegue
 

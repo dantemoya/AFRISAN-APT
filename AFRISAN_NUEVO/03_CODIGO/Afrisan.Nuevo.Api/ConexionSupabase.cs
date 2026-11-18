@@ -89,11 +89,20 @@ public static class ConexionSupabase
                   WHERE table_schema='afrisan' AND table_name='OrdenTrabajo' AND column_name='MotivoDevolucion')
                 """, conexion, transaccion))
                 migracion11 = (bool)(await columna.ExecuteScalarAsync(limite.Token) ?? false);
+            // La migración 12 agrega los datos del pedido y la foto obligatoria; sin ella la API no crea OT.
+            bool migracion12;
+            await using (var columna = new NpgsqlCommand("""
+                SELECT EXISTS(SELECT 1 FROM information_schema.columns
+                  WHERE table_schema='afrisan' AND table_name='OrdenTrabajo' AND column_name='FechaProgramada')
+                  AND EXISTS(SELECT 1 FROM pg_trigger WHERE tgname='TR_Pesaje_Requiere_Foto')
+                """, conexion, transaccion))
+                migracion12 = (bool)(await columna.ExecuteScalarAsync(limite.Token) ?? false);
             await transaccion.RollbackAsync(limite.Token);
             Console.WriteLine("Conexión PostgreSQL correcta, con TLS y certificado verificado.");
             var faltantes = Tablas.Except(tablas).Select(t => $"afrisan.{t}")
                 .Concat(Vistas.Except(vistas).Select(v => $"afrisan.{v}"))
-                .Concat(migracion11 ? [] : ["migración 11 (afrisan.OrdenTrabajo.MotivoDevolucion)"]).ToArray();
+                .Concat(migracion11 ? [] : ["migración 11 (afrisan.OrdenTrabajo.MotivoDevolucion)"])
+                .Concat(migracion12 ? [] : ["migración 12 (afrisan.OrdenTrabajo.FechaProgramada y TR_Pesaje_Requiere_Foto)"]).ToArray();
             if (faltantes.Length > 0)
                 Console.Error.WriteLine($"Objetos esperados ausentes: {string.Join(", ", faltantes)}.");
             if (sinRls.Count > 0)

@@ -47,6 +47,7 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
                 return Ver(ordenes[anterior.Id]);
             }
             if (string.IsNullOrWhiteSpace(dto.Sucursal) || string.IsNullOrWhiteSpace(dto.Direccion) || string.IsNullOrWhiteSpace(dto.Descripcion)) Fallar("Sucursal, dirección y descripción son obligatorias.");
+            var (solicitante, prioridad, programada) = Pedido.Validar(dto);
             var tecnico = sesiones.Cuentas.FirstOrDefault(c => c.Rol == "Tecnico" && c.Email.Equals(dto.TecnicoEmail, StringComparison.OrdinalIgnoreCase))
                 ?? throw new ReglaInventarioException("Selecciona un técnico de la instancia demo.");
             if (dto.Detalle is null || dto.Detalle.Length == 0 || dto.Detalle.Length > 20 || dto.Detalle.Any(l => l is null || l.GrSolicitados <= 0 || l.GrAutorizados <= 0)
@@ -65,12 +66,14 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
                     Fallar($"{c.Codigo} no está instalado en esa sucursal. Los cilindros de Bodega se registran como entrega, no como retiro.", 409);
                 if (ordenes.Values.Any(o => o.Estado != "Cerrada" && o.Retirar.Contains(c.Codigo))) Fallar($"{c.Codigo} está solicitado en otra OT abierta.", 409);
             }
-            var ot = new Orden { Id = Guid.NewGuid(), Codigo = $"OT-{ordenes.Count + 1:D6}", Sucursal = dto.Sucursal.Trim(),
+            // D-47: código corto de 8 caracteres, igual que la secuencia de PostgreSQL.
+            var ot = new Orden { Id = Guid.NewGuid(), Codigo = $"OT-{ordenes.Count + 1:D5}", Sucursal = dto.Sucursal.Trim(),
                 Direccion = dto.Direccion.Trim(), Descripcion = dto.Descripcion.Trim(), Tecnico = tecnico.Email,
-                Autorizador = Actor(user), Detalle = lineas, Retirar = codigos };
+                Autorizador = Actor(user), Detalle = lineas, Retirar = codigos,
+                Solicitante = solicitante, Prioridad = prioridad, FechaProgramada = programada };
             // Autorizar una OT reserva el retiro; no cambia la ubicación física.
             ordenes.Add(ot.Id, ot); altas.Add(dto.IdOperacion, (huella, ot.Id));
-            Anotar(ot, user, "OT autorizada", "Pedido manual de revisión, técnico y cilindros a retirar registrados. No es integración Defontana.");
+            Anotar(ot, user, "OT autorizada", Pedido.Detalle(solicitante, prioridad, programada));
             return Ver(ot);
         }
     }
@@ -104,9 +107,10 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             ot.Despachos.Add(dto.IdOperacion, (huella, new(info, datos))); bytesFotos += datos.Length;
             ot.Entregas.Add(new(c.Codigo, c.RefrigeranteCodigo, c.TaraGr, c.CapacidadGr, dto.PesoBrutoGr, Actor(user), fecha,
                 Id: dto.IdOperacion, FotoDespacho: info));
-            inventario.Ubicar(c.Codigo, "Tecnico", "EnProcesoDespacho", null, ot.Tecnico, Actor(user), $"Retiro de bodega para {ot.Codigo}", dto.PesoBrutoGr);
+            inventario.Ubicar(c.Codigo, "Tecnico", "EnProcesoDespacho", null, ot.Tecnico, Actor(user), $"Retiro de bodega para {ot.Codigo}", dto.PesoBrutoGr,
+                "Despacho", ot.Codigo, [new(foto.Id, Path.GetFileName(foto.Nombre), foto.ContentType, datos)]);
             if (ot.Estado == "Asignada") ot.Estado = "EnProcesoDespacho";
-            Anotar(ot, user, "Retiro de bodega por técnico", $"{c.Codigo}: {dto.PesoBrutoGr} g. Foto {foto.Id}.");
+            Anotar(ot, user, "Retiro de bodega por técnico", $"Cilindro {c.Codigo} · {dto.PesoBrutoGr:N0} g");
             return Ver(ot);
         }
     }
@@ -151,7 +155,7 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
                 op.Datos = limpio;
             }
             op.Version++; op.Actualizada = DateTimeOffset.UtcNow;
-            Anotar(ot, user, "Borrador guardado", dto.Id.ToString());
+            Anotar(ot, user, "Borrador guardado", Resumen(op.Datos)); // DEF-10: sin identificadores internos
             return VerOperacion(op);
         }
     }
@@ -177,7 +181,7 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             if (bytesFotos + datos.Length > 256L * 1024 * 1024) Fallar("La memoria de evidencias de esta instancia está llena. No se guardó la foto.", 409);
             var info = new FotoResponse(dto.Id, dto.Grupo, codigo!, Path.GetFileName(dto.Nombre), dto.ContentType, datos.Length, DateTimeOffset.UtcNow, Actor(user));
             op.Fotos.Add(dto.Id, new(info, datos)); bytesFotos += datos.Length; op.Version++; op.Actualizada = DateTimeOffset.UtcNow;
-            Anotar(ot, user, "Evidencia adjunta", $"{dto.Grupo}: {codigo} / {dto.Id}");
+            Anotar(ot, user, "Evidencia adjunta", $"Foto del cilindro {dto.Grupo.ToLowerInvariant()} {codigo}");
             return VerOperacion(op);
         }
     }
@@ -189,7 +193,7 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             var ot = Acceder(id, user); Editable(ot); var op = OperacionDe(ot, operacionId);
             if (op.Estado != "Borrador") Fallar("No se eliminan evidencias de trabajos confirmados.", 409);
             if (version.HasValue && version != op.Version) Fallar("El borrador cambió antes de retirar la foto. No se sobrescribieron datos.", 409);
-            if (op.Fotos.Remove(fotoId, out var foto)) { bytesFotos -= foto.Bytes.Length; op.Version++; Anotar(ot, user, "Foto retirada del borrador", fotoId.ToString()); }
+            if (op.Fotos.Remove(fotoId, out var foto)) { bytesFotos -= foto.Bytes.Length; op.Version++; Anotar(ot, user, "Foto retirada del borrador", foto.Info.Nombre); }
             return VerOperacion(op);
         }
     }
@@ -240,8 +244,10 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             // Todas las comprobaciones preceden a las escrituras bajo el bloqueo común.
             var entrega = ot.Entregas.FindLastIndex(e => e.Codigo == nuevo.Codigo && e.Estado == "EnProcesoDespacho");
             ot.Entregas[entrega] = ot.Entregas[entrega] with { Estado = "Instalado" };
-            inventario.Ubicar(nuevo.Codigo, "Sucursal", "Instalado", ot.Sucursal, null, Actor(user), $"Instalación física en {ot.Codigo}", d.PesoInstaladoGr);
-            if (viejo is not null) inventario.Ubicar(viejo.Codigo, "Tecnico", "RetiradoPendienteRecepcion", null, ot.Tecnico, Actor(user), $"Retiro físico de {ot.Sucursal}", d.PesoRetiradoGr);
+            inventario.Ubicar(nuevo.Codigo, "Sucursal", "Instalado", ot.Sucursal, null, Actor(user), $"Instalación física en {ot.Codigo}", d.PesoInstaladoGr,
+                "Instalado", ot.Codigo, FotosGrupo(op, "Instalado"));
+            if (viejo is not null) inventario.Ubicar(viejo.Codigo, "Tecnico", "RetiradoPendienteRecepcion", null, ot.Tecnico, Actor(user), $"Retiro físico de {ot.Sucursal}", d.PesoRetiradoGr,
+                "Retirado", ot.Codigo, FotosGrupo(op, "Retirado"));
             op.Estado = "Registrada"; op.Version++; op.Actualizada = DateTimeOffset.UtcNow;
             ot.Estado = "EnTerreno";
             Anotar(ot, user, "Trabajo físico registrado", $"{d.Tipo}: {d.CodigoRetirado ?? "sin retiro"} → {nuevo.Codigo}");
@@ -276,11 +282,13 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             var entrega = ot.Entregas.FindLastIndex(e => e.Codigo == c.Codigo && e.Estado == "EnProcesoDespacho");
             if (op is null && entrega < 0) Fallar("No hay retiro ni entrega sin uso pendiente de ese envase en esta OT.", 409);
             if (c.Ubicacion != "Tecnico" || c.Tecnico != ot.Tecnico) Fallar("El envase no está bajo esta custodia.", 409);
+            var fotoRecepcion = InventarioStore.Foto(dto.Foto, "Adjunta la foto de la balanza con el peso recibido.");
             // D-43: el retirado de la sucursal vuelve vacío (pendiente de recarga); un despacho sin uso vuelve disponible.
-            inventario.Ubicar(c.Codigo, "Bodega", op is not null || dto.PesoBrutoGr == c.TaraGr ? "Vacio" : "Disponible", null, null, Actor(user), "Recepción de envase retirado", dto.PesoBrutoGr);
+            inventario.Ubicar(c.Codigo, "Bodega", op is not null || dto.PesoBrutoGr == c.TaraGr ? "Vacio" : "Disponible", null, null, Actor(user), "Recepción de envase retirado", dto.PesoBrutoGr,
+                "Recepcion", ot.Codigo, [fotoRecepcion]);
             if (op is not null) { op.Recibido = true; op.UsuarioRecepcion = Actor(user); op.FechaRecepcion = DateTimeOffset.UtcNow; op.PesoRecepcionGr = dto.PesoBrutoGr; op.ObservacionRecepcion = dto.Observacion?.Trim(); }
             else ot.Entregas[entrega] = ot.Entregas[entrega] with { Estado = "Devuelto", PesoRecepcionGr = dto.PesoBrutoGr, UsuarioRecepcion = Actor(user), FechaRecepcion = DateTimeOffset.UtcNow };
-            Anotar(ot, user, "Recepción oficial de bodega", $"{c.Codigo}: {dto.PesoBrutoGr} g. {dto.Observacion}");
+            Anotar(ot, user, "Recepción oficial de bodega", $"Cilindro {c.Codigo} · {dto.PesoBrutoGr:N0} g {dto.Observacion}".Trim());
             return Ver(ot);
         }
     }
@@ -307,7 +315,8 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             if (bytesFotos + datos.Length > 256L * 1024 * 1024) Fallar("La memoria de evidencias está llena. No se registró la recarga.", 409);
             var info = new FotoResponse(foto.Id, "Recarga", c.Codigo, Path.GetFileName(foto.Nombre), foto.ContentType, datos.Length, DateTimeOffset.UtcNow, Actor(user));
             recargas.Add(dto.IdOperacion, (c.Codigo, dto.PesoBrutoGr, new(info, datos))); bytesFotos += datos.Length;
-            inventario.Ubicar(c.Codigo, "Bodega", "Disponible", null, null, Actor(user), $"Recarga en Bodega. {dto.Observacion}".Trim(), dto.PesoBrutoGr);
+            inventario.Ubicar(c.Codigo, "Bodega", "Disponible", null, null, Actor(user), $"Recarga en Bodega. {dto.Observacion}".Trim(), dto.PesoBrutoGr,
+                "Recarga", null, [new(foto.Id, Path.GetFileName(foto.Nombre), foto.ContentType, datos)]);
             return BuscarCilindro(codigo);
         }
     }
@@ -454,7 +463,7 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
             if (op.Estado == "Descartada") return Ver(ot);
             if (op.Estado != "Borrador" || op.Version != version) Fallar("Solo se descarta un borrador sin cambios pendientes de otra pestaña.", 409);
             op.Estado = "Descartada"; op.Version++; op.Actualizada = DateTimeOffset.UtcNow;
-            Anotar(ot, user, "Borrador descartado", operacionId.ToString());
+            Anotar(ot, user, "Borrador descartado", Resumen(op.Datos));
             return Ver(ot);
         }
     }
@@ -482,7 +491,7 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
     {
         if (peso < c.TaraGr || (decimal)peso > (decimal)c.TaraGr + c.CapacidadGr) Fallar($"Peso inválido de {c.Codigo}: usa gramos brutos entre tara y tara más capacidad.");
     }
-    private static byte[] LeerImagen(SubirFotoRequest dto)
+    internal static byte[] LeerImagen(SubirFotoRequest dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Base64) || dto.Base64.Length > 5_600_000) Fallar("La foto está vacía o supera el límite de 4 MiB.");
         byte[] datos;
@@ -498,6 +507,8 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
         if (!valida) Fallar("Solo se aceptan fotos JPEG, PNG o WebP cuya firma coincida con el formato.");
         return datos;
     }
+    private static string Resumen(GuardarOperacionRequest d) =>
+        $"{d.Tipo}: instalado {d.CodigoInstalado ?? "pendiente"}" + (d.CodigoRetirado is null ? "" : $", retirado {d.CodigoRetirado}");
     private static void Anotar(Orden ot, ClaimsPrincipal user, string accion, string descripcion) => ot.Historial.Add(new(DateTimeOffset.UtcNow, accion, Actor(user), descripcion));
     private static OperacionResponse VerOperacion(Operacion op) => new(op.Datos.Id, op.Version, op.Datos.Tipo, op.Datos.CodigoRetirado,
         op.Datos.CodigoInstalado, op.Datos.PesoRetiradoGr, op.Datos.PesoInstaladoGr, op.Datos.Observacion, op.Estado,
@@ -505,11 +516,12 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
         op.PesoRecepcionGr, op.ObservacionRecepcion);
     private static OtResponse Ver(Orden o) => new(o.Id, o.Codigo, o.Sucursal, o.Direccion, o.Descripcion, o.Tecnico, o.Estado, o.Autorizador,
         o.Fecha, o.Detalle.ToArray(), o.Retirar.ToArray(), o.Entregas.ToArray(), o.Operaciones.Values.Select(VerOperacion).ToArray(), o.Incidencias.ToArray(), o.Historial.ToArray(), o.ObservacionTermino,
-        o.AprobacionBodega, o.RevisionAutorizador, o.MotivoDevolucion, o.MotivoAnulacion);
+        o.AprobacionBodega, o.RevisionAutorizador, o.MotivoDevolucion, o.MotivoAnulacion, o.Solicitante, o.Prioridad, o.FechaProgramada);
     private sealed class Orden
     {
         public Guid Id; public string Codigo = "", Sucursal = "", Direccion = "", Descripcion = "", Tecnico = "", Autorizador = "", Estado = "Asignada";
         public DateTimeOffset Fecha = DateTimeOffset.UtcNow; public string? ObservacionTermino, MotivoDevolucion, MotivoAnulacion;
+        public string? Solicitante, Prioridad; public DateOnly? FechaProgramada;
         public RevisionTrabajoResponse? AprobacionBodega, RevisionAutorizador;
         public LineaOtResponse[] Detalle = []; public string[] Retirar = [];
         public Dictionary<Guid, (string Huella, FotoGuardada Foto)> Despachos = [];
@@ -524,4 +536,6 @@ public sealed class TrabajoStore(InventarioStore inventario, SesionesDemo sesion
         public long? PesoRecepcionGr; public string? ObservacionRecepcion;
     }
     private sealed record FotoGuardada(FotoResponse Info, byte[] Bytes);
+    private static InventarioStore.FotoMemoria[] FotosGrupo(Operacion op, string grupo) =>
+        op.Fotos.Values.Where(f => f.Info.Grupo == grupo).Select(f => new InventarioStore.FotoMemoria(f.Info.Id, f.Info.Nombre, f.Info.ContentType, f.Bytes)).ToArray();
 }

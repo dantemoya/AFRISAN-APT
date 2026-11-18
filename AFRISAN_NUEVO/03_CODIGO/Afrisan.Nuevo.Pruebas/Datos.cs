@@ -31,7 +31,7 @@ internal static class Datos
     {
         var inventario = new InventarioStore();
         var gas = inventario.CrearRefrigerante(new() { Codigo = "R410A", Nombre = "R-410A" });
-        var lleno = inventario.CrearCilindro(new() { RefrigeranteId = gas.Id, CapacidadGr = 10_000, TaraGr = 5_000, PesoInicialGr = 12_000 }, Bodega);
+        var lleno = inventario.CrearCilindro(new() { RefrigeranteId = gas.Id, CapacidadGr = 10_000, TaraGr = 5_000, PesoInicialGr = 12_000, Foto = FotoDespacho(9) }, Bodega);
         var instalado = inventario.CrearCilindro(new()
         {
             RefrigeranteId = gas.Id, CapacidadGr = 10_000, TaraGr = 5_000,
@@ -44,7 +44,9 @@ internal static class Datos
     {
         IdOperacion = Guid.NewGuid(), Sucursal = Sucursal, Direccion = "Av. Ejemplo 123", Descripcion = "Reemplazo de cilindro",
         TecnicoEmail = Tecnico, Detalle = [new() { RefrigeranteId = gas, GrSolicitados = 5_000, GrAutorizados = 5_000 }],
-        CilindrosARetirar = retirar
+        CilindrosARetirar = retirar,
+        // D-49: datos del pedido obligatorios.
+        Solicitante = "Jefe de local (prueba)", Prioridad = "Normal", FechaProgramada = Afrisan.Nuevo.Api.Pedido.Hoy()
     };
 
     public static int Codigo(Action accion) => Assert.Throws<ReglaInventarioException>(accion).Estado;

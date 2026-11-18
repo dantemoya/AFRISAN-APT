@@ -76,7 +76,7 @@ En otra terminal:
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Web
 ```
 
-**Pruebas:** `dotnet test AFRISAN.slnx` (453 pruebas xUnit).
+**Pruebas:** `dotnet test AFRISAN.slnx` (476 pruebas xUnit).
 
 ---
 
@@ -199,7 +199,7 @@ vida. También están el [manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUA
 5. **Power BI:** lee las tablas desde la API con un token de solo lectura de 30 días, y la
    web descarga el proyecto ya conectado ([POWER_BI.md](AFRISAN_NUEVO/03_CODIGO/POWER_BI.md)).
 6. **Pendiente:**
-   - revisar en el despliegue de Azure (15/11) los casos que dependían de él (CDP-39 y CDP-64) y llevar las fotos a Supabase Storage (DEF-11) ([guía](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md));
+   - revisar en el despliegue de Azure el caso que depende de él (CDP-39, Android; CDP-64 aprobado el 17/11 con 46 de 46) y llevar las fotos a Supabase Storage (DEF-11) ([guía](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md));
    - pruebas en Android (G05) y aceptación con usuarios (G09); la contraparte de AFRISAN no
      está disponible desde el 11/11 (D-36);
    - actualizar el informe en Power BI Desktop (CDP-57) y publicarlo;
@@ -211,7 +211,7 @@ vida. También están el [manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUA
 
 | Tipo | Cómo ejecutar | Resultado |
 | --- | --- | --- |
-| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 453 pruebas aprobadas al 15/11/2026; 32 % de cobertura de líneas (medida el 12/11) |
+| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 476 pruebas aprobadas al 17/11/2026; 32 % de cobertura de líneas (medida el 12/11) |
 | Integración sobre PostgreSQL embebido y navegador | `AFRISAN_NUEVO/04_SEGUIMIENTO/MODULOS_2026_11_08/Validar-Modulos.ps1` (requiere Node.js) | Resultados JSON fechados en `AFRISAN_NUEVO/04_SEGUIMIENTO/` |
 | Correcciones del recorrido del 14/11 (migración `11`) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/CORRECCIONES_2026_11_14/validar_correcciones.mjs` | 40 comprobaciones correctas el 15/11/2026 |
 | Recorrido completo contra Supabase (CDP-67) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/CORRECCIONES_2026_11_14/recorrido_supabase.mjs` (API local contra Supabase) | 33 comprobaciones correctas el 15/11/2026 |

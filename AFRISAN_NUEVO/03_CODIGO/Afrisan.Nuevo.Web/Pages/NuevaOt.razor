@@ -19,6 +19,9 @@ else
         </div><div><label for="ot-direccion">Dirección</label><InputText id="ot-direccion" @bind-Value="form.Direccion" maxlength="400" disabled="@(Sesion.Entorno?.Modo=="PostgreSQL")" /></div></div>
         <datalist id="sucursales-conocidas">@foreach (var sucursal in cilindros.Where(c => c.Ubicacion == "Sucursal").Select(c => c.Sucursal).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.OrdinalIgnoreCase)) { <option value="@sucursal"></option> }</datalist>
         <label for="ot-descripcion">Trabajo solicitado</label><InputText id="ot-descripcion" @bind-Value="form.Descripcion" maxlength="150" />
+        <div class="form-grid"><div><label for="ot-solicitante">Solicitado por</label><InputText id="ot-solicitante" @bind-Value="form.Solicitante" maxlength="150" placeholder="Ej.: jefe de local de la sucursal" /><ValidationMessage For="() => form.Solicitante" /></div>
+        <div><label for="ot-prioridad">Prioridad</label><InputSelect id="ot-prioridad" @bind-Value="form.Prioridad">@foreach (var p in Prioridades.Todas) { <option value="@p">@p</option> }</InputSelect></div></div>
+        <label for="ot-fecha">Fecha programada</label><InputDate id="ot-fecha" @bind-Value="form.FechaProgramada" min="@Hoy.ToString("yyyy-MM-dd")" /><ValidationMessage For="() => form.FechaProgramada" /><p class="field-help">Día en que el técnico debe realizar el trabajo. No puede ser anterior a hoy.</p>
         <label for="ot-tecnico">Técnico asignado</label><InputSelect id="ot-tecnico" @bind-Value="form.Tecnico"><option value="">Selecciona técnico</option>@foreach (var cuenta in tecnicos) { <option value="@cuenta.Email">@cuenta.Nombre — @cuenta.Email</option> }</InputSelect>
         <h2 class="mt">Pedido por refrigerante</h2>
         @foreach (var linea in lineas)
@@ -74,13 +77,14 @@ else
         ocupado = true; error = null;
         try
         {
+            if (form.FechaProgramada is null || form.FechaProgramada < Hoy) throw new InvalidOperationException("Indica una fecha programada desde hoy en adelante.");
             if (!soloAgregados && seleccionados.Count == 0) throw new InvalidOperationException("Selecciona al menos un cilindro de la lista o indica que el pedido es solo de agregados.");
             if (lineas.Any(l => l.RefrigeranteId <= 0 || l.Solicitados <= 0 || l.Autorizados <= 0) || lineas.Select(l => l.RefrigeranteId).Distinct().Count() != lineas.Count)
                 throw new InvalidOperationException("Completa las cantidades y selecciona un refrigerante diferente en cada línea.");
             if (cilindros.Any(c => seleccionados.Contains(c.Codigo) && (!lineas.Any(l => l.RefrigeranteId == c.RefrigeranteId) || Reservado(c.Codigo))))
                 throw new InvalidOperationException("Revisa los refrigerantes del pedido y los cilindros reservados antes de autorizar.");
             var ot = await Api.CrearOtAsync(new() { SucursalId=form.SucursalId, IdOperacion = idOperacion, Sucursal = form.Sucursal, Direccion = form.Direccion,
-                Descripcion = form.Descripcion, TecnicoEmail = form.Tecnico, Detalle = lineas.Select(l => new LineaOtRequest { RefrigeranteId = l.RefrigeranteId, GrSolicitados = l.Solicitados, GrAutorizados = l.Autorizados }).ToArray(),
+                Descripcion = form.Descripcion, TecnicoEmail = form.Tecnico, Solicitante = form.Solicitante, Prioridad = form.Prioridad, FechaProgramada = form.FechaProgramada, Detalle = lineas.Select(l => new LineaOtRequest { RefrigeranteId = l.RefrigeranteId, GrSolicitados = l.Solicitados, GrAutorizados = l.Autorizados }).ToArray(),
                 CilindrosARetirar = seleccionados.OrderBy(c => c).ToArray() });
             Nav.NavigateTo($"ordenes/{ot.Id}");
         }
@@ -94,6 +98,11 @@ else
         [Required, StringLength(400)] public string Direccion { get; set; } = "";
         [Required, StringLength(150)] public string Descripcion { get; set; } = "";
         [Required] public string Tecnico { get; set; } = "";
+        // D-49: quién pidió el trabajo, con qué urgencia y para qué día.
+        [Required(ErrorMessage = "Indica quién solicitó el trabajo."), StringLength(150, MinimumLength = 3, ErrorMessage = "El solicitante debe tener entre 3 y 150 caracteres.")] public string Solicitante { get; set; } = "";
+        [Required] public string Prioridad { get; set; } = "Normal";
+        [Required(ErrorMessage = "Indica la fecha programada.")] public DateOnly? FechaProgramada { get; set; } = DateOnly.FromDateTime(DateTime.Today);
     }
+    private static DateOnly Hoy => DateOnly.FromDateTime(DateTime.Today);
     private sealed class LineaForm { public long RefrigeranteId { get; set; } public long Solicitados { get; set; } public long Autorizados { get; set; } }
 }

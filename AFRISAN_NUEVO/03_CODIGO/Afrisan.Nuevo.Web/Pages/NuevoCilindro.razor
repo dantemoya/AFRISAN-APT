@@ -31,6 +31,7 @@ else
                     <hr /><legend>Primer pesaje</legend>
                     <label for="cil-peso">Peso bruto inicial (g) <span class="optional">Opcional en revisión</span></label><InputNumber id="cil-peso" @bind-Value="form.PesoInicialGr" min="0" step="1" /><ValidationMessage For="() => form.PesoInicialGr" />
                     <p class="field-help">Peso real de balanza: envase + gas. Sin lectura quedará pendiente de pesaje; no se asigna un contenido ficticio.</p>
+                    @if (form.PesoInicialGr.HasValue) { <label for="cil-foto">Foto de la balanza</label><InputFile id="cil-foto" accept="image/jpeg,image/png,image/webp" OnChange="CargarFoto" /><p class="field-help">Obligatoria con peso inicial: la foto respalda el monto y queda guardada para consultarla.</p> }
                     <label for="cil-observacion">Observación del pesaje <span class="optional">Opcional</span></label><InputTextArea id="cil-observacion" @bind-Value="form.Observacion" maxlength="1000" rows="3" />
                     <div class="form-actions"><a class="btn secondary" href="inventario">Cancelar</a><button class="btn primary" type="submit">@(guardando ? "Registrando…" : "Registrar cilindro")</button></div>
                 </fieldset>
@@ -62,14 +63,26 @@ else
         catch (Exception ex) { error = Formato.Error(ex); falloCarga = true; }
         finally { cargando = false; }
     }
+    private FotoPesajeRequest? foto;
+    private async Task CargarFoto(InputFileChangeEventArgs args)
+    {
+        error = null; foto = null;
+        const long maximo = 4 * 1024 * 1024;
+        if (args.File.Size > maximo) { error = "La foto supera 4 MiB."; return; }
+        await using var origen = args.File.OpenReadStream(maximo);
+        using var memoria = new MemoryStream();
+        await origen.CopyToAsync(memoria);
+        foto = new() { Id = Guid.NewGuid(), Nombre = args.File.Name, ContentType = args.File.ContentType, Base64 = Convert.ToBase64String(memoria.ToArray()) };
+    }
     private async Task Guardar()
     {
         if (guardando) return;
+        if (form.PesoInicialGr.HasValue && foto is null) { error = "Adjunta la foto de la balanza con el peso inicial."; return; }
         guardando = true; error = null;
         try
         {
             var creado = await Api.CrearCilindroAsync(new() { SucursalId = form.UbicacionInicial=="Sucursal"?form.SucursalId:null, RefrigeranteId = form.RefrigeranteId, NumeroSerie = form.NumeroSerie,
-                CapacidadGr = form.CapacidadGr, TaraGr = form.TaraGr, PesoInicialGr = form.PesoInicialGr, Observacion = form.Observacion, UbicacionInicial = form.UbicacionInicial, SucursalInicial = form.UbicacionInicial == "Sucursal" ? form.SucursalInicial : null });
+                CapacidadGr = form.CapacidadGr, TaraGr = form.TaraGr, PesoInicialGr = form.PesoInicialGr, Observacion = form.Observacion, Foto = form.PesoInicialGr.HasValue ? foto : null, UbicacionInicial = form.UbicacionInicial, SucursalInicial = form.UbicacionInicial == "Sucursal" ? form.SucursalInicial : null });
             Nav.NavigateTo($"cilindros/{creado.Codigo}");
         }
         catch (Exception ex) { error = Formato.Error(ex); }

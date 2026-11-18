@@ -13,8 +13,8 @@
     @if (cargando) { <p class="loading" role="status">Consultando órdenes…</p> }
     else if (error is not null) { <p>No se obtuvo una consulta actualizada.</p> }
     else if (!Filtradas.Any()) { <div class="empty-state"><h2>No hay OT para mostrar</h2><p>@(Sesion.Sesion?.Rol == "Tecnico" ? "El Autorizador debe asignarte un trabajo antes de registrar cambios. Abre tus OT con conexión para disponer de su copia local." : "El Autorizador puede preparar una OT manual para revisar este recorrido. No se crean ejemplos automáticamente.")</p></div> }
-    else { <div class="table-wrap"><table><thead><tr><th>OT / sucursal</th><th>Técnico</th><th>Estado</th><th>Operaciones</th><th>Detalle</th></tr></thead><tbody>
-        @foreach (var ot in Filtradas) { <tr @key="ot.Id"><td><strong>@ot.Codigo</strong><small class="cell-note">@ot.Sucursal</small></td><td>@ot.TecnicoEmail</td><td><span class="badge @(ot.Estado == "Cerrada" ? "success" : "pending")">@Formato.Estado(ot.Estado)</span></td><td>@ot.Operaciones.Count(o => o.Estado == "Registrada") registradas</td><td><a class="table-link" href="@($"ordenes/{ot.Id}")">Abrir →</a></td></tr> }
+    else { <div class="table-wrap"><table><thead><tr><th>OT / sucursal</th><th>Prioridad / programada</th><th>Técnico</th><th>Estado</th><th>Operaciones</th><th>Detalle</th></tr></thead><tbody>
+        @foreach (var ot in Filtradas) { <tr @key="ot.Id"><td><strong>@ot.Codigo</strong><small class="cell-note">@ot.Sucursal</small></td><td>@if (ot.Prioridad is not null) { <span class="badge @Formato.EstiloPrioridad(ot.Prioridad)">@ot.Prioridad</span><small class="cell-note">@ot.FechaProgramada?.ToString("dd/MM/yyyy") · @ot.Solicitante</small> } else { <span class="muted">Sin datos del pedido</span> }</td><td>@ot.TecnicoEmail</td><td><span class="badge @(ot.Estado == "Cerrada" ? "success" : "pending")">@Formato.Estado(ot.Estado)</span></td><td>@ot.Operaciones.Count(o => o.Estado == "Registrada") registradas</td><td><a class="table-link" href="@($"ordenes/{ot.Id}")">Abrir →</a></td></tr> }
     </tbody></table></div> }
 </section>
 @if (Sesion.Sesion?.Rol == "Tecnico")
@@ -32,7 +32,9 @@
     private string busqueda = "";
     private bool cargando, ocupado;
     private string? error;
-    private IEnumerable<OtResponse> Filtradas => ordenes.Where(o => o.Codigo.Contains(busqueda, StringComparison.OrdinalIgnoreCase) || o.Sucursal.Contains(busqueda, StringComparison.OrdinalIgnoreCase));
+    // D-49: las OT abiertas primero, por prioridad y fecha programada.
+    private IEnumerable<OtResponse> Filtradas => ordenes.Where(o => o.Codigo.Contains(busqueda, StringComparison.OrdinalIgnoreCase) || o.Sucursal.Contains(busqueda, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(o => o.Estado is "Cerrada" or "Anulada").ThenByDescending(o => Prioridades.Orden(o.Prioridad)).ThenBy(o => o.FechaProgramada ?? DateOnly.MaxValue);
     protected override Task OnInitializedAsync() => Cargar();
     private async Task Cargar()
     {

@@ -21,6 +21,18 @@ public sealed record CrearOtRequest
     [Required, EmailAddress] public string TecnicoEmail { get; init; } = "";
     [MinLength(1), MaxLength(20)] public LineaOtRequest[] Detalle { get; init; } = [];
     [MaxLength(50)] public string[] CilindrosARetirar { get; init; } = [];
+    /// <summary>Persona del cliente que pidió el trabajo (D-49).</summary>
+    [Required, StringLength(150, MinimumLength = 3)] public string Solicitante { get; init; } = "";
+    /// <summary>Baja, Normal, Alta o Urgente (D-49).</summary>
+    [Required] public string Prioridad { get; init; } = "Normal";
+    /// <summary>Día de la visita, en hora de Chile; no puede ser anterior a hoy (D-49).</summary>
+    [Required] public DateOnly? FechaProgramada { get; init; }
+}
+/// <summary>Prioridades de una OT, de menor a mayor (D-49).</summary>
+public static class Prioridades
+{
+    public static readonly string[] Todas = ["Baja", "Normal", "Alta", "Urgente"];
+    public static int Orden(string? prioridad) => prioridad is null ? -1 : Array.IndexOf(Todas, prioridad);
 }
 /// <summary>Detalle del pedido y cantidades por refrigerante.</summary>
 public sealed record LineaOtResponse(long RefrigeranteId, string Refrigerante, long GrSolicitados, long GrAutorizados);
@@ -34,7 +46,8 @@ public sealed record OtResponse(Guid Id, string Codigo, string Sucursal, string 
     LineaOtResponse[] Detalle, string[] CilindrosARetirar, EntregaResponse[] Entregas,
     OperacionResponse[] Operaciones, IncidenciaResponse[] Incidencias, EventoResponse[] Historial,
     string? ObservacionTermino, RevisionTrabajoResponse? AprobacionBodega = null, RevisionTrabajoResponse? RevisionAutorizador = null,
-    string? MotivoDevolucion = null, string? MotivoAnulacion = null);
+    string? MotivoDevolucion = null, string? MotivoAnulacion = null,
+    string? Solicitante = null, string? Prioridad = null, DateOnly? FechaProgramada = null);
 /// <summary>Bodega devuelve al técnico una OT enviada a revisión, antes de aprobarla (D-39).</summary>
 public sealed record DevolverOtRequest
 {
@@ -51,7 +64,7 @@ public sealed record EntregarCilindroRequest
     public Guid IdOperacion { get; init; }
     [Required, StringLength(120)] public string Codigo { get; init; } = "";
     [Range(0, long.MaxValue)] public long PesoBrutoGr { get; init; }
-    [Required] public FotoPesajeRequest? Foto { get; init; }
+    [Required(ErrorMessage = "Adjunta la foto de la balanza con el peso registrado.")] public FotoPesajeRequest? Foto { get; init; }
 }
 
 public sealed record FotoPesajeRequest
@@ -75,6 +88,8 @@ public sealed record RecibirCilindroRequest
     [Required, StringLength(120)] public string Codigo { get; init; } = "";
     [Range(0, long.MaxValue)] public long PesoBrutoGr { get; init; }
     [StringLength(1000)] public string? Observacion { get; init; }
+    /// <summary>Foto de la balanza en la recepción (D-48).</summary>
+    [Required(ErrorMessage = "Adjunta la foto de la balanza con el peso registrado.")] public FotoPesajeRequest? Foto { get; init; }
 }
 /// <summary>Borrador del reemplazo físico o agregado. La versión detecta conflictos.</summary>
 public sealed record GuardarOperacionRequest

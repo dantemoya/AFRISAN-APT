@@ -33,21 +33,29 @@ public sealed record CrearCilindroRequest
     [Range(1, long.MaxValue)] public long TaraGr { get; init; }
     [Range(0, long.MaxValue)] public long? PesoInicialGr { get; init; }
     [StringLength(1000)] public string? Observacion { get; init; }
+    /// <summary>Foto de la balanza; obligatoria cuando se registra el peso inicial (D-48).</summary>
+    public FotoPesajeRequest? Foto { get; init; }
 }
 
-/// <summary>Primer pesaje físico de un cilindro, separado de un despacho o retorno.</summary>
+/// <summary>Primer pesaje físico de un cilindro, separado de un despacho o retorno. Exige foto (D-48).</summary>
 public sealed record RegistrarPesajeInicialRequest
 {
     [Range(0, long.MaxValue)] public long PesoBrutoGr { get; init; }
     [StringLength(1000)] public string? Observacion { get; init; }
+    [Required(ErrorMessage = "Adjunta la foto de la balanza con el peso registrado.")] public FotoPesajeRequest? Foto { get; init; }
 }
+
+/// <summary>Un pesaje del cilindro con sus fotos, para verificar el monto (D-48).</summary>
+public sealed record PesajeEvidenciaResponse(Guid Id, string Tipo, long PesoBrutoGr, DateTimeOffset Fecha,
+    string Usuario, string? Orden, FotoPesajeInfo[] Fotos);
+public sealed record FotoPesajeInfo(Guid Id, string Nombre, string ContentType);
 
 /// <summary>Reingreso a Bodega de un cilindro recargado: nuevo peso bruto con foto de la balanza (D-43).</summary>
 public sealed record RecargarCilindroRequest
 {
     public Guid IdOperacion { get; init; }
     [Range(1, long.MaxValue)] public long PesoBrutoGr { get; init; }
-    [Required] public FotoPesajeRequest? Foto { get; init; }
+    [Required(ErrorMessage = "Adjunta la foto de la balanza con el peso registrado.")] public FotoPesajeRequest? Foto { get; init; }
     [StringLength(1000)] public string? Observacion { get; init; }
 }
 

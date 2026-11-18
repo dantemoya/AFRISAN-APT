@@ -1,0 +1,276 @@
+{
+  "fecha_utc": "2026-11-17T22:00:55.828Z",
+  "tipo": "API .NET 8 + PostgreSQL embebido (05, 07, 08, 09, 10, 11 y 12)",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "Los scripts 05, 07, 08, 09, 10, 11 y 12 se aplican en orden sobre una base vacía"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La migración 12 se puede aplicar dos veces sin error"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El alta con peso inicial y sin foto se rechaza con un mensaje sobre la foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El alta sin peso no exige foto y queda pendiente de pesaje"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST cilindros/AF-00003/pesaje-inicial: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El pesaje inicial con foto deja el cilindro disponible"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Los cilindros reciben códigos AF-00001, AF-00002 y AF-00003"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Una fecha programada anterior a hoy se rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La primera OT recibe el código OT-00001 (8 caracteres)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT guarda y devuelve solicitante, prioridad y fecha programada"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El historial describe el pedido en texto legible"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El historial muestra el nombre del usuario, no su identificador"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El cambio con fotos se confirma con la foto obligatoria activa en la base"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "POST ordenes-trabajo/{id}/recepciones: HTTP 400"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La recepción de Bodega sin foto se rechaza"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La recepción rechazada no mueve el cilindro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Con foto, Bodega recibe el cilindro retirado"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El retiro de Bodega se describe con código y peso, sin identificador numérico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La recepción se describe con código y peso"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El cambio físico se describe con los códigos instalado y retirado"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ningún evento del historial muestra un GUID"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El cilindro retirado muestra sus pesajes Recepción, Retirado e Inicial"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cada pesaje del cilindro tiene al menos una foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El pesaje de recepción muestra peso, OT y usuario"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La foto de la recepción se descarga idéntica a la enviada"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET cilindros/AF-00001/pesajes: HTTP 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET cilindros/AF-00001/pesajes: HTTP 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET cilindros/AF-00001/pesajes: HTTP 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET cilindros/AF-00001/pesajes: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET cilindros/AF-00001/pesajes/fotos/{id}: HTTP 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET cilindros/AF-00002/pesajes/fotos/{id}: HTTP 404"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La foto de un cilindro no se obtiene a través de otro cilindro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Administrador GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Bodega GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Autorizador GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Jefatura GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Tecnico GET cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Administrador GET usuarios responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Bodega GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Autorizador GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Jefatura GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Tecnico GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Administrador GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Bodega GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Autorizador GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Jefatura GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Tecnico GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Bodega GET ordenes-trabajo/{id} responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Autorizador GET ordenes-trabajo/{id} responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: Tecnico GET ordenes-trabajo/{id} responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-64: el técnico solo lista sus propias OT"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico abre la ficha con el código en minúsculas"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La ficha también se encuentra por número de serie"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "GET cilindros/NO-EXISTE: HTTP 404"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Un código inexistente responde 404 con un mensaje claro"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La base rechaza al confirmar un pesaje sin foto (restricción diferida)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La base no permite cambiar la prioridad de una OT creada (No reescribir OT autorizada)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La base rechaza una OT sin datos del pedido"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ningún código creado supera 8 caracteres"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Todos los pesajes guardados tienen foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "RLS sigue habilitado en todas las tablas después de la migración 12"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 67
+}

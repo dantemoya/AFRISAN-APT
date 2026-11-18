@@ -39,7 +39,8 @@ public static class InventarioEndpoints
             return TypedResults.Created($"/api/v1/cilindros/{nuevo.Codigo}", nuevo);
         }).RequireAuthorization(p => p.RequireRole(Roles.AltaCilindro.Split(',')))
           .ProducesValidationProblem().ProducesProblem(409);
-        datos.MapGet("/cilindros/{codigo}", (string codigo, InventarioStore store) => TypedResults.Ok(Obtener(store, codigo)))
+        datos.MapGet("/cilindros/{codigo}", (string codigo, InventarioStore store) =>
+            TypedResults.Ok(store.Buscar(codigo) ?? throw new ReglaInventarioException("No se encontró un cilindro con ese código o número de serie.", 404)))
             .ProducesProblem(404);
         datos.MapGet("/cilindros/{codigo}/historial", (string codigo, InventarioStore store) =>
             TypedResults.Ok(store.Eventos(Obtener(store, codigo).Id))).ProducesProblem(404);
@@ -48,6 +49,15 @@ public static class InventarioEndpoints
             .RequireAuthorization(p => p.RequireRole(Roles.AltaCilindro.Split(','))).ProducesValidationProblem().ProducesProblem(409);
         datos.MapGet("/cilindros/{codigo}/pesaje-inicial", (string codigo, InventarioStore store) =>
             TypedResults.Ok(Obtener(store, codigo).PesajeInicial ?? throw new ReglaInventarioException("Sin pesaje inicial registrado.", 404)));
+        // D-48: pesajes del cilindro con sus fotos; igual que PostgreSQL, sin el rol Técnico.
+        datos.MapGet("/cilindros/{codigo}/pesajes", (string codigo, InventarioStore store) => TypedResults.Ok(store.Pesajes(codigo)))
+            .RequireAuthorization(p => p.RequireRole(Roles.Lectura.Split(',')));
+        datos.MapGet("/cilindros/{codigo}/pesajes/fotos/{foto:guid}", (string codigo, Guid foto, InventarioStore store, HttpContext ctx) =>
+        {
+            var f = store.FotoPesaje(codigo, foto);
+            ctx.Response.Headers.CacheControl = "no-store"; ctx.Response.Headers.XContentTypeOptions = "nosniff";
+            return Results.File(f.Bytes, f.Mime);
+        }).RequireAuthorization(p => p.RequireRole(Roles.Lectura.Split(',')));
         datos.MapGet("/cilindros/{codigo}/qr", (string codigo, InventarioStore store) =>
         {
             var registro = Obtener(store, codigo);

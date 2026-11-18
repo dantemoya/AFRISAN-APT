@@ -17,7 +17,7 @@ else
     @if (ot.Estado == "Anulada") { <div class="notice warning" role="status"><strong>OT anulada por el Autorizador</strong><p>@ot.MotivoAnulacion</p></div> }
     @if (ot.Estado == "EnTerreno" && ot.MotivoDevolucion is not null) { <div class="notice warning" role="status"><strong>Bodega devolvió esta OT al técnico</strong><p>@ot.MotivoDevolucion</p><p>Corrige lo indicado (por ejemplo, con una incidencia o una rectificación de peso) y vuelve a enviar el trabajo a Bodega.</p></div> }
     <div class="split-grid">
-        <section class="panel"><h2>Pedido y autorización</h2><div class="table-wrap"><table><thead><tr><th>Refrigerante</th><th>Solicitado</th><th>Autorizado</th></tr></thead><tbody>@foreach (var l in ot.Detalle) { <tr><td>@l.Refrigerante</td><td>@Formato.Gramos(l.GrSolicitados)</td><td>@Formato.Gramos(l.GrAutorizados)</td></tr> }</tbody></table></div><p class="field-help">Cantidades del pedido autorizado, en gramos. El consumo frente a los límites de la sucursal se revisa en «Límites por sucursal».</p><h3>Cilindros previstos para retiro</h3><p>@(ot.CilindrosARetirar.Length == 0 ? "Sin retiros previstos: pedido para agregados." : string.Join(", ", ot.CilindrosARetirar))</p></section>
+        <section class="panel"><h2>Pedido y autorización</h2>@if (ot.Solicitante is not null) { <dl class="detail-list"><dt>Solicitado por</dt><dd>@ot.Solicitante</dd><dt>Prioridad</dt><dd><span class="badge @Formato.EstiloPrioridad(ot.Prioridad)">@ot.Prioridad</span></dd><dt>Fecha programada</dt><dd>@ot.FechaProgramada?.ToString("dd/MM/yyyy")</dd></dl> }<div class="table-wrap"><table><thead><tr><th>Refrigerante</th><th>Solicitado</th><th>Autorizado</th></tr></thead><tbody>@foreach (var l in ot.Detalle) { <tr><td>@l.Refrigerante</td><td>@Formato.Gramos(l.GrSolicitados)</td><td>@Formato.Gramos(l.GrAutorizados)</td></tr> }</tbody></table></div><p class="field-help">Cantidades del pedido autorizado, en gramos. El consumo frente a los límites de la sucursal se revisa en «Límites por sucursal».</p><h3>Cilindros previstos para retiro</h3><p>@(ot.CilindrosARetirar.Length == 0 ? "Sin retiros previstos: pedido para agregados." : string.Join(", ", ot.CilindrosARetirar))</p></section>
         <section class="panel"><h2>Retiro de bodega por el técnico</h2>
             @if (ot.Entregas.Length == 0) { <p class="muted">El técnico todavía no ha registrado cilindros retirados.</p> }
             @foreach (var e in ot.Entregas) {
@@ -67,7 +67,10 @@ else
     @if (fotosVisibles.Count > 0) { <section class="panel mt"><h2>Evidencias del trabajo seleccionado</h2><div class="photo-grid">@foreach (var f in fotosVisibles) { <figure><img src="@f.Url" alt="@($"Pesaje {f.Info.Grupo} de {f.Info.CodigoCilindro}")" /><figcaption>@f.Info.Grupo · @f.Info.CodigoCilindro<br />@f.Info.Nombre</figcaption></figure> }</div><button class="btn subtle" @onclick="() => fotosVisibles.Clear()">Ocultar fotos</button></section> }
     @if (EsBodega && ot.AprobacionBodega is null && Abierta)
     {
-        <section class="panel mt"><h2>Recepción oficial de bodega</h2><p class="muted">Recibe el envase retirado de sucursal o un cilindro entregado que no se utilizó.</p><div class="form-grid"><div><label for="recepcion-codigo">Código recibido</label><select id="recepcion-codigo" @bind="codigoRecepcion"><option value="">Selecciona un envase pendiente</option>@foreach (var codigo in RecepcionesPendientes) { <option value="@codigo">@codigo</option> }</select></div><div><label for="recepcion-peso">Peso bruto recibido (g)</label><InputNumber id="recepcion-peso" @bind-Value="pesoRecepcion" min="0" step="1" /></div></div><label for="recepcion-nota">Observación</label><textarea id="recepcion-nota" @bind="notaRecepcion" maxlength="1000"></textarea><button class="btn primary mt" disabled="@ocupado" @onclick="Recibir">Confirmar recepción física</button></section>
+        <section class="panel mt"><h2>Recepción oficial de bodega</h2><p class="muted">Recibe el envase retirado de sucursal o un cilindro entregado que no se utilizó.</p><div class="form-grid"><div><label for="recepcion-codigo">Código recibido</label><select id="recepcion-codigo" @bind="codigoRecepcion"><option value="">Selecciona un envase pendiente</option>@foreach (var codigo in RecepcionesPendientes) { <option value="@codigo">@codigo</option> }</select></div><div><label for="recepcion-peso">Peso bruto recibido (g)</label><InputNumber id="recepcion-peso" @bind-Value="pesoRecepcion" min="0" step="1" /></div></div><label for="recepcion-foto">Foto de la balanza con el peso recibido</label><InputFile @key="archivoRecepcionKey" id="recepcion-foto" OnChange="CargarFotoRecepcion" accept="image/jpeg,image/png,image/webp" capture="environment" disabled="@ocupado" />
+            @if (fotoRecepcion is not null) { <div class="photo-grid"><figure><img src="@($"data:{fotoRecepcion.ContentType};base64,{fotoRecepcion.Base64}")" alt="Foto del peso recibido en bodega" /><figcaption>@fotoRecepcion.Nombre</figcaption></figure></div> }
+            <p class="field-help">Obligatoria: la foto queda guardada con el pesaje para verificar el monto recibido.</p>
+            <label for="recepcion-nota">Observación</label><textarea id="recepcion-nota" @bind="notaRecepcion" maxlength="1000"></textarea><button class="btn primary mt" disabled="@(ocupado || fotoRecepcion is null || pesoRecepcion is null || string.IsNullOrWhiteSpace(codigoRecepcion))" @onclick="Recibir">Confirmar recepción física</button></section>
     }
     @if ((EsTecnico || EsBodega) && ot.AprobacionBodega is null && Abierta)
     {
@@ -167,7 +170,19 @@ else
         await Api.EntregarAsync(Id, new() { IdOperacion = idRetiro, Codigo = codigoEntrega, PesoBrutoGr = pesoEntrega.Value, Foto = fotoDespacho });
         codigoEntrega = ""; CambiarCilindroRetiro(); mensaje = "Retiro registrado: cilindro en proceso de despacho, con tu peso y fotografía de salida.";
     });
-    private Task Recibir() => Ejecutar(async () => { if (pesoRecepcion is null) throw new InvalidOperationException("Ingresa el peso recibido."); await Api.RecibirAsync(Id, new() { Codigo = codigoRecepcion, PesoBrutoGr = pesoRecepcion.Value, Observacion = notaRecepcion }); codigoRecepcion = ""; pesoRecepcion = null; notaRecepcion = ""; });
+    private Task Recibir() => Ejecutar(async () => { if (pesoRecepcion is null) throw new InvalidOperationException("Ingresa el peso recibido."); if (fotoRecepcion is null) throw new InvalidOperationException("Adjunta la foto de la balanza con el peso recibido."); await Api.RecibirAsync(Id, new() { Codigo = codigoRecepcion, PesoBrutoGr = pesoRecepcion.Value, Observacion = notaRecepcion, Foto = fotoRecepcion }); codigoRecepcion = ""; pesoRecepcion = null; notaRecepcion = ""; fotoRecepcion = null; archivoRecepcionKey = Guid.NewGuid(); });
+    private FotoPesajeRequest? fotoRecepcion;
+    private Guid archivoRecepcionKey = Guid.NewGuid();
+    private async Task CargarFotoRecepcion(InputFileChangeEventArgs args)
+    {
+        error = null; fotoRecepcion = null;
+        const long maximo = 4 * 1024 * 1024;
+        if (args.File.Size > maximo) { error = "La foto supera 4 MiB."; return; }
+        await using var origen = args.File.OpenReadStream(maximo);
+        using var memoria = new MemoryStream();
+        await origen.CopyToAsync(memoria);
+        fotoRecepcion = new() { Id = Guid.NewGuid(), Nombre = args.File.Name, ContentType = args.File.ContentType, Base64 = Convert.ToBase64String(memoria.ToArray()) };
+    }
     private Task AprobarBodega() => Ejecutar(async () => { await Api.AprobarBodegaAsync(Id, new() { ConfirmoRevision = confirmoBodega, Observacion = notaBodega }); confirmoBodega = false; });
     private string motivoDevolucion = "", motivoAnulacion = "";
     private bool Abierta => ot?.Estado is not ("Cerrada" or "Anulada");

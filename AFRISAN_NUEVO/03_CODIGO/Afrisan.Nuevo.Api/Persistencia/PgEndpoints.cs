@@ -25,11 +25,16 @@ public static class PgEndpoints
         datos.MapGet("/refrigerantes/{id:long}",async(long id,PgInventario repo)=>(await repo.Refrigerantes()).FirstOrDefault(r=>r.Id==id)??throw new ReglaInventarioException("Refrigerante no encontrado.",404)).RequireAuthorization(p=>p.RequireRole(Roles.Lectura.Split(',')));
         datos.MapPost("/refrigerantes",async(CrearRefrigeranteRequest dto,PgInventario repo,ClaimsPrincipal user)=>{var row=await repo.CrearRefrigerante(dto,PgDatabase.Actor(user));return TypedResults.Created($"/api/v1/refrigerantes/{row.Id}",row);}).RequireAuthorization(p=>p.RequireRole(Roles.Catalogo.Split(',')));
         datos.MapGet("/cilindros",async(PgInventario repo)=>await repo.Cilindros()).RequireAuthorization(p=>p.RequireRole(Roles.Lectura.Split(',')));
-        datos.MapGet("/cilindros/{codigo}",async(string codigo,PgInventario repo)=>await repo.Cilindro(codigo));
-        datos.MapPost("/cilindros",async(CrearCilindroRequest dto,PgInventario repo,ClaimsPrincipal user)=>{var row=await repo.CrearCilindro(dto,PgDatabase.Actor(user));return TypedResults.Created($"/api/v1/cilindros/{row.Codigo}",row);}).RequireAuthorization(p=>p.RequireRole(Roles.AltaCilindro.Split(',')));
+        datos.MapGet("/cilindros/{codigo}",async(string codigo,PgInventario repo)=>await repo.Buscar(codigo));
+        datos.MapPost("/cilindros",async(CrearCilindroRequest dto,PgInventario repo,ClaimsPrincipal user)=>{var row=await repo.CrearCilindro(dto,PgDatabase.Actor(user),Correo(user));return TypedResults.Created($"/api/v1/cilindros/{row.Codigo}",row);}).RequireAuthorization(p=>p.RequireRole(Roles.AltaCilindro.Split(',')));
         datos.MapGet("/cilindros/{codigo}/historial",async(string codigo,PgInventario repo)=>await repo.Eventos(codigo));
         datos.MapGet("/cilindros/{codigo}/pesaje-inicial",async(string codigo,PgInventario repo)=>(await repo.Cilindro(codigo)).PesajeInicial??throw new ReglaInventarioException("Sin pesaje inicial.",404));
-        datos.MapPost("/cilindros/{codigo}/pesaje-inicial",async(string codigo,RegistrarPesajeInicialRequest dto,PgInventario repo,ClaimsPrincipal user)=>await repo.Pesar(codigo,dto,PgDatabase.Actor(user))).RequireAuthorization(p=>p.RequireRole(Roles.AltaCilindro.Split(',')));
+        datos.MapPost("/cilindros/{codigo}/pesaje-inicial",async(string codigo,RegistrarPesajeInicialRequest dto,PgInventario repo,ClaimsPrincipal user)=>await repo.Pesar(codigo,dto,PgDatabase.Actor(user),Correo(user))).RequireAuthorization(p=>p.RequireRole(Roles.AltaCilindro.Split(',')));
+        // D-48: pesajes del cilindro con sus fotos. No incluye al Técnico: verían fotos de OT de otros técnicos.
+        datos.MapGet("/cilindros/{codigo}/pesajes",async(string codigo,PgInventario repo)=>await repo.Pesajes(codigo)).RequireAuthorization(p=>p.RequireRole(Roles.Lectura.Split(',')));
+        datos.MapGet("/cilindros/{codigo}/pesajes/fotos/{foto:guid}",async(string codigo,Guid foto,PgInventario repo,HttpContext ctx)=>{
+            var f=await repo.FotoPesaje(codigo,foto);ctx.Response.Headers.CacheControl="no-store";ctx.Response.Headers.XContentTypeOptions="nosniff";return Results.File(f.Bytes,f.Mime);
+        }).RequireAuthorization(p=>p.RequireRole(Roles.Lectura.Split(',')));
         datos.MapGet("/cilindros/{codigo}/qr",async(string codigo,PgInventario repo)=>{var row=await repo.Cilindro(codigo);using var data=QRCodeGenerator.GenerateQrCode(row.Codigo,QRCodeGenerator.ECCLevel.Q);using var qr=new PngByteQRCode(data);return TypedResults.File(qr.GetGraphic(10),"image/png",row.Codigo+".png");});
         var ot=datos.MapGroup("/ordenes-trabajo");
         ot.MapGet("",async(PgTrabajo repo,ClaimsPrincipal user)=>await repo.Listar(user));
@@ -89,6 +94,7 @@ public static class PgEndpoints
         datos.MapGet("/sucursales",async(PgDatabase db)=>{await using var u=await db.Open();return await u.Query<SucursalResponse>(SucursalesSql+" WHERE s.\"Activo\" AND c.\"Activo\" ORDER BY c.\"NombreEmpresa\",s.\"NombreSucursal\"");}).RequireAuthorization(p=>p.RequireRole(Roles.Lectura.Split(',')));
         datos.MapPost("/sucursales",async(CrearSucursalRequest dto,PgDatabase db,ClaimsPrincipal user)=>{await using var u=await db.Open(PgDatabase.Actor(user));var id=await u.One<int>("INSERT INTO afrisan.\"Sucursales\"(\"Id_Cliente\",\"NombreSucursal\",\"Direccion\") VALUES(@p0,@p1,@p2) RETURNING \"Id_Sucursal\" AS \"Value\"",dto.ClienteId,dto.Nombre.Trim(),dto.Direccion.Trim());var s=await u.One<SucursalResponse>(SucursalesSql+" WHERE s.\"Id_Sucursal\"=@p0",id);await u.Commit();return s;}).RequireAuthorization(p=>p.RequireRole("Administrador"));
     }
+    private static string Correo(ClaimsPrincipal user)=>user.FindFirstValue("correo")??throw new ReglaInventarioException("Sesión inválida.",401);
     private const string SucursalesSql="SELECT s.\"Id_Sucursal\" AS \"Id\",s.\"Id_Cliente\" AS \"ClienteId\",c.\"NombreEmpresa\" AS \"Cliente\",s.\"NombreSucursal\" AS \"Nombre\",s.\"Direccion\" FROM afrisan.\"Sucursales\" s JOIN afrisan.\"Cliente\" c USING(\"Id_Cliente\")";
 }
 

@@ -26,11 +26,12 @@ public sealed class InventarioStoreTests
         var store = new InventarioStore();
         var gas = store.CrearRefrigerante(new() { Codigo = "R22", Nombre = "R-22" });
 
-        var cilindro = store.CrearCilindro(new() { RefrigeranteId = gas.Id, CapacidadGr = 10_000, TaraGr = 5_000, PesoInicialGr = peso }, Datos.Bodega);
+        var cilindro = store.CrearCilindro(new() { RefrigeranteId = gas.Id, CapacidadGr = 10_000, TaraGr = 5_000, PesoInicialGr = peso, Foto = Datos.FotoDespacho() }, Datos.Bodega);
 
         Assert.Equal(estado, cilindro.Estado);
         Assert.Equal("Bodega", cilindro.Ubicacion);
-        Assert.Equal("AFR-000001", cilindro.Codigo);
+        Assert.Equal("AF-00001", cilindro.Codigo); // D-47: código corto
+        Assert.True(cilindro.Codigo.Length <= 8);
     }
 
     [Theory]
@@ -77,11 +78,11 @@ public sealed class InventarioStoreTests
         var gas = store.CrearRefrigerante(new() { Codigo = "R22", Nombre = "R-22" });
         var cilindro = store.CrearCilindro(new() { RefrigeranteId = gas.Id, CapacidadGr = 10_000, TaraGr = 5_000 }, Datos.Bodega);
 
-        var pesado = store.Pesar(cilindro.Codigo, new() { PesoBrutoGr = 7_000 }, Datos.Bodega);
+        var pesado = store.Pesar(cilindro.Codigo, new() { PesoBrutoGr = 7_000, Foto = Datos.FotoDespacho() }, Datos.Bodega);
 
         Assert.Equal("Disponible", pesado.Estado);
         Assert.Equal(2_000, pesado.ContenidoSegunPesajeGr);
-        Assert.Equal(409, Datos.Codigo(() => store.Pesar(cilindro.Codigo, new() { PesoBrutoGr = 6_000 }, Datos.Bodega)));
+        Assert.Equal(409, Datos.Codigo(() => store.Pesar(cilindro.Codigo, new() { PesoBrutoGr = 6_000, Foto = Datos.FotoDespacho() }, Datos.Bodega)));
         Assert.Equal(404, Datos.Codigo(() => store.Pesar("AFR-999999", new() { PesoBrutoGr = 6_000 }, Datos.Bodega)));
         Assert.Equal(new[] { "Alta", "Pesaje inicial" }, store.Eventos(cilindro.Id).Select(e => e.Accion));
     }

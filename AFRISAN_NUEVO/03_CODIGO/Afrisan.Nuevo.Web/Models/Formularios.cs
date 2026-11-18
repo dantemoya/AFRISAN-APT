@@ -38,5 +38,7 @@ public static class Formato
     public static string Kg(long? gramos) => gramos is { } g ? (g / 1000m).ToString("N3", Cultura) + " kg" : "—";
     public static string Estado(string valor) => valor switch { "PendientePesaje" => "Pendiente de pesaje", "Vacio" => "Vacío", "EnProcesoDespacho" => "En proceso de despacho", "EnTerreno" => "En terreno", "PendienteBodega" => "Pendiente de aprobación de Bodega", "PendienteRevision" => "Pendiente de revisión del Autorizador", "RetiradoPendienteRecepcion" => "Retirado / pendiente de bodega", _ => valor };
     public static string Estilo(string valor) => valor switch { "Disponible" => "success", "Vacio" => "neutral", _ => "pending" };
+    // D-49: la prioridad del pedido se distingue por color en listas y detalle.
+    public static string EstiloPrioridad(string? prioridad) => prioridad switch { "Urgente" => "danger", "Alta" => "pending", "Baja" => "neutral", _ => "info" };
     public static string Error(Exception ex) => ex is InvalidOperationException ? ex.Message : "No se pudo consultar la API. Comprueba que Afrisan.Nuevo.Api esté encendida y vuelve a intentarlo.";
 }

@@ -8,6 +8,14 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 ## Sin publicar
 
 ### Agregado
+- Consulta de las fotos de cada pesaje (16/11, D-48): la ficha del cilindro muestra «Pesajes y fotos de la
+  balanza» con tipo, peso, OT, usuario y la foto de cada pesaje, para verificar el monto. Rutas
+  `GET /cilindros/{codigo}/pesajes` y `/pesajes/fotos/{id}` para Administrador, Bodega, Autorizador y Jefatura.
+- Datos del pedido en la OT (16/11, D-49, DEF-12): solicitante, prioridad y fecha programada, obligatorios al
+  crearla; la lista de OT los muestra y ordena las abiertas por prioridad y fecha.
+- Migración `12_Codigos_Fotos_Pedido.sql` y comando `--actualizar-codigos-fotos-pedido`; validación en
+  PostgreSQL embebido (`DEFECTOS_2026_11_16/validar_defectos.mjs`, 67 comprobaciones) y prueba de humo por
+  rol para Supabase y Azure (`humo_por_rol.mjs`, CDP-64). 23 pruebas xUnit nuevas (476 en total).
 - Endurecimiento de seguridad (15/11): cabeceras `Content-Security-Policy` (web y API), `X-Frame-Options`,
   `Referrer-Policy`, `Permissions-Policy` y `Cross-Origin-Resource-Policy`; límite global de solicitudes por
   usuario autenticado o IP (`Seguridad__ApiPorMinuto`, 300/min); CORS acotado a los métodos y encabezados
@@ -73,6 +81,19 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 - El Autorizador responde las incidencias en cualquier etapa abierta de la OT (D-41).
 
 ### Corregido
+- Códigos de OT y de cilindro de 8 caracteres, `OT-00001` y `AF-00001` (16/11, D-47, DEF-09); los códigos
+  largos anteriores se siguen aceptando y ya no ensanchan la página.
+- Todo pesaje exige foto de la balanza, también el pesaje inicial y la recepción de Bodega (16/11, D-48, DEF-06).
+- El historial de la OT se lee sin identificadores internos: código y peso del cilindro, códigos del cambio y
+  nombre del usuario (16/11, DEF-10).
+- La validación de la API devuelve en español el aviso de foto faltante.
+- El historial de la OT muestra las rectificaciones como «Pesaje retirado del cilindro …: 12.950 g → 12.900 g»
+  en vez del identificador de la solicitud (17/11, DEF-10).
+- Migración `12` aplicada en Supabase y API y web publicadas en Azure (17/11).
+- La consulta por código de «Identificar cilindro» rechazaba los códigos reales (`AFR-` con letras) antes de
+  consultarlos, escritos o leídos del QR (17/11). Ahora acepta el código corto o largo sin importar mayúsculas
+  ni espacios (`AF-1` o `1` equivalen a `AF-00001`), la dirección de la ficha o el número de serie; la API
+  busca por serie cuando no hay un código igual y responde 404 con un mensaje claro.
 - Las OT anuladas ya no cuentan como «OT abiertas» en la vista previa ni en el informe
   de Power BI; se informan aparte (DEF-13, D-44), con una prueba xUnit nueva.
 - Textos de `/power-bi/operativo`: el informe tiene cinco páginas, los gráficos de

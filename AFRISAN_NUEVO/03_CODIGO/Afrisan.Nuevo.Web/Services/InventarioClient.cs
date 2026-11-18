@@ -27,6 +27,13 @@ public sealed partial class InventarioClient(HttpClient http, SesionService sesi
     public Task<RefrigeranteResponse> CrearRefrigeranteAsync(CrearRefrigeranteRequest dto) => EnviarAsync<RefrigeranteResponse>("refrigerantes", dto);
     public Task<CilindroResponse> CrearCilindroAsync(CrearCilindroRequest dto) => EnviarAsync<CilindroResponse>("cilindros", dto);
     public Task<CilindroResponse> PesarAsync(string codigo, RegistrarPesajeInicialRequest dto) => EnviarAsync<CilindroResponse>($"cilindros/{Uri.EscapeDataString(codigo)}/pesaje-inicial", dto);
+    // D-48: pesajes del cilindro con sus fotos, para verificar cada monto.
+    public Task<PesajeEvidenciaResponse[]> PesajesAsync(string codigo) => ObtenerAsync<PesajeEvidenciaResponse[]>($"cilindros/{Uri.EscapeDataString(codigo)}/pesajes");
+    public async Task<string> FotoPesajeAsync(string codigo, FotoPesajeInfo foto)
+    {
+        using var respuesta = await http.GetAsync($"cilindros/{Uri.EscapeDataString(codigo)}/pesajes/fotos/{foto.Id}"); await RevisarAsync(respuesta);
+        return $"data:{foto.ContentType};base64," + Convert.ToBase64String(await respuesta.Content.ReadAsByteArrayAsync());
+    }
     public Task<SesionResponse> LoginAsync(LoginRequest dto) => EnviarAsync<SesionResponse>("sesiones", dto);
 
     public async Task<string> QrAsync(string codigo)

@@ -11,7 +11,7 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
           s."Id_Sucursal" AS "SucursalId",s."NombreSucursal" AS "Sucursal",s."Direccion",o."Descripcion",
           o."Id_Tecnico" AS "TecnicoId",t."Correo_Usuario" AS "Tecnico",o."Estado",a."Correo_Usuario" AS "Autorizador",
           o."FechaCreacion" AS "Fecha",o."ObservacionTermino",o."HuellaCreacion" AS "Huella",
-          o."MotivoDevolucion",o."MotivoAnulacion"
+          o."MotivoDevolucion",o."MotivoAnulacion",o."Solicitante",o."Prioridad",o."FechaProgramada"
         FROM afrisan."OrdenTrabajo" o JOIN afrisan."Sucursales" s USING("Id_Sucursal")
         JOIN afrisan."Usuario" t ON t."Id_Usuario"=o."Id_Tecnico" JOIN afrisan."Usuario" a ON a."Id_Usuario"=o."Id_Autorizador"
         """;
@@ -21,6 +21,38 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
           "FechaConfirmacion" AS "Confirmacion","FechaEntregaInformada" AS "Entrega",
           "Id_PesajeInstalado" AS "PesajeInstalado","Id_PesajeRetirado" AS "PesajeRetirado"
         FROM afrisan."OperacionTerreno"
+        """;
+    // DEF-10: los disparadores guardan en "Detalle" identificadores internos (cilindro u operación).
+    // Se traducen al leer, así sirve también para el historial ya registrado: código del cilindro y peso.
+    private const string HistorialSql="""
+        SELECT e."Id_OrdenTrabajo" AS "OtId",e."Fecha",e."Accion",u."Nombre"||' '||u."Apellido" AS "Usuario",
+          CASE
+            WHEN e."Accion"='Retiro de Bodega por Técnico' AND e."Detalle" ~ '^[0-9]+$' THEN coalesce((
+              SELECT 'Cilindro '||c."CilindroQR"||coalesce(' · '||replace(to_char(p."PesoBrutoGr",'FM999,999,999'),',','.')||' g','')
+              FROM afrisan."Cilindros" c LEFT JOIN afrisan."Despacho" d ON d."Id_Cilindro"=c."Id_Cilindro" AND d."Id_OrdenTrabajo"=e."Id_OrdenTrabajo"
+              LEFT JOIN afrisan."Pesaje" p ON p."Id_Pesaje"=d."Id_Pesaje"
+              WHERE c."Id_Cilindro"=e."Detalle"::bigint ORDER BY d."Fecha" LIMIT 1),'')
+            WHEN e."Accion"='Recepción oficial Bodega' AND e."Detalle" ~ '^[0-9]+$' THEN coalesce((
+              SELECT 'Cilindro '||c."CilindroQR"||coalesce(' · '||replace(to_char(p."PesoBrutoGr",'FM999,999,999'),',','.')||' g','')
+              FROM afrisan."Cilindros" c LEFT JOIN afrisan."RecepcionBodega" r ON r."Id_Cilindro"=c."Id_Cilindro" AND r."Id_OrdenTrabajo"=e."Id_OrdenTrabajo"
+              LEFT JOIN afrisan."Pesaje" p ON p."Id_Pesaje"=r."Id_Pesaje"
+              WHERE c."Id_Cilindro"=e."Detalle"::bigint ORDER BY r."Fecha" LIMIT 1),'')
+            -- Sin llaves en el SQL: EF Core aplica string.Format al texto cuando hay parámetros.
+            WHEN e."Accion"='Cambio físico confirmado' AND length(e."Detalle")=36 AND e."Detalle" ~* '^[0-9a-f-]+$' THEN coalesce((
+              SELECT op."Tipo"||': instalado '||ci."CilindroQR"||coalesce(', retirado '||cr."CilindroQR",'')
+              FROM afrisan."OperacionTerreno" op JOIN afrisan."Cilindros" ci ON ci."Id_Cilindro"=op."Id_Instalado"
+              LEFT JOIN afrisan."Cilindros" cr ON cr."Id_Cilindro"=op."Id_Retirado"
+              WHERE op."Id_Operacion"=e."Detalle"::uuid),'')
+            WHEN e."Accion" LIKE 'Rectificación %' AND length(split_part(e."Detalle",':',1))=36 AND split_part(e."Detalle",':',1) ~* '^[0-9a-f-]+$' THEN coalesce((
+              SELECT 'Pesaje '||lower(p."Tipo")||' del cilindro '||c."CilindroQR"||': '
+                ||replace(to_char(r."PesoAnteriorGr",'FM999,999,999'),',','.')||' g → '||replace(to_char(r."PesoPropuestoGr",'FM999,999,999'),',','.')||' g'
+              FROM afrisan."RectificacionPesaje" r JOIN afrisan."Pesaje" p USING("Id_Pesaje") JOIN afrisan."Cilindros" c ON c."Id_Cilindro"=p."Id_Cilindro"
+              WHERE r."Id"=split_part(e."Detalle",':',1)::uuid),'')
+            WHEN e."Detalle"='Pedido manual persistido; no corresponde a importación Defontana.' THEN ''
+            ELSE coalesce(e."Detalle",'')
+          END AS "Descripcion"
+        FROM afrisan."EventoOT" e JOIN afrisan."Usuario" u USING("Id_Usuario")
+        WHERE e."Id_OrdenTrabajo"=ANY(@p0) ORDER BY e."Id_Evento"
         """;
     private static readonly JsonSerializerOptions Json=new(JsonSerializerDefaults.Web);
     private static T Read<T>(string json)=>JsonSerializer.Deserialize<T>(json,Json)??throw new ReglaInventarioException("El registro persistido no se pudo interpretar.",503);
@@ -66,20 +98,25 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         if(dto.Detalle.Length is <1 or >20||dto.Detalle.Select(x=>x.RefrigeranteId).Distinct().Count()!=dto.Detalle.Length) throw new ReglaInventarioException("El detalle debe contener refrigerantes diferentes.");
         var codigos=dto.CilindrosARetirar.Select(c=>c.Trim().ToUpperInvariant()).Order().ToArray();
         if(codigos.Any(string.IsNullOrWhiteSpace)||codigos.Distinct().Count()!=codigos.Length) throw new ReglaInventarioException("Hay cilindros vacíos o repetidos.");
-        var huella=Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new{Actor=actor,dto.SucursalId,Descripcion=dto.Descripcion.Trim(),Tecnico=dto.TecnicoEmail.Trim().ToLowerInvariant(),Detalle=dto.Detalle.OrderBy(x=>x.RefrigeranteId),Cilindros=codigos})));
+        var (solicitante,prioridad,programada)=Pedido.Validar(dto);
+        var huella=Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new{Actor=actor,dto.SucursalId,Descripcion=dto.Descripcion.Trim(),Tecnico=dto.TecnicoEmail.Trim().ToLowerInvariant(),Detalle=dto.Detalle.OrderBy(x=>x.RefrigeranteId),Cilindros=codigos,
+            Solicitante=solicitante,Prioridad=prioridad,FechaProgramada=programada})));
         await using var u=await database.Open(actor);
         await u.Query<long>("SELECT 1::bigint AS \"Value\" FROM pg_advisory_xact_lock(hashtextextended(@p0,0))",dto.IdOperacion.ToString());
         var previous=(await u.Query<OtRow>(OtSql+" WHERE o.\"Id_Publico\"=@p0",dto.IdOperacion)).SingleOrDefault();
         if(previous is not null) {if(previous.Huella!=huella) throw new ReglaInventarioException("El UUID de creación ya corresponde a otro pedido.",409);return await Ver(u,previous);}
+        // El código corto (OT-00001) lo asigna la base con su secuencia (D-47).
         var id=await u.One<long>("""
-            INSERT INTO afrisan."OrdenTrabajo"("Id_Publico","CodigoOT","Id_Sucursal","Id_Tecnico","Id_Autorizador","Descripcion","HuellaCreacion")
-            VALUES(@p0,@p1,@p2,(SELECT u."Id_Usuario" FROM afrisan."Usuario" u JOIN afrisan."Rol" r USING("Id_Rol")
-              WHERE lower(u."Correo_Usuario")=@p3 AND u."Activo" AND r."Nombre_Rol"='Tecnico'),@p4,@p5,@p6)
+            INSERT INTO afrisan."OrdenTrabajo"("Id_Publico","Id_Sucursal","Id_Tecnico","Id_Autorizador","Descripcion","HuellaCreacion",
+              "Solicitante","Prioridad","FechaProgramada")
+            VALUES(@p0,@p1,(SELECT u."Id_Usuario" FROM afrisan."Usuario" u JOIN afrisan."Rol" r USING("Id_Rol")
+              WHERE lower(u."Correo_Usuario")=@p2 AND u."Activo" AND r."Nombre_Rol"='Tecnico'),@p3,@p4,@p5,@p6,@p7,@p8)
             RETURNING "Id_OrdenTrabajo" AS "Value"
-            """,dto.IdOperacion,"OT-"+dto.IdOperacion.ToString("N").ToUpperInvariant(),dto.SucursalId,dto.TecnicoEmail.Trim().ToLowerInvariant(),actor,dto.Descripcion.Trim(),huella);
+            """,dto.IdOperacion,dto.SucursalId,dto.TecnicoEmail.Trim().ToLowerInvariant(),actor,dto.Descripcion.Trim(),huella,
+            solicitante,prioridad,programada);
         foreach(var d in dto.Detalle) await u.Exec("INSERT INTO afrisan.\"DetalleOT\"(\"Id_OrdenTrabajo\",\"Id_Refrigerante\",\"GrSolicitados\",\"GrAutorizados\") VALUES(@p0,@p1,@p2,@p3)",id,d.RefrigeranteId,d.GrSolicitados,d.GrAutorizados);
         foreach(var codigo in codigos) {var c=await Cilindro(u,codigo);await u.Exec("INSERT INTO afrisan.\"RetiroPrevisto\"(\"Id_OrdenTrabajo\",\"Id_Cilindro\") VALUES(@p0,@p1)",id,c.Id);}
-        await Evento(u,id,actor,"OT autorizada","Pedido manual persistido; no corresponde a importación Defontana.");
+        await Evento(u,id,actor,"OT autorizada",Pedido.Detalle(solicitante,prioridad,programada));
         var result=await Ver(u,await Acceder(u,dto.IdOperacion,user));await u.Commit();return result;
     }
     public async Task<OtResponse> Entregar(Guid id,EntregarCilindroRequest dto,ClaimsPrincipal user)
@@ -195,7 +232,11 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         var operation=(await u.Query<Guid>("SELECT \"Id_Operacion\" AS \"Value\" FROM afrisan.\"OperacionTerreno\" WHERE \"Id_OrdenTrabajo\"=@p0 AND \"Id_Retirado\"=@p1 AND \"Estado\"='Registrada'",o.Id,c.Id)).SingleOrDefault();
         var dispatch=operation==Guid.Empty?(await u.Query<Guid>("SELECT \"Id_Despacho\" AS \"Value\" FROM afrisan.\"Despacho\" WHERE \"Id_OrdenTrabajo\"=@p0 AND \"Id_Cilindro\"=@p1 AND \"Estado\"='EnProcesoDespacho'",o.Id,c.Id)).SingleOrDefault():Guid.Empty;
         if(operation==Guid.Empty&&dispatch==Guid.Empty) throw new ReglaInventarioException("No existe un retiro o despacho pendiente de esta OT.",409);
+        if(dto.Foto is null) throw new ReglaInventarioException("Adjunta la foto de la balanza con el peso recibido.");
+        // D-48: la foto se guarda antes de la recepción, que cierra el pesaje a nuevas fotos.
         var peso=await PgInventario.InsertarPesaje(u,c.Id,o.Id,"Recepcion",dto.PesoBrutoGr,actor,dto.Observacion);
+        var foto=await fotos.Guardar(id,dto.Foto.Id,"Recepcion",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user));
+        await Evidencia(u,foto,peso,actor);
         await u.Exec("""
             INSERT INTO afrisan."RecepcionBodega"("Id_OrdenTrabajo","Id_Cilindro","Id_Operacion","Id_DespachoSinUso","Id_Pesaje","Id_Bodeguero","Observacion")
             VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6)
@@ -311,7 +352,7 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
           e."NombreArchivo" AS "Nombre",e."ContentType",e."Bytes",e."SHA256" AS "Sha256",u."Correo_Usuario" AS "Usuario",e."Fecha"
         FROM afrisan."EvidenciaPesaje" e JOIN afrisan."Usuario" u USING("Id_Usuario")
         """;
-    private static Task<int> Evidencia(PgUnit u,FotoArchivo f,Guid pesaje,int actor)=>u.Exec("""
+    internal static Task<int> Evidencia(PgUnit u,FotoArchivo f,Guid pesaje,int actor)=>u.Exec("""
         INSERT INTO afrisan."EvidenciaPesaje"("Id_Evidencia","Id_Pesaje","BucketPrivado","RutaObjeto","NombreArchivo","ContentType","Bytes","SHA256","Id_Usuario")
         VALUES(@p0,@p1,@p8,@p2,@p3,@p4,@p5,@p6,@p7)
         """,f.Id,pesaje,f.Ruta,f.Nombre,f.ContentType,f.Bytes,f.Sha256,actor,f.Bucket);
@@ -357,7 +398,7 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         var evidencias=(await u.Query<EvidenciaRow>(EvidenciasSql+" WHERE e.\"Id_Pesaje\"=ANY(@p0)",despachos.SelectMany(g=>g).Select(d=>d.PesajeId).ToArray())).ToLookup(e=>e.PesajeId);
         var operaciones=(await u.Query<OperacionRow>(OpSql+" WHERE \"Id_OrdenTrabajo\"=ANY(@p0) ORDER BY \"FechaRecepcion\"",ids)).ToLookup(op=>op.OtId);
         var incidencias=(await u.Query<IncidenciaRow>(IncidenciasSql+" WHERE i.\"Id_OrdenTrabajo\"=ANY(@p0) ORDER BY i.\"Fecha\"",ids)).ToLookup(i=>i.OtId);
-        var historial=(await u.Query<EventoRow>("SELECT e.\"Id_OrdenTrabajo\" AS \"OtId\",e.\"Fecha\",e.\"Accion\",u.\"Correo_Usuario\" AS \"Usuario\",coalesce(e.\"Detalle\",'') AS \"Descripcion\" FROM afrisan.\"EventoOT\" e JOIN afrisan.\"Usuario\" u USING(\"Id_Usuario\") WHERE e.\"Id_OrdenTrabajo\"=ANY(@p0) ORDER BY e.\"Id_Evento\"",ids)).ToLookup(e=>e.OtId);
+        var historial=(await u.Query<EventoRow>(HistorialSql,ids)).ToLookup(e=>e.OtId);
         var revisiones=(await u.Query<RevisionRow>("SELECT r.\"Id_OrdenTrabajo\" AS \"OtId\",r.\"Etapa\",u.\"Correo_Usuario\" AS \"Usuario\",r.\"Fecha\",r.\"Observacion\" FROM afrisan.\"RevisionOT\" r JOIN afrisan.\"Usuario\" u USING(\"Id_Usuario\") WHERE r.\"Id_OrdenTrabajo\"=ANY(@p0)",ids)).ToLookup(r=>r.OtId);
         var result=new OtResponse[ots.Count];
         for(var i=0;i<ots.Count;i++)
@@ -372,7 +413,8 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
             result[i]=new(o.Publico,o.Codigo,o.Sucursal,o.Direccion,o.Descripcion,o.Tecnico,o.Estado,o.Autorizador,o.Fecha,
                 detalle[o.Id].Select(d=>d.Response()).ToArray(),retirar[o.Id].Select(r=>r.Codigo).ToArray(),entregas,ops.ToArray(),
                 incidencias[o.Id].Select(x=>x.Response()).ToArray(),historial[o.Id].Select(e=>e.Response()).ToArray(),
-                o.ObservacionTermino,Revision("Bodega"),Revision("Autorizador"),o.MotivoDevolucion,o.MotivoAnulacion);
+                o.ObservacionTermino,Revision("Bodega"),Revision("Autorizador"),o.MotivoDevolucion,o.MotivoAnulacion,
+                o.Solicitante,o.Prioridad,o.FechaProgramada);
         }
         return result;
     }

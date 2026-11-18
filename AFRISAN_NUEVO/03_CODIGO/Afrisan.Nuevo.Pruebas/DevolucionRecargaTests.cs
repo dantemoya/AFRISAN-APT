@@ -66,7 +66,7 @@ public sealed class DevolucionRecargaTests
         Assert.Equal(409, Datos.Codigo(() => store.Devolver(asignada.Id, new() { Motivo = "Motivo cualquiera" }, bodega)));
 
         var ot = HastaBodega();
-        store.Recibir(ot.Id, new() { Codigo = instalado.Codigo, PesoBrutoGr = 6_000 }, bodega);
+        store.Recibir(ot.Id, new() { Codigo = instalado.Codigo, PesoBrutoGr = 6_000, Foto = Datos.FotoDespacho(7) }, bodega);
         store.AprobarBodega(ot.Id, new() { ConfirmoRevision = true }, bodega);
         Assert.Equal(409, Datos.Codigo(() => store.Devolver(ot.Id, new() { Motivo = "Motivo tardío de prueba" }, bodega)));
     }
@@ -94,7 +94,7 @@ public sealed class DevolucionRecargaTests
     public void Bodega_no_aprueba_con_incidencias_abiertas_y_el_Autorizador_las_responde_antes()
     {
         var ot = HastaBodega();
-        store.Recibir(ot.Id, new() { Codigo = instalado.Codigo, PesoBrutoGr = 6_000 }, bodega);
+        store.Recibir(ot.Id, new() { Codigo = instalado.Codigo, PesoBrutoGr = 6_000, Foto = Datos.FotoDespacho(7) }, bodega);
         var incidencia = Guid.NewGuid();
         store.Incidencia(ot.Id, new() { Id = incidencia, Tipo = "Incidencia", Motivo = "El peso no coincide con la foto" }, bodega);
 
@@ -120,7 +120,7 @@ public sealed class DevolucionRecargaTests
         var conPeso = inventario.CrearCilindro(new()
         {
             RefrigeranteId = gas.Id, CapacidadGr = 10_000, TaraGr = 5_000,
-            UbicacionInicial = "Sucursal", SucursalInicial = Datos.Sucursal, PesoInicialGr = 6_000
+            UbicacionInicial = "Sucursal", SucursalInicial = Datos.Sucursal, PesoInicialGr = 6_000, Foto = Datos.FotoDespacho(8)
         }, Datos.Bodega);
 
         Assert.Equal(409, Datos.Codigo(() => HastaBodega(retiradoGr: 6_500, retirar: conPeso.Codigo)));
@@ -130,7 +130,7 @@ public sealed class DevolucionRecargaTests
     public void El_retirado_vuelve_vacio_y_Bodega_lo_reingresa_con_una_recarga()
     {
         var ot = HastaBodega();
-        store.Recibir(ot.Id, new() { Codigo = instalado.Codigo, PesoBrutoGr = 6_000 }, bodega);
+        store.Recibir(ot.Id, new() { Codigo = instalado.Codigo, PesoBrutoGr = 6_000, Foto = Datos.FotoDespacho(7) }, bodega);
         Assert.Equal("Vacio", inventario.Cilindro(instalado.Codigo)!.Estado);
 
         var recarga = new RecargarCilindroRequest { IdOperacion = Guid.NewGuid(), PesoBrutoGr = 14_500, Foto = Datos.FotoDespacho(7) };

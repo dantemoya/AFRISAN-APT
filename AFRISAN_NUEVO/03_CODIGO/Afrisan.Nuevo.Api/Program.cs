@@ -44,6 +44,12 @@ if (args.Contains("--actualizar-devolucion-recarga"))
     catch (Exception ex) { Console.Error.WriteLine(FalloActualizacion(ex, "11")); Environment.ExitCode=1; }
     return;
 }
+if (args.Contains("--actualizar-codigos-fotos-pedido"))
+{
+    try { await PrepararPersistencia.ActualizarCodigosFotosPedido(builder.Configuration); }
+    catch (Exception ex) { Console.Error.WriteLine(FalloActualizacion(ex, "12")); Environment.ExitCode=1; }
+    return;
+}
 if (args.Contains("--actualizar-mantenedores"))
 {
     try { await PrepararPersistencia.ActualizarMantenedores(builder.Configuration); }

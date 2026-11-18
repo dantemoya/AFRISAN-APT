@@ -48,7 +48,7 @@ public sealed class TrabajoStoreTests
 
         store.InformarEntrega(ot.Id, opId, tecnico);
         Assert.Equal("PendienteBodega", store.Terminar(ot.Id, new(), tecnico).Estado);
-        store.Recibir(ot.Id, new() { Codigo = instalado.Codigo, PesoBrutoGr = 6_000 }, bodega);
+        store.Recibir(ot.Id, new() { Codigo = instalado.Codigo, PesoBrutoGr = 6_000, Foto = Datos.FotoDespacho(7) }, bodega);
         Assert.Equal("PendienteRevision", store.AprobarBodega(ot.Id, new() { ConfirmoRevision = true }, bodega).Estado);
         store.RevisarAutorizador(ot.Id, new() { ConfirmoRevision = true }, autorizador);
         ot = store.Cerrar(ot.Id, autorizador);

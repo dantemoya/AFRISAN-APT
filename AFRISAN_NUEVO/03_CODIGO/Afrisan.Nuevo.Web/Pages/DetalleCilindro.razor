@@ -36,7 +36,9 @@ else
     {
         <section class="panel mt"><h2>Registrar primer pesaje</h2><p class="muted">Lectura de ingreso. No genera una salida, retorno ni consumo.</p>
             <EditForm Model="form" OnValidSubmit="GuardarPesaje"><DataAnnotationsValidator /><ValidationSummary />
-                <fieldset disabled="@guardando"><div class="form-grid"><div><label for="peso-inicial">Peso bruto (g)</label><InputNumber id="peso-inicial" @bind-Value="form.PesoBrutoGr" step="1" min="0" /></div><div><label for="observacion-inicial">Observación (opcional)</label><InputText id="observacion-inicial" @bind-Value="form.Observacion" maxlength="1000" /></div></div>
+                <fieldset disabled="@guardando"><div class="form-grid"><div><label for="peso-inicial">Peso bruto (g)</label><InputNumber id="peso-inicial" @bind-Value="form.PesoBrutoGr" step="1" min="0" /></div>
+                    <div><label for="foto-inicial">Foto de la balanza</label><InputFile id="foto-inicial" accept="image/jpeg,image/png,image/webp" OnChange="CargarFotoInicial" /><small class="field-help">Obligatoria: respalda el peso registrado.</small></div>
+                    <div><label for="observacion-inicial">Observación (opcional)</label><InputText id="observacion-inicial" @bind-Value="form.Observacion" maxlength="1000" /></div></div>
                     <button class="btn primary" type="submit">@(guardando ? "Guardando…" : "Registrar pesaje inicial")</button></fieldset>
             </EditForm>
         </section>
@@ -49,6 +51,28 @@ else
                 <div><label for="recarga-foto">Foto de la balanza</label><InputFile id="recarga-foto" accept="image/jpeg,image/png,image/webp" OnChange="CargarFotoRecarga" /></div>
                 <div><label for="recarga-observacion">Observación (opcional)</label><input id="recarga-observacion" maxlength="1000" @bind="notaRecarga" /></div>
             </div><button class="btn primary" @onclick="Recargar">@(guardando ? "Guardando…" : "Registrar recarga")</button></fieldset>
+        </section>
+    }
+    @if (Sesion.Sesion?.Rol != "Tecnico")
+    {
+        <section class="panel mt"><h2>Pesajes y fotos de la balanza</h2><p class="muted">Cada pesaje conserva su foto para verificar el monto registrado.</p>
+            @if (errorPesajes is not null) { <div class="notice error" role="alert">@errorPesajes</div> }
+            else if (pesajes.Length == 0) { <p class="muted">Sin pesajes registrados.</p> }
+            else
+            {
+                <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Peso bruto</th><th>OT</th><th>Usuario</th><th>Foto</th></tr></thead><tbody>
+                    @foreach (var p in pesajes)
+                    {
+                        <tr><td>@p.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td><td>@TipoPesaje(p.Tipo)</td><td class="nowrap">@Formato.Gramos(p.PesoBrutoGr)</td><td class="nowrap">@(p.Orden ?? "—")</td><td>@p.Usuario</td>
+                            <td>@if (p.Fotos.Length == 0) { <span class="muted">Sin foto (registro anterior)</span> }
+                                else { @foreach (var f in p.Fotos) { <button class="btn secondary small" @onclick="() => VerFoto(p, f)">Ver foto</button> } }</td></tr>
+                    }
+                </tbody></table></div>
+            }
+            @if (fotoVista is not null)
+            {
+                <figure class="pesaje-foto"><img src="@fotoVista" alt="@fotoTitulo" /><figcaption>@fotoTitulo</figcaption><button class="btn secondary" @onclick="() => { fotoVista = null; fotoTitulo = null; }">Cerrar foto</button></figure>
+            }
         </section>
     }
     <section class="panel mt"><h2>Historial del registro</h2>
@@ -81,6 +105,12 @@ else
         try { cilindro = await Api.CilindroAsync(Codigo); historial = await Api.HistorialAsync(Codigo); }
         catch (Exception ex) { error = Formato.Error(ex); }
         finally { cargando = false; }
+        pesajes = []; errorPesajes = null; fotoVista = null;
+        if (cilindro is not null && Sesion.Sesion?.Rol != "Tecnico")
+        {
+            try { pesajes = await Api.PesajesAsync(Codigo); }
+            catch (Exception ex) { errorPesajes = Formato.Error(ex); }
+        }
         if (cilindro is not null)
         {
             try { qr = await Api.QrAsync(Codigo); }
@@ -116,11 +146,37 @@ else
         catch (Exception ex) { error = Formato.Error(ex); }
         finally { guardando = false; }
     }
+    private PesajeEvidenciaResponse[] pesajes = [];
+    private string? errorPesajes, fotoVista, fotoTitulo;
+    private FotoPesajeRequest? fotoInicial;
+    private static string TipoPesaje(string tipo) => tipo switch
+    {
+        "Inicial" => "Pesaje inicial", "Despacho" => "Retiro de Bodega", "Instalado" => "Instalado en sucursal",
+        "Retirado" => "Retirado de sucursal", "Recepcion" => "Recepción en Bodega", "Recarga" => "Recarga", _ => tipo
+    };
+    private async Task VerFoto(PesajeEvidenciaResponse p, FotoPesajeInfo f)
+    {
+        errorPesajes = null;
+        try { fotoVista = await Api.FotoPesajeAsync(Codigo, f); fotoTitulo = $"{TipoPesaje(p.Tipo)} · {Formato.Gramos(p.PesoBrutoGr)} · {p.Fecha.ToLocalTime():dd/MM/yyyy HH:mm}"; }
+        catch (Exception ex) { errorPesajes = Formato.Error(ex); }
+    }
+    private async Task CargarFotoInicial(InputFileChangeEventArgs args) => fotoInicial = await LeerFoto(args);
+    private async Task<FotoPesajeRequest?> LeerFoto(InputFileChangeEventArgs args)
+    {
+        error = null;
+        const long maximo = 4 * 1024 * 1024;
+        if (args.File.Size > maximo) { error = "La foto supera 4 MiB."; return null; }
+        await using var origen = args.File.OpenReadStream(maximo);
+        using var memoria = new MemoryStream();
+        await origen.CopyToAsync(memoria);
+        return new() { Id = Guid.NewGuid(), Nombre = args.File.Name, ContentType = args.File.ContentType, Base64 = Convert.ToBase64String(memoria.ToArray()) };
+    }
     private async Task GuardarPesaje()
     {
         if (guardando || form.PesoBrutoGr is null) return;
+        if (fotoInicial is null) { error = "Adjunta la foto de la balanza con el peso inicial."; return; }
         guardando = true; error = null; mensaje = null;
-        try { await Api.PesarAsync(Codigo, new() { PesoBrutoGr = form.PesoBrutoGr.Value, Observacion = form.Observacion }); await Cargar(); mensaje = "Pesaje inicial registrado. El historial conserva la lectura y el usuario."; }
+        try { await Api.PesarAsync(Codigo, new() { PesoBrutoGr = form.PesoBrutoGr.Value, Observacion = form.Observacion, Foto = fotoInicial }); fotoInicial = null; await Cargar(); mensaje = "Pesaje inicial registrado con su foto. El historial conserva la lectura y el usuario."; }
         catch (Exception ex) { error = Formato.Error(ex); }
         finally { guardando = false; }
     }

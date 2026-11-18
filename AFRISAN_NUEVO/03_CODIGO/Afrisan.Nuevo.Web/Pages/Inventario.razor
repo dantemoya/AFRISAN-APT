@@ -10,7 +10,7 @@
 @if (error is not null) { <div class="notice error" role="alert">@error</div> }
 <section class="panel">
     <div class="filter-bar">
-        <div class="search-field"><label for="buscar">Buscar código o serie</label><input id="buscar" @bind="busqueda" @bind:event="oninput" placeholder="Ej.: AFR-000001" /></div>
+        <div class="search-field"><label for="buscar">Buscar código o serie</label><input id="buscar" @bind="busqueda" @bind:event="oninput" placeholder="Ej.: AF-00001" /></div>
         <div><label for="filtro-gas">Refrigerante</label><select id="filtro-gas" @bind="gas"><option value="">Todos los refrigerantes</option>@foreach (var tipo in items.GroupBy(c => c.RefrigeranteId).Select(g => g.First()).OrderBy(c => c.RefrigeranteCodigo)) { <option value="@tipo.RefrigeranteId">@tipo.RefrigeranteCodigo</option> }</select></div>
         <div><label for="filtro-ubicacion">Ubicación</label><select id="filtro-ubicacion" @bind="ubicacion"><option value="Bodega">Bodega</option><option value="Sucursal">Sucursales</option><option value="Tecnico">Con técnico</option><option value="">Todas las ubicaciones</option></select></div>
         <div><label for="filtro-estado">Estado</label><select id="filtro-estado" @bind="estado"><option value="">Todos los estados</option><option value="Disponible">Disponible</option><option value="PendientePesaje">Pendiente de pesaje</option><option value="Vacio">Vacío</option><option value="Instalado">Instalado en sucursal</option><option value="EnProcesoDespacho">En proceso de despacho</option><option value="RetiradoPendienteRecepcion">Retirado / pendiente de bodega</option></select></div>

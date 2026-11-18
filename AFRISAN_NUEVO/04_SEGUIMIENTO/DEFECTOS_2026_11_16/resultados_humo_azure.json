@@ -1,0 +1,197 @@
+{
+  "fecha_utc": "2026-11-18T02:07:02.812Z",
+  "tipo": "CDP-64 por rol contra https://afrisan-api-dm.azurewebsites.net (con OT completa)",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "La API responde con la base PostgreSQL de Supabase"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Sin sesión la API responde 401"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresa la cuenta de prueba de Bodega"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresa la cuenta de prueba de Autorizador"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresa la cuenta de prueba de Tecnico"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Ingresa la cuenta de prueba de Jefatura"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET cilindros responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET usuarios responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET ordenes-trabajo responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET costos responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET costos responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET costos responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET costos responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET limites responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET limites responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET limites responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET limites responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: POST ordenes-trabajo responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: POST ordenes-trabajo responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: POST ordenes-trabajo responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: POST cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: POST cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: POST cilindros responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Bodega: GET cilindros/{código}/pesajes responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Autorizador: GET cilindros/{código}/pesajes responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Tecnico: GET cilindros/{código}/pesajes responde 403"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Jefatura: GET cilindros/{código}/pesajes responde 200"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico solo lista sus propias OT"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Existen la sucursal y el gas de prueba del 14/11"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El alta con peso y sin foto se rechaza (D-48)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El cilindro nuevo recibe un código corto (AF-00001)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT nueva tiene código corto (OT-00001) y los datos del pedido (D-49)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico registra el agregado con foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La OT de prueba pasa por los tres roles y se cierra"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "El historial de la OT no muestra GUID (DEF-10)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Los pesajes Inicial, Despacho e Instalado tienen su foto"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "La foto del último pesaje se puede consultar para verificar el monto"
+    }
+  ],
+  "datos_creados": {
+    "cilindro": "AF-00001",
+    "ot": "OT-00001"
+  },
+  "fotografias": "DiscoPrivado",
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 46
+}
