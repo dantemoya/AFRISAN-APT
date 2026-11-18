@@ -5,6 +5,7 @@ Desktop y sin escribir claves en el sitio publicado.
 
 | Caso | Resultado | Evidencia |
 | --- | --- | --- |
+| CDP-12 Análisis dinámico de vulnerabilidades | **Aprobado.** OWASP ZAP 2.17.0. Escaneo pasivo, sin sesión, de la web y la API publicadas en Azure, y escaneo activo con sesión de Administrador sobre la API local en modo memoria (46 rutas de la especificación OpenAPI). Sin alertas altas (detalle en la sección siguiente). | Informes completos en `.local/zap_2026_11_17/` (fuera de Git) |
 | CDP-16 Código único con solicitudes simultáneas | **Aprobado.** Dos altas a la vez con el mismo número de serie: una se crea (201) y la otra recibe conflicto (409). Cinco altas simultáneas sin serie reciben códigos distintos de 8 caracteres, asignados por la base (D-47). | [`resultados_concurrencia_supabase.json`](resultados_concurrencia_supabase.json) |
 | CDP-29 Carrera de despacho simultáneo | **Aprobado.** El técnico de prueba, con dos sesiones, retira a la vez el mismo cilindro para dos OT: un retiro se registra (200) y el otro recibe conflicto (409); el cilindro queda en un solo despacho. | Mismo archivo |
 | CDP-61 Respaldo y recuperación | **Aprobado.** Respaldo lógico de solo lectura de Supabase ([`respaldo/respaldo.cs`](respaldo/respaldo.cs)): 32 tablas y 1.347 filas en 18 s. Restaurado en una instancia de prueba con los scripts 05 y 07 a 12 ([`respaldo/restaurar.mjs`](respaldo/restaurar.mjs)) en 2,5 s: cada tabla idéntica por SHA-256, las 86 claves foráneas válidas y sin filas huérfanas. | [`respaldo/resultados_respaldo.json`](respaldo/resultados_respaldo.json) |
@@ -15,6 +16,19 @@ El respaldo contiene datos personales y hashes de contraseñas, por eso se guard
 Git). **RTO** de la base: unos 21 s (respaldo más restauración). **RPO**: el tiempo desde el último
 respaldo ejecutado; con una ejecución diaria, hasta 24 horas. Las fotos no van en este respaldo: se
 respaldan con el bucket de Storage (o la carpeta del servidor mientras siga DEF-11).
+
+## Alertas de OWASP ZAP (CDP-12)
+
+| Escaneo | Riesgo | Alerta | Tratamiento |
+| --- | --- | --- | --- |
+| Pasivo, Azure | Medio | La CSP de la web permite `style-src 'unsafe-inline'` | Se acepta: Blazor aplica estilos en línea. Los scripts, la vía principal de XSS, no usan `unsafe-inline`. |
+| Pasivo, Azure | Bajo (2) | Cookie `ARRAffinity` de Azure sin `SameSite` estricto | Desactivar la afinidad ARR del App Service: la API usa tokens y no guarda sesión en el servidor. Pendiente de autorización. |
+| Pasivo, Azure | Informativo (4) | Comentarios en JavaScript de terceros (Blazor, jsQR), directivas de caché a revisar, aplicación web moderna y cookie de sesión de Azure | Sin acción |
+| Activo y autenticado, API local | Informativo (3) | Solicitud de autenticación, respuesta con token y variación de `User-Agent` | Sin acción |
+
+El escaneo activo se hizo sobre la copia local para no enviar ataques a la base de producción. Como esa
+copia guarda en memoria, la inyección SQL se cubre con la revisión del código (todas las consultas son
+parametrizadas). Los informes completos no se publican porque el repositorio es público.
 
 ## Defecto encontrado
 
