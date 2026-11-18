@@ -99,8 +99,10 @@ public sealed class SupabaseFotos(HttpClient client,StorageOptions options)
         if(path.Length is <1 or >700||path.Split('/').Any(s=>s is "" or "." or "..")||!Regex.IsMatch(path,"^[a-zA-Z0-9/_\\.-]+$"))throw new ReglaInventarioException("Ruta de fotografía inválida.");
         return string.Join('/',path.Split('/').Select(Uri.EscapeDataString));
     }
-    public async Task Guardar(string path,string mime,byte[] bytes,string hash)
+    /// <summary>Sube la foto sin sobrescribir. Devuelve true si esta llamada la creó y false si ya existía (reintento).</summary>
+    public async Task<bool> Guardar(string path,string mime,byte[] bytes,string hash)
     {
+        var creada=true;
         await VerificarBucket();
         using var request=Request(HttpMethod.Post,$"object/{options.Bucket}/{RutaObjeto(path)}");
         request.Headers.Add("x-upsert","false");request.Content=new ByteArrayContent(bytes);request.Content.Headers.ContentType=new(mime);
@@ -115,9 +117,17 @@ public sealed class SupabaseFotos(HttpClient client,StorageOptions options)
                 catch(JsonException){ }
             }
             if(!duplicate)throw Error(response.StatusCode);
+            creada=false;
         }
         var saved=await Leer(path,mime,hash);
         if(saved.Length!=bytes.Length)throw new ReglaInventarioException("La foto almacenada no coincide con la enviada.",503);
+        return creada;
+    }
+    /// <summary>DEF-15: borra la foto que esta solicitud acaba de subir cuando la base rechazó la operación.</summary>
+    public async Task EliminarRechazada(string path)
+    {
+        using var request=Request(HttpMethod.Delete,"object/"+options.Bucket);request.Content=JsonContent.Create(new{prefixes=new[]{path}});
+        using var response=await Send(request);if(!response.IsSuccessStatusCode)throw Error(response.StatusCode);
     }
     public async Task<byte[]> Leer(string path,string mime,string hash)
     {

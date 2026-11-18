@@ -164,6 +164,30 @@ try{
  check((await api('cilindros/ser-12',tecnico)).codigo===conSerie.codigo,'La ficha también se encuentra por número de serie');
  r=await api('cilindros/NO-EXISTE',tecnico,undefined,'GET',404);
  check(/código o número de serie/.test(mensaje(r)),'Un código inexistente responde 404 con un mensaje claro');
+
+ // DEF-15 (18/11): si la base rechaza la operación, la foto nueva no queda en el almacenamiento.
+ const libre=await api('cilindros',bodega,alta('Bodega',6000,foto(40)));
+ const otA=await api('ordenes-trabajo',autorizador,pedido('DEF-15 A',{cilindrosARetirar:[]}));
+ const otB=await api('ordenes-trabajo',autorizador,pedido('DEF-15 B',{cilindrosARetirar:[]}));
+ const fotosDe=async o=>{try{return(await fs.readdir(path.join(environment.Persistencia__FotosPath,inst.instancia,o.id.replaceAll('-','')))).filter(n=>n.endsWith('.bin')).length;}catch{return 0;}};
+ const retiroA={idOperacion:randomUUID(),codigo:libre.codigo,pesoBrutoGr:6000,foto:foto(41)};
+ await api(`ordenes-trabajo/${otA.id}/entregas`,tecnico,retiroA);
+ const rechazo=await http(`ordenes-trabajo/${otB.id}/entregas`,tecnico,{idOperacion:randomUUID(),codigo:libre.codigo,pesoBrutoGr:6000,foto:foto(42)});
+ check(rechazo.status>=400&&rechazo.status<500,`DEF-15: la base rechaza retirar en otra OT un cilindro ya retirado (HTTP ${rechazo.status}: ${mensaje(rechazo.result)})`);
+ const enB=await fotosDe(otB);
+ check(enB===0,'DEF-15: la foto del retiro rechazado no queda en el almacenamiento'+(enB===0?'':` (quedaron ${enB})`));
+ await api(`ordenes-trabajo/${otA.id}/entregas`,tecnico,retiroA);
+ check(await fotosDe(otA)===1,'DEF-15: reintentar el retiro aceptado no duplica ni borra su foto');
+ const despacho=(await api(`cilindros/${libre.codigo}/pesajes`,bodega)).find(p=>p.tipo!=='Inicial');
+ check((await http(`cilindros/${libre.codigo}/pesajes/fotos/${despacho?.fotos[0]?.id}`,bodega)).status===200,'DEF-15: la foto del retiro aceptado se sigue descargando');
+ const opA=randomUUID();
+ let borrador=await api(`ordenes-trabajo/${otA.id}/operaciones`,tecnico,{id:opA,instancia:inst.instancia,version:0,tipo:'Agregado',codigoInstalado:libre.codigo,pesoInstaladoGr:5950},'PUT');
+ const imagen=foto(43);
+ borrador=await api(`ordenes-trabajo/${otA.id}/operaciones/${opA}/fotos`,tecnico,{...imagen,grupo:'Instalado',version:borrador.version});
+ const repetida=await http(`ordenes-trabajo/${otA.id}/operaciones/${opA}/fotos`,tecnico,{...imagen,id:randomUUID(),grupo:'Instalado',version:borrador.version});
+ check(repetida.status===409,`DEF-15: la misma imagen con otro identificador se rechaza (HTTP ${repetida.status})`);
+ const enA=await fotosDe(otA);
+ check(enA===2,'DEF-15: la imagen repetida rechazada tampoco queda guardada'+(enA===2?'':` (hay ${enA} fotos; se esperaban 2)`));
  // D-48 en la base: un pesaje insertado sin evidencia no se confirma.
  await db.exec('RESET ROLE');
  const ids=(await db.query(`SELECT (SELECT "Id_Cilindro" FROM afrisan."Cilindros" WHERE "CilindroQR"='${pendiente.codigo}') AS c,(SELECT "Id_Usuario" FROM afrisan."Usuario" WHERE "Correo_Usuario"='bodega@example.invalid') AS u`)).rows[0];

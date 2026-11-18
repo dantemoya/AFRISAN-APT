@@ -57,14 +57,17 @@ public sealed class PgRectificaciones(PgDatabase database, FotosPrivadas fotos)
             WHERE p."Id_Pesaje"=@p0 AND p."Id_OrdenTrabajo"=@p1
             """,dto.PesajeId,ot)).SingleOrDefault() ?? throw new ReglaInventarioException("Pesaje no encontrado en esta OT.",404);
         if (anterior is null) await Prevalidar(u, ot, dto);
-        var f = await fotos.Guardar(id,dto.Foto.Id,"Rectificacion",cilindro,dto.Foto.Nombre,
-            dto.Foto.ContentType,dto.Foto.Base64,user.FindFirstValue("correo")!,previa);
-        if (anterior is not null) return anterior;
-        await u.Exec("""
-            INSERT INTO afrisan."RectificacionPesaje"("Id","Id_OrdenTrabajo","Id_Pesaje","PesoAnteriorGr","PesoPropuestoGr","Motivo","Evidencia","Id_Solicitante")
-            VALUES(@p0,@p1,@p2,0,@p3,@p4,@p5::jsonb,@p6)
-            """,dto.Id,ot,dto.PesajeId,dto.PesoPropuestoGr,dto.Motivo.Trim(),JsonSerializer.Serialize(f,Json),PgDatabase.Actor(user));
-        var resultado = await u.One<RectificacionResponse>(Consulta + " WHERE r.\"Id\"=@p0",dto.Id);
+        // DEF-15: si la base rechaza la solicitud, se borra la foto nueva.
+        var resultado = await fotos.GuardarYUsar(id,dto.Foto.Id,"Rectificacion",cilindro,dto.Foto.Nombre,
+            dto.Foto.ContentType,dto.Foto.Base64,user.FindFirstValue("correo")!,previa,async f =>
+            {
+                if (anterior is not null) return anterior;
+                await u.Exec("""
+                    INSERT INTO afrisan."RectificacionPesaje"("Id","Id_OrdenTrabajo","Id_Pesaje","PesoAnteriorGr","PesoPropuestoGr","Motivo","Evidencia","Id_Solicitante")
+                    VALUES(@p0,@p1,@p2,0,@p3,@p4,@p5::jsonb,@p6)
+                    """,dto.Id,ot,dto.PesajeId,dto.PesoPropuestoGr,dto.Motivo.Trim(),JsonSerializer.Serialize(f,Json),PgDatabase.Actor(user));
+                return await u.One<RectificacionResponse>(Consulta + " WHERE r.\"Id\"=@p0",dto.Id);
+            });
         await u.Commit();
         return resultado;
     }

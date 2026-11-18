@@ -92,8 +92,9 @@ public sealed class PgInventario(PgDatabase database,FotosPrivadas fotos)
     {
         var codigo=await u.One<string>("SELECT \"CilindroQR\" AS \"Value\" FROM afrisan.\"Cilindros\" WHERE \"Id_Cilindro\"=@p0",cilindro);
         var pesaje=await InsertarPesaje(u,cilindro,null,"Inicial",peso,actor,observacion);
-        var archivo=await fotos.Guardar(pesaje,foto.Id,"Inicial",codigo,foto.Nombre,foto.ContentType,foto.Base64,correo);
-        await PgTrabajo.Evidencia(u,archivo,pesaje,actor);
+        // DEF-15: si la base rechaza la evidencia, se borra la foto nueva.
+        await fotos.GuardarYUsar(pesaje,foto.Id,"Inicial",codigo,foto.Nombre,foto.ContentType,foto.Base64,correo,null,
+            archivo=>PgTrabajo.Evidencia(u,archivo,pesaje,actor));
     }
     /// <summary>Todos los pesajes del cilindro con sus fotos, para verificar cada monto (D-48).</summary>
     public async Task<PesajeEvidenciaResponse[]> Pesajes(string codigo)

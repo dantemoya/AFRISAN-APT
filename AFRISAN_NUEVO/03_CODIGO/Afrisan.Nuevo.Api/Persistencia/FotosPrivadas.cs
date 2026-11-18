@@ -13,7 +13,37 @@ public sealed record FotoArchivo(Guid Id,string Grupo,string Codigo,string Nombr
 // y para copiar los originales durante la activación, sin borrarlos.
 public sealed class FotosPrivadas(PersistenciaOptions options,StorageOptions storage,SupabaseFotos nube)
 {
-    public async Task<FotoArchivo> Guardar(Guid ot,Guid id,string grupo,string codigo,string nombre,string mime,string base64,string usuario,FotoArchivo? existente=null)
+    /// <summary>
+    /// DEF-15: guarda la foto y ejecuta con ella el trabajo de base de datos. Si ese trabajo falla (la base rechaza
+    /// la operación), borra la foto, pero solo si esta llamada la creó: la de un reintento puede estar en uso.
+    /// El borrado ocurre antes de cerrar la transacción, con sus bloqueos todavía tomados. El commit va después,
+    /// fuera de <paramref name="usar"/>: si fallara, no se sabría si quedó confirmado y la foto se conserva.
+    /// </summary>
+    public async Task<T> GuardarYUsar<T>(Guid ot,Guid id,string grupo,string codigo,string nombre,string mime,string base64,string usuario,
+        FotoArchivo? existente,Func<FotoArchivo,Task<T>> usar)
+    {
+        var (archivo,creada)=await Escribir(ot,id,grupo,codigo,nombre,mime,base64,usuario,existente);
+        try { return await usar(archivo); }
+        catch
+        {
+            if(creada) await Descartar(archivo);
+            throw;
+        }
+    }
+    public Task GuardarYUsar(Guid ot,Guid id,string grupo,string codigo,string nombre,string mime,string base64,string usuario,
+        FotoArchivo? existente,Func<FotoArchivo,Task> usar)=>
+        GuardarYUsar(ot,id,grupo,codigo,nombre,mime,base64,usuario,existente,async archivo=>{await usar(archivo);return true;});
+    // Si no se puede borrar, se conserva el error original de la operación; la foto queda como antes de DEF-15.
+    private async Task Descartar(FotoArchivo archivo)
+    {
+        try
+        {
+            if(storage.Nube) await nube.EliminarRechazada(archivo.Ruta);
+            else File.Delete(Ruta(archivo.Ruta));
+        }
+        catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or ReglaInventarioException) { }
+    }
+    private async Task<(FotoArchivo Archivo,bool Creada)> Escribir(Guid ot,Guid id,string grupo,string codigo,string nombre,string mime,string base64,string usuario,FotoArchivo? existente)
     {
         if(id==Guid.Empty||string.IsNullOrWhiteSpace(nombre)||nombre.Length>150) throw new ReglaInventarioException("Identificador o nombre de fotografía inválido.");
         byte[] bytes;
@@ -30,25 +60,27 @@ public sealed class FotosPrivadas(PersistenciaOptions options,StorageOptions sto
         {
             if(existente.Id!=id||existente.Grupo!=grupo||existente.Codigo!=codigo||existente.Nombre!=limpio||existente.ContentType!=mime||existente.Bytes!=bytes.Length||existente.Sha256!=sha)
                 throw new ReglaInventarioException("El UUID de la fotografía ya corresponde a otro contenido.",409);
-            await Leer(existente.Ruta,mime,sha,existente.Bucket);return existente;
+            await Leer(existente.Ruta,mime,sha,existente.Bucket);return(existente,false);
         }
         var ruta=$"{options.Instancia}/{ot:N}/{id:N}-{sha}.bin";
         if(storage.Nube)
         {
-            await nube.Guardar(ruta,mime,bytes,sha);
-            return new(id,grupo,codigo,limpio,mime,bytes.Length,ruta,sha,DateTimeOffset.UtcNow,usuario,storage.Bucket);
+            var subida=await nube.Guardar(ruta,mime,bytes,sha);
+            return(new(id,grupo,codigo,limpio,mime,bytes.Length,ruta,sha,DateTimeOffset.UtcNow,usuario,storage.Bucket),subida);
         }
         var target=Ruta(ruta);Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         var temporal=target+"."+Guid.NewGuid().ToString("N")+".tmp";
+        var creada=true;
         try {
             await File.WriteAllBytesAsync(temporal,bytes);
             try{File.Move(temporal,target,false);}
             catch(IOException) when(File.Exists(target)) {
                 var previous=await File.ReadAllBytesAsync(target);
                 if(!CryptographicOperations.FixedTimeEquals(SHA256.HashData(previous),SHA256.HashData(bytes)))throw new ReglaInventarioException("La fotografía almacenada no coincide.",409);
+                creada=false;
             }
         } finally {if(File.Exists(temporal))File.Delete(temporal);}
-        return new(id,grupo,codigo,limpio,mime,bytes.Length,ruta,sha,DateTimeOffset.UtcNow,usuario);
+        return(new(id,grupo,codigo,limpio,mime,bytes.Length,ruta,sha,DateTimeOffset.UtcNow,usuario),creada);
     }
     public async Task<(byte[] Bytes,string Mime)> Leer(string ruta,string mime,string sha,string bucket="servidor-privado")
     {

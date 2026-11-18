@@ -39,7 +39,7 @@ parametrizadas). Los informes completos no se publican porque el repositorio es 
 
 | ID | Severidad | Hallazgo | Estado |
 | --- | --- | --- | --- |
-| DEF-15 | Baja | En CDP-29, la API guardó la foto del retiro rechazado antes de que la base lo rechazara, y la foto quedó en la carpeta de la OT anulada sin registro que la use. No se expone (la carpeta es privada), pero ocupa espacio y pasa lo mismo en Storage. Corrección propuesta: borrar la foto nueva cuando la base rechaza la operación. | Abierto |
+| DEF-15 | Baja | En CDP-29, la API guardó la foto del retiro rechazado antes de que la base lo rechazara, y la foto quedó en la carpeta de la OT anulada sin registro que la use. No se expone (la carpeta es privada), pero ocupa espacio y pasa lo mismo en Storage. Corrección propuesta: borrar la foto nueva cuando la base rechaza la operación. | **Corregido el 18/11** ([detalle](../DEFECTOS_2026_11_16/README.md)): verificado con PostgreSQL embebido y xUnit; se publica en Azure después del 19/11. |
 
 ## Totales esperados en Power BI Desktop (CDP-57), al 17/11/2026
 

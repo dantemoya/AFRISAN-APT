@@ -98,6 +98,10 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 - El Autorizador responde las incidencias en cualquier etapa abierta de la OT (D-41).
 
 ### Corregido
+- DEF-15 (18/11): si la base rechaza la operación, la API borra la foto que acababa de guardar en el disco o en Storage, solo si
+  esa solicitud la creó. Cubre el retiro, la foto del borrador, la recepción, la recarga, el pesaje inicial y la rectificación.
+  Verificado con `validar_defectos.mjs` (73 de 73, PostgreSQL embebido) y 7 pruebas xUnit nuevas (495 en total). Todavía no se
+  publica en Azure: se publica después del 19/11.
 - Códigos de OT y de cilindro de 8 caracteres, `OT-00001` y `AF-00001` (16/11, D-47, DEF-09); los códigos
   largos anteriores se siguen aceptando y ya no ensanchan la página.
 - Todo pesaje exige foto de la balanza, también el pesaje inicial y la recepción de Bodega (16/11, D-48, DEF-06).

@@ -130,10 +130,14 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         // para no dejar fotos huérfanas en Storage. Los reintentos conservan su validación original.
         if(anterior is null&&(dto.PesoBrutoGr<c.TaraGr||(decimal)dto.PesoBrutoGr>(decimal)c.TaraGr+c.CapacidadGr))
             throw new ReglaInventarioException("Peso fuera de tara/capacidad",409);
-        var f=await fotos.Guardar(id,dto.Foto.Id,"Despacho",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user),previa);
-        var metadata=Write(new[]{new{id=f.Id,bucket=f.Bucket,ruta=f.Ruta,nombre=f.Nombre,mime=f.ContentType,bytes=f.Bytes,sha256=f.Sha256}});
-        await u.Query<Guid>("SELECT \"Id_Despacho\" AS \"Value\" FROM afrisan.retirar_cilindro(@p0,@p1,@p2,@p3,@p4::jsonb)",dto.IdOperacion,o.Id,c.Id,dto.PesoBrutoGr,metadata);
-        var result=await Ver(u,await Acceder(u,id,user));await u.Commit();return result;
+        // DEF-15: si la base rechaza el retiro (por ejemplo, el cilindro ya salió en otra OT), se borra la foto nueva.
+        var result=await fotos.GuardarYUsar(id,dto.Foto.Id,"Despacho",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user),previa,async f=>
+        {
+            var metadata=Write(new[]{new{id=f.Id,bucket=f.Bucket,ruta=f.Ruta,nombre=f.Nombre,mime=f.ContentType,bytes=f.Bytes,sha256=f.Sha256}});
+            await u.Query<Guid>("SELECT \"Id_Despacho\" AS \"Value\" FROM afrisan.retirar_cilindro(@p0,@p1,@p2,@p3,@p4::jsonb)",dto.IdOperacion,o.Id,c.Id,dto.PesoBrutoGr,metadata);
+            return await Ver(u,await Acceder(u,id,user));
+        });
+        await u.Commit();return result;
     }
     public async Task<OperacionResponse> Guardar(Guid id,GuardarOperacionRequest dto,ClaimsPrincipal user)
     {
@@ -170,14 +174,18 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         var existing=files.FirstOrDefault(f=>f.Id==dto.Id);
         if(existing is null) {Editable(o);Version(op,dto.Version);if(op.Estado!="Borrador") throw new ReglaInventarioException("Solo se agregan fotos a borradores.",409);}
         if(existing is null&&files.Count(f=>f.Grupo==dto.Grupo)>=8) throw new ReglaInventarioException("Máximo ocho fotos por pesaje.");
-        var f=await fotos.Guardar(id,dto.Id,dto.Grupo,codigo,dto.Nombre,dto.ContentType,dto.Base64,Correo(user),existing);
-        if(existing is not null) {
-            if(existing.Grupo!=f.Grupo||existing.Codigo!=f.Codigo||existing.Sha256!=f.Sha256||existing.Nombre!=f.Nombre||existing.ContentType!=f.ContentType) throw new ReglaInventarioException("UUID de foto usado con otro contenido.",409);
-            return await VerOperacion(u,op);
-        }
-        if(files.Any(x=>x.Sha256==f.Sha256)) throw new ReglaInventarioException("Esa fotografía ya está adjunta. Cada pesaje debe tener su propia evidencia.",409);
-        await u.Exec("UPDATE afrisan.\"OperacionTerreno\" SET \"FotosBorrador\"=@p1::jsonb,\"Version\"=\"Version\"+1 WHERE \"Id_Operacion\"=@p0",operacion,Write(files.Append(f).ToArray()));
-        var result=await VerOperacion(u,await Operacion(u,o.Id,operacion));await u.Commit();return result;
+        // DEF-15: si la foto se rechaza después de guardarla (imagen repetida o error de la base), se borra.
+        var result=await fotos.GuardarYUsar(id,dto.Id,dto.Grupo,codigo,dto.Nombre,dto.ContentType,dto.Base64,Correo(user),existing,async f=>
+        {
+            if(existing is not null) {
+                if(existing.Grupo!=f.Grupo||existing.Codigo!=f.Codigo||existing.Sha256!=f.Sha256||existing.Nombre!=f.Nombre||existing.ContentType!=f.ContentType) throw new ReglaInventarioException("UUID de foto usado con otro contenido.",409);
+                return await VerOperacion(u,op);
+            }
+            if(files.Any(x=>x.Sha256==f.Sha256)) throw new ReglaInventarioException("Esa fotografía ya está adjunta. Cada pesaje debe tener su propia evidencia.",409);
+            await u.Exec("UPDATE afrisan.\"OperacionTerreno\" SET \"FotosBorrador\"=@p1::jsonb,\"Version\"=\"Version\"+1 WHERE \"Id_Operacion\"=@p0",operacion,Write(files.Append(f).ToArray()));
+            return await VerOperacion(u,await Operacion(u,o.Id,operacion));
+        });
+        await u.Commit();return result;
     }
     public async Task<OperacionResponse> QuitarFoto(Guid id,Guid operacion,Guid foto,int version,ClaimsPrincipal user)
     {
@@ -235,13 +243,17 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
         if(dto.Foto is null) throw new ReglaInventarioException("Adjunta la foto de la balanza con el peso recibido.");
         // D-48: la foto se guarda antes de la recepción, que cierra el pesaje a nuevas fotos.
         var peso=await PgInventario.InsertarPesaje(u,c.Id,o.Id,"Recepcion",dto.PesoBrutoGr,actor,dto.Observacion);
-        var foto=await fotos.Guardar(id,dto.Foto.Id,"Recepcion",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user));
-        await Evidencia(u,foto,peso,actor);
-        await u.Exec("""
-            INSERT INTO afrisan."RecepcionBodega"("Id_OrdenTrabajo","Id_Cilindro","Id_Operacion","Id_DespachoSinUso","Id_Pesaje","Id_Bodeguero","Observacion")
-            VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6)
-            """,o.Id,c.Id,operation==Guid.Empty?null:operation,dispatch==Guid.Empty?null:dispatch,peso,actor,PgInventario.Null(dto.Observacion));
-        var result=await Ver(u,o);await u.Commit();return result;
+        // DEF-15: si la base rechaza la recepción, se borra la foto nueva.
+        var result=await fotos.GuardarYUsar(id,dto.Foto.Id,"Recepcion",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user),null,async foto=>
+        {
+            await Evidencia(u,foto,peso,actor);
+            await u.Exec("""
+                INSERT INTO afrisan."RecepcionBodega"("Id_OrdenTrabajo","Id_Cilindro","Id_Operacion","Id_DespachoSinUso","Id_Pesaje","Id_Bodeguero","Observacion")
+                VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6)
+                """,o.Id,c.Id,operation==Guid.Empty?null:operation,dispatch==Guid.Empty?null:dispatch,peso,actor,PgInventario.Null(dto.Observacion));
+            return await Ver(u,o);
+        });
+        await u.Commit();return result;
     }
     public async Task<OtResponse> Descartar(Guid id,Guid operacion,int version,ClaimsPrincipal user)
     {
@@ -284,12 +296,15 @@ public sealed class PgTrabajo(PgDatabase database,FotosPrivadas fotos,Persistenc
             // Mismas reglas que el disparador de Pesaje, antes de subir la foto, para no dejar fotos huérfanas.
             if(c.Ubicacion!="Bodega"||c.Estado is not("Vacio" or "Disponible")) throw new ReglaInventarioException("Solo se recarga un cilindro en Bodega, vacío o disponible, y con gas",409);
             if(dto.PesoBrutoGr<=c.TaraGr||(decimal)dto.PesoBrutoGr>(decimal)c.TaraGr+c.CapacidadGr) throw new ReglaInventarioException("Peso fuera de tara/capacidad",409);
-            var f=await fotos.Guardar(dto.IdOperacion,dto.Foto.Id,"Recarga",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user));
-            await u.Exec("""
-                INSERT INTO afrisan."Pesaje"("Id_Pesaje","Id_Cilindro","Tipo","PesoBrutoGr","Id_Usuario","Observacion")
-                VALUES(@p0,@p1,'Recarga',@p2,@p3,@p4)
-                """,dto.IdOperacion,c.Id,dto.PesoBrutoGr,actor,PgInventario.Null(dto.Observacion));
-            await Evidencia(u,f,dto.IdOperacion,actor);
+            // DEF-15: si la base rechaza la recarga, se borra la foto nueva.
+            await fotos.GuardarYUsar(dto.IdOperacion,dto.Foto.Id,"Recarga",c.Codigo,dto.Foto.Nombre,dto.Foto.ContentType,dto.Foto.Base64,Correo(user),null,async f=>
+            {
+                await u.Exec("""
+                    INSERT INTO afrisan."Pesaje"("Id_Pesaje","Id_Cilindro","Tipo","PesoBrutoGr","Id_Usuario","Observacion")
+                    VALUES(@p0,@p1,'Recarga',@p2,@p3,@p4)
+                    """,dto.IdOperacion,c.Id,dto.PesoBrutoGr,actor,PgInventario.Null(dto.Observacion));
+                await Evidencia(u,f,dto.IdOperacion,actor);
+            });
         }
         else if(previo[0]!=dto.PesoBrutoGr) throw new ReglaInventarioException("La recarga ya se registró con otro peso.",409);
         var result=(await PgInventario.Map(u,await u.Query<CilindroRow>(PgInventario.CilindrosSql+" WHERE c.\"Id_Cilindro\"=@p0",c.Id))).Single();

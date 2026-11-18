@@ -76,7 +76,7 @@ En otra terminal:
 dotnet run --project AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Web
 ```
 
-**Pruebas:** `dotnet test AFRISAN.slnx` (488 pruebas xUnit).
+**Pruebas:** `dotnet test AFRISAN.slnx` (495 pruebas xUnit).
 
 ---
 
@@ -212,7 +212,7 @@ vida. También están el [manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUA
 
 | Tipo | Cómo ejecutar | Resultado |
 | --- | --- | --- |
-| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 488 pruebas aprobadas al 18/11/2026; 32 % de cobertura de líneas (medida el 12/11) |
+| Unitarias e integración HTTP (xUnit) | `dotnet test AFRISAN.slnx` | 495 pruebas aprobadas al 18/11/2026; 32 % de cobertura de líneas (medida el 12/11) |
 | Integración sobre PostgreSQL embebido y navegador | `AFRISAN_NUEVO/04_SEGUIMIENTO/MODULOS_2026_11_08/Validar-Modulos.ps1` (requiere Node.js) | Resultados JSON fechados en `AFRISAN_NUEVO/04_SEGUIMIENTO/` |
 | Correcciones del recorrido del 14/11 (migración `11`) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/CORRECCIONES_2026_11_14/validar_correcciones.mjs` | 40 comprobaciones correctas el 15/11/2026 |
 | Recorrido completo contra Supabase (CDP-67) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/CORRECCIONES_2026_11_14/recorrido_supabase.mjs` (API local contra Supabase) | 33 comprobaciones correctas el 15/11/2026 |
