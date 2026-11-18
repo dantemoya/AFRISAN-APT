@@ -122,7 +122,8 @@ no hay Docker, así que no se construyeron ni ejecutaron las imágenes.
 | --- | --- | --- |
 | Grupo de recursos | `rg-afrisan` (East US), suscripción Azure for Students | — |
 | API | App Service `afrisan-api-dm`, plan `plan-afrisan` **B1 Linux** con *Always On* | https://afrisan-api-dm.azurewebsites.net |
-| Web | Static Web App `afrisan-web` (**Free**, East US 2) | https://ambitious-field-0d951cb0f.6.azurestaticapps.net |
+| Web | App Service `afrisan` en el mismo plan `plan-afrisan` (sin costo extra), desde el 18/11/2026 | **https://afrisan.azurewebsites.net** |
+| Web (respaldo) | Static Web App `afrisan-web` (**Free**, East US 2), la misma web y la misma API | https://ambitious-field-0d951cb0f.6.azurestaticapps.net |
 | Base y fotos | Supabase us-east-1 (sin cambios) | — |
 
 - **API autocontenida:** App Service ya no ofrece .NET 8 (su soporte terminó el 10/11/2026), así
@@ -154,10 +155,54 @@ dotnet publish AFRISAN_NUEVO/03_CODIGO/Afrisan.Nuevo.Api -c Release -r linux-x64
 az webapp deploy -g rg-afrisan -n afrisan-api-dm --src-path <carpeta>/api.zip --type zip
 ```
 
-La web se publica con `npx @azure/static-web-apps-cli deploy <carpeta>/web/wwwroot --env production`,
-con el token de despliegue en la variable `SWA_CLI_DEPLOYMENT_TOKEN` (`az staticwebapp secrets list`).
-El comando se ejecuta desde `<carpeta>/web`: desde la raíz de una unidad la herramienta intenta leer
+La web principal (https://afrisan.azurewebsites.net, D-50) se publica con un solo comando:
+
+```powershell
+.\AFRISAN_NUEVO\03_CODIGO\Despliegue\Publicar-Web-AppService.ps1
+```
+
+El script hace estos pasos:
+
+1. Publica `Afrisan.Nuevo.WebHost` autocontenido para `linux-x64`, junto con la web.
+2. En la copia publicada, cambia `ApiBaseUrl` y su hash en el service worker, y borra las copias
+   comprimidas de esos dos archivos.
+3. Comprime el paquete con 7-Zip.
+4. Lo sube con `az webapp deploy`. Este comando espera a que la app arranque, así que puede tardar
+   unos 20 minutos.
+
+`Afrisan.Nuevo.WebHost` lee `wwwroot/staticwebapp.config.json` al arrancar. Así aplica las mismas
+cabeceras (CSP incluida), tipos de archivo y rutas de la SPA que Static Web Apps, y la política se
+cambia en un solo archivo. Si falta el archivo o no define la CSP, no arranca. Además:
+
+- Entrega las copias `.br` o `.gz` cuando el navegador las acepta.
+- Agrega HSTS y responde `no-cache`, con validación por ETag.
+- Oculta la cabecera `Server` y no entrega `staticwebapp.config.json`.
+
+El App Service `afrisan` comparte `plan-afrisan` con la API y se creó una sola vez, el 18/11/2026,
+con estos ajustes:
+
+- `--runtime DOTNETCORE:10.0`, solo HTTPS, sin afinidad ARR, *Always On*, FTPS y TLS 1.2.
+- Comando de inicio: `chmod +x /home/site/wwwroot/Afrisan.Nuevo.WebHost && /home/site/wwwroot/Afrisan.Nuevo.WebHost`.
+- `ASPNETCORE_URLS=http://+:8080`, `WEBSITES_PORT=8080` y `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`.
+
+La API admite su origen en `Cors__Origins__1`.
+
+La web de respaldo en Static Web Apps se publica con `npx @azure/static-web-apps-cli deploy <carpeta>/web/wwwroot --env production`.
+Usa el token de despliegue en la variable `SWA_CLI_DEPLOYMENT_TOKEN` (`az staticwebapp secrets list`).
+El comando se ejecuta desde `<carpeta>/web`: desde la raíz de una unidad, la herramienta intenta leer
 carpetas del sistema y falla.
+
+**Publicación del 18/11/2026 en https://afrisan.azurewebsites.net:** se verificó lo siguiente:
+
+- La web carga, muestra el acceso y llama a la API.
+- CORS acepta el origen nuevo y rechaza uno ajeno; el de Static Web Apps sigue aceptado.
+- HTTP redirige a HTTPS (301), y las rutas de la SPA (`/ordenes`) entregan `index.html`.
+- `dotnet.native.wasm` llega comprimido con Brotli, `appsettings.json` apunta a la API de Azure y su
+  hash coincide con el del service worker.
+- OWASP ZAP pasivo da el mismo resultado que en Static Web Apps.
+
+Esta publicación incluye el gráfico de consumo sin estilos en línea (A1 a A3 del plan de la CSP). La
+CSP no cambió.
 
 **Publicación del 17/11/2026:** API y web con D-47 a D-49 y la búsqueda por código corregida, después
 de aplicar la migración `12`. Verificado: `/health/ready` 200 con `"supabase": true`, `/swagger` 404,

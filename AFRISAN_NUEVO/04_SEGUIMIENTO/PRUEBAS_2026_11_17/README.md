@@ -26,6 +26,11 @@ respaldan con el bucket de Storage (o la carpeta del servidor mientras siga DEF-
 | Pasivo, Azure | Informativo (4) | Comentarios en JavaScript de terceros (Blazor, jsQR), directivas de caché a revisar, aplicación web moderna y cookie de sesión de Azure | Sin acción |
 | Activo y autenticado, API local | Informativo (3) | Solicitud de autenticación, respuesta con token y variación de `User-Agent` | Sin acción |
 
+**18/11/2026, dirección nueva de la web:** el escaneo pasivo se repitió sobre https://afrisan.azurewebsites.net
+(App Service con `Afrisan.Nuevo.WebHost`, D-50) y la API. El resultado fue el mismo que en Static Web Apps:
+0 alertas altas, la misma media (`style-src 'unsafe-inline'`), 0 bajas y solo informativas. El servidor
+también envía HSTS, redirige HTTP a HTTPS (301) y no entrega `staticwebapp.config.json` (404).
+
 El escaneo activo se hizo sobre la copia local para no enviar ataques a la base de producción. Como esa
 copia guarda en memoria, la inyección SQL se cubre con la revisión del código (todas las consultas son
 parametrizadas). Los informes completos no se publican porque el repositorio es público.

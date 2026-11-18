@@ -3,8 +3,9 @@
 Alerta del análisis dinámico del 17 y 18/11/2026 (CDP-12, [resultados](README.md#alertas-de-owasp-zap-cdp-12)).
 Hoy está **aceptada temporalmente**. Este plan la elimina sin cambiar lo que ve el usuario.
 
-**Avance al 18/11/2026:** A1, A2 y A3 están hechas en el código y probadas en local, pero **no publicadas**:
-la web en Azure y su CSP siguen como estaban. Faltan A4 a A7, después del 19/11 (sección 4).
+**Avance al 18/11/2026:** A1, A2 y A3 están hechas y probadas en local. El gráfico sin estilos en línea ya
+está publicado en https://afrisan.azurewebsites.net (D-50), pero **la CSP publicada no cambió**: sigue con
+`unsafe-inline`. Faltan A4 a A7, después del 19/11 (sección 4).
 
 ## 1. La alerta
 

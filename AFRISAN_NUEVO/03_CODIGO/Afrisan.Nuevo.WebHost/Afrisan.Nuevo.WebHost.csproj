@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Servidor de la web publicada en App Service (https://afrisan.azurewebsites.net). Sirve la publicación
+       de Afrisan.Nuevo.Web con las cabeceras, tipos y rutas de wwwroot/staticwebapp.config.json.
+       Se publica con Despliegue/Publicar-Web-AppService.ps1 (DESPLIEGUE.md §6). -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Afrisan.Nuevo.Web/Afrisan.Nuevo.Web.csproj" />
+  </ItemGroup>
+
+</Project>

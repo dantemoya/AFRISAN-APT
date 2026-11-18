@@ -121,9 +121,10 @@ Tres proyectos .NET 8 y un proyecto de pruebas:
 - **`Afrisan.Nuevo.Contratos`:** datos (DTO) que comparten la web y la API.
 - **`Afrisan.Nuevo.Api`:** API REST que concentra las reglas de negocio, la autorización por
   rol y el acceso a PostgreSQL y Storage.
+- **`Afrisan.Nuevo.WebHost`:** servidor mínimo que publica la web en App Service con las cabeceras de seguridad de `staticwebapp.config.json`.
 - **`Afrisan.Nuevo.Pruebas`:** pruebas xUnit.
 
-Diagrama de despliegue (publicado en Azure el 15/11/2026: web en https://ambitious-field-0d951cb0f.6.azurestaticapps.net y API en https://afrisan-api-dm.azurewebsites.net; ver [DESPLIEGUE.md](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md)):
+Diagrama de despliegue (publicado en Azure el 15/11/2026: web en **https://afrisan.azurewebsites.net** desde el 18/11, con respaldo en https://ambitious-field-0d951cb0f.6.azurestaticapps.net, y API en https://afrisan-api-dm.azurewebsites.net; ver [DESPLIEGUE.md](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md)):
 
 ```mermaid
 flowchart LR
@@ -131,7 +132,7 @@ flowchart LR
         WEB["Web Blazor WebAssembly<br/>borradores sin conexión en IndexedDB"]
     end
     subgraph Azure["Microsoft Azure · East US"]
-        SWA["Static Web Apps<br/>archivos de la web"]
+        SWA["App Service afrisan<br/>archivos de la web y cabeceras"]
         API["App Service B1 Linux<br/>API ASP.NET Core 8 autocontenida"]
     end
     subgraph Supabase["Supabase · us-east-1"]
