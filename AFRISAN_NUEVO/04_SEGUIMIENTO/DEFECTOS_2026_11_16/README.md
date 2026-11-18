@@ -36,11 +36,12 @@ con la API de esta versión ya no corresponde repetirlo.
 1. ~~Aplicar la migración `12` en Supabase~~: aplicada el 17/11 con autorización del autor;
    `--verificar-supabase` y `--verificar-persistencia` sin errores.
 2. ~~Publicar la API y la web en Azure~~: publicadas el 17/11 ([`DESPLIEGUE.md`](../../03_CODIGO/DESPLIEGUE.md) §6).
-3. ~~CDP-64 contra Azure~~: el autor ejecutó [`humo_por_rol.mjs`](humo_por_rol.mjs) con `ESCRIBIR=1` el
+3. CDP-64 contra Azure: el autor ejecutó [`humo_por_rol.mjs`](humo_por_rol.mjs) con `ESCRIBIR=1` el
    17/11: **46 de 46 correctas** ([resultados](resultados_humo_azure.json)). Salud, ingreso de las cuatro
    cuentas de prueba, matriz por rol y una OT de agregado (`OT-00001`, cilindro `AF-00001`) llevada por
    Técnico, Bodega y Autorizador hasta el cierre, con fotos en cada pesaje y consultables. El rol
-   Administrador no se incluyó (no tiene cuenta de prueba).
+   Administrador no se incluyó (no tiene cuenta de prueba). En la matriz el caso queda **fallido**: su
+   resultado esperado incluye `SupabaseStorage` y la salud informa `DiscoPrivado`. Se repite después de DEF-11.
 4. **DEF-11:** llevar las fotos a Supabase Storage para que duren fuera del servidor de Azure. Hoy la
    API publicada las guarda en el disco privado del App Service.
 

@@ -199,7 +199,7 @@ vida. También están el [manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUA
 5. **Power BI:** lee las tablas desde la API con un token de solo lectura de 30 días, y la
    web descarga el proyecto ya conectado ([POWER_BI.md](AFRISAN_NUEVO/03_CODIGO/POWER_BI.md)).
 6. **Pendiente:**
-   - revisar en el despliegue de Azure el caso que depende de él (CDP-39, Android; CDP-64 aprobado el 17/11 con 46 de 46) y llevar las fotos a Supabase Storage (DEF-11) ([guía](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md));
+   - revisar en el despliegue de Azure el caso que depende de él (CDP-39, Android; CDP-64 pasó 46 de 46 el 17/11, pero queda fallido hasta resolver DEF-11) y llevar las fotos a Supabase Storage (DEF-11) ([guía](AFRISAN_NUEVO/03_CODIGO/DESPLIEGUE.md));
    - pruebas en Android (G05) y aceptación con usuarios (G09); la contraparte de AFRISAN no
      está disponible desde el 11/11 (D-36);
    - actualizar el informe en Power BI Desktop (CDP-57) y publicarlo;
