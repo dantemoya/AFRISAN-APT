@@ -17,6 +17,8 @@ Git). **RTO** de la base: unos 21 s (respaldo más restauración). **RPO**: el t
 respaldo ejecutado; con una ejecución diaria, hasta 24 horas. Las fotos no van en este respaldo: se
 respaldan con el bucket de Storage (o la carpeta del servidor mientras siga DEF-11).
 
+CDP-19, del 18/11, está en [PRUEBAS_2026_11_18](../PRUEBAS_2026_11_18/README.md).
+
 ## Alertas de OWASP ZAP (CDP-12)
 
 | Escaneo | Riesgo | Alerta | Tratamiento |

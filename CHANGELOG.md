@@ -8,6 +8,9 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 ## Sin publicar
 
 ### Agregado
+- CDP-19 (18/11): lectura del QR con la cámara del celular sobre la web publicada. Queda aprobado con observación: abrió la
+  ficha correcta con los tres formatos de código, pero en unos 5 s la primera vez y menos de 3 s después (la meta es 2 s). El
+  tiempo queda como DEF-16, con plan de mitigación (`AFRISAN_NUEVO/04_SEGUIMIENTO/PRUEBAS_2026_11_18`). Plan de pruebas: 65 de 72.
 - Pruebas del 17/11: CDP-12 (OWASP ZAP, sin alertas altas), CDP-16, CDP-29 y CDP-61 aprobados contra Supabase (concurrencia y respaldo con
   restauración verificada), guion de carga para CDP-62 y totales de Power BI recalculados
   (`AFRISAN_NUEVO/04_SEGUIMIENTO/PRUEBAS_2026_11_17`). DEF-15 registrado.
@@ -98,6 +101,8 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 - El Autorizador responde las incidencias en cualquier etapa abierta de la OT (D-41).
 
 ### Corregido
+- Plan de pruebas 06: el resumen por nivel (recalculado desde la matriz 07) y la fila Sistema de los niveles de prueba, que
+  una edición del 17/11 había alterado al reemplazar celdas con el mismo contenido.
 - DEF-15 (18/11): si la base rechaza la operación, la API borra la foto que acababa de guardar en el disco o en Storage, solo si
   esa solicitud la creó. Cubre el retiro, la foto del borrador, la recepción, la recarga, el pesaje inicial y la rectificación.
   Verificado con `validar_defectos.mjs` (73 de 73, PostgreSQL embebido) y 7 pruebas xUnit nuevas (495 en total). Todavía no se
