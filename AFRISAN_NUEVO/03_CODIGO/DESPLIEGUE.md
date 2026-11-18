@@ -132,7 +132,8 @@ no hay Docker, así que no se construyeron ni ejecutaron las imágenes.
   la CA) y la conexión usa `Root Certificate=/home/site/wwwroot/certificates/supabase.crt`.
 - **Ajustes:** `ASPNETCORE_ENVIRONMENT=Production`, `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`,
   `ASPNETCORE_URLS=http://+:8080`, `WEBSITES_PORT=8080`, `Persistencia__FotosPath=/home/afrisan/fotos`,
-  `Cors__Origins__0` con la dirección de la web. Los secretos (`ConnectionStrings__AfrisanRuntime` y
+  `Cors__Origins__0` con la dirección de la web. La afinidad ARR está desactivada (18/11/2026): la API no
+  guarda sesión en el servidor y así no envía la cookie `ARRAffinity` que señalaba OWASP ZAP. Los secretos (`ConnectionStrings__AfrisanRuntime` y
   una `Persistencia__JwtKey` propia de producción) los carga el autor con un script local que no los
   muestra. Sin claves de Storage, las fotos quedan en el disco persistente del App Service (DEF-11).
 - **Web:** se publica con `dotnet publish` y, solo en la copia que se sube, `appsettings.json` apunta a
