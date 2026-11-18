@@ -21,7 +21,7 @@ respaldan con el bucket de Storage (o la carpeta del servidor mientras siga DEF-
 
 | Escaneo | Riesgo | Alerta | Tratamiento |
 | --- | --- | --- | --- |
-| Pasivo, Azure | Medio | La CSP de la web permite `style-src 'unsafe-inline'` | Se acepta: Blazor aplica estilos en línea. Los scripts, la vía principal de XSS, no usan `unsafe-inline`. |
+| Pasivo, Azure | Medio | La CSP de la web permite `style-src 'unsafe-inline'` | Aceptada temporalmente: los scripts, la vía principal de XSS, no admiten código en línea. La única causa son dos estilos en línea del gráfico de consumo por sucursal; [plan de mitigación](Plan_mitigacion_CSP.md) para después del 19/11. |
 | Pasivo, Azure | Bajo (2) | Cookie `ARRAffinity` de Azure sin `SameSite` estricto | **Resuelto el 18/11:** se desactivó la afinidad ARR del App Service (la API usa tokens y no guarda sesión en el servidor). Al repetir el escaneo pasivo ya no aparecen. |
 | Pasivo, Azure | Informativo (4) | Comentarios en JavaScript de terceros (Blazor, jsQR), directivas de caché a revisar, aplicación web moderna y cookie de sesión de Azure | Sin acción |
 | Activo y autenticado, API local | Informativo (3) | Solicitud de autenticación, respuesta con token y variación de `User-Agent` | Sin acción |
