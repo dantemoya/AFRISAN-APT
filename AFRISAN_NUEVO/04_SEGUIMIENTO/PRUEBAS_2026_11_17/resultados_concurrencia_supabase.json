@@ -1,0 +1,68 @@
+{
+  "fecha_utc": "2026-11-18T02:29:21.150Z",
+  "tipo": "CDP-16 y CDP-29 con la API local y la base de Supabase",
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "El técnico de prueba abre dos sesiones independientes"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Existen la sucursal y el gas de prueba del 14/11"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-16: dos altas simultáneas con la misma serie: una se crea (201) y la otra recibe conflicto (409) [201,409]"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-16: cinco altas simultáneas sin serie se crean"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-16: los seis cilindros reciben códigos distintos de 8 caracteres (AF-00002, AF-00004, AF-00005, AF-00007, AF-00006, AF-00008)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-16: en la base existe un solo cilindro con esa serie"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-29: dos retiros simultáneos del mismo cilindro: uno queda activo y el otro recibe conflicto (409) [200,409]"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "CDP-29: el cilindro aparece en un solo despacho"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Datos de prueba ordenados: OT-00003 anulada y OT-00002 cerrada"
+    }
+  ],
+  "datos_creados": {
+    "cilindroSerie": "AF-00002",
+    "cilindrosSinSerie": [
+      "AF-00004",
+      "AF-00005",
+      "AF-00007",
+      "AF-00006",
+      "AF-00008"
+    ],
+    "ots": [
+      "OT-00002",
+      "OT-00003"
+    ]
+  },
+  "carrera": [
+    {
+      "status": 200,
+      "detalle": "retiro registrado"
+    },
+    {
+      "status": 409,
+      "detalle": "Cilindro no disponible/pesado/con contenido en Bodega"
+    }
+  ],
+  "estado": "CORRECTO",
+  "cantidad_comprobaciones": 9
+}

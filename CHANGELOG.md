@@ -8,6 +8,9 @@ hora de Chile. El detalle de cada cambio está en el historial de Git.
 ## Sin publicar
 
 ### Agregado
+- Pruebas del 17/11: CDP-16, CDP-29 y CDP-61 aprobados contra Supabase (concurrencia y respaldo con
+  restauración verificada), guion de carga para CDP-62 y totales de Power BI recalculados
+  (`AFRISAN_NUEVO/04_SEGUIMIENTO/PRUEBAS_2026_11_17`). DEF-15 registrado.
 - Consulta de las fotos de cada pesaje (16/11, D-48): la ficha del cilindro muestra «Pesajes y fotos de la
   balanza» con tipo, peso, OT, usuario y la foto de cada pesaje, para verificar el monto. Rutas
   `GET /cilindros/{codigo}/pesajes` y `/pesajes/fotos/{id}` para Administrador, Bodega, Autorizador y Jefatura.

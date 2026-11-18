@@ -1,0 +1,39 @@
+{
+  "fecha_utc": "2026-11-18T02:35:04.555Z",
+  "api": "http://localhost:5181",
+  "cantidad": 50,
+  "tecnicos_simulados": 5,
+  "limite_ms": 2000,
+  "datos_creados": {
+    "serie": "P1711C-MWLIDO1F",
+    "cilindros": 50,
+    "ots": [
+      "OT-00001",
+      "OT-00002",
+      "OT-00003",
+      "OT-00004",
+      "OT-00005"
+    ]
+  },
+  "duracion_total_s": 0.1,
+  "lectura_qr": {
+    "n": 50,
+    "p50_ms": 4,
+    "p95_ms": 7,
+    "max_ms": 9
+  },
+  "retiro": {
+    "n": 50,
+    "p50_ms": 5,
+    "p95_ms": 17,
+    "max_ms": 18
+  },
+  "errores": [],
+  "recepcion": {
+    "n": 50,
+    "p50_ms": 2,
+    "p95_ms": 3,
+    "max_ms": 6
+  },
+  "estado": "CORRECTO"
+}

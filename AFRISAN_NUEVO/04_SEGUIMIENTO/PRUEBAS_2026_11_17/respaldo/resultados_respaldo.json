@@ -1,0 +1,33 @@
+{
+  "fecha_utc": "2026-11-18T02:33:53.384Z",
+  "respaldo_utc": "2026-11-18T02:32:48.725275+00:00",
+  "respaldo_s": 18.2388078,
+  "esquema_s": 2.0761925000000003,
+  "carga_s": 0.13970610000000033,
+  "restauracion_total_s": 2.4920567,
+  "rto_s": 20.7308645,
+  "tablas": 32,
+  "filas": 1347,
+  "cuentas": {
+    "cilindros": 30,
+    "ot": 26,
+    "pesajes": 69,
+    "despachos": 20,
+    "fotos": 43
+  },
+  "comprobaciones": [
+    {
+      "resultado": "OK",
+      "comprobacion": "La instancia de prueba tiene las mismas 32 tablas que Supabase"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Las 32 tablas restauradas son idénticas al respaldo (SHA-256 y 1347 filas)"
+    },
+    {
+      "resultado": "OK",
+      "comprobacion": "Cilindros, pesajes, despachos y evidencias quedan relacionados (86 claves foráneas, 0 filas huérfanas)"
+    }
+  ],
+  "estado": "CORRECTO"
+}
