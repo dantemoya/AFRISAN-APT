@@ -54,7 +54,7 @@ y la integración continua (D-30). Antes, las pruebas eran los guiones de integr
 
 ## 3. Retrospectivas de la Fase 2
 
-Los sprints siguen la numeración del [tablero](../../../AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_18/Tablero_AFRISAN.md),
+Los sprints siguen la numeración del [tablero](../../../AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_19/Tablero_AFRISAN.md),
 y las semanas, el calendario oficial de la asignatura
 ([línea base](16_Linea_Base_de_Planificacion_Afrisan_DM.md)).
 

@@ -38,7 +38,7 @@ revisión, o **Pendiente** si depende de un hecho que todavía no ocurre.
 | Plan de comunicación y registro de interesados | `Fase 1/Documentación del proyecto/06_Plan_de_Comunicacion_Afrisan_DM.docx` | Existente |
 | Matriz RACI | `Fase 1/Documentación del proyecto/08_Matriz_RACI_Afrisan_DM.docx` | Existente |
 | Registro de decisiones y cambios (D-01 a D-38) | `AFRISAN_NUEVO/04_SEGUIMIENTO/DECISIONES_Y_PENDIENTES.md` | Existente |
-| Tablero de seguimiento por sprints | `AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_18/Tablero_AFRISAN.md` (corte del 18/11; los anteriores, en `TRELLO_2026_11_08/` y `TRELLO_2026_10_29/`) | Existente |
+| Tablero de seguimiento por sprints | `AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_19/Tablero_AFRISAN.md` (corte del 19/11; los anteriores, en `TRELLO_2026_11_18/`, `TRELLO_2026_11_08/` y `TRELLO_2026_10_29/`) | Existente |
 | Informes de Fase 1, avance y monitoreo | `Fase 1/…/05_…`, `Fase 2/Evidencias Proyecto/Evidencias de documentación/02_` y `03_` | Existente |
 | **Informe final del Proyecto APT** | `Fase 2/Evidencias Grupales/Informe_Final_Proyecto_APT_Afrisan_DM.docx` | Existente; movido el 14/11 a la carpeta que pide el docente y actualizado al 15/11 (recorrido completo y correcciones D-39 a D-43) |
 | **Registro de riesgos, supuestos y lecciones aprendidas** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/10_Registro_de_Riesgos_y_Lecciones_Afrisan_DM.xlsx` | Nuevo (11/11) |

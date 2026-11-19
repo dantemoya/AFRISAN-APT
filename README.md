@@ -106,7 +106,7 @@ Metodología mixta, justificada en la sección 4 del informe final:
 | Visión del producto, definición de hecho (DoD) y retrospectivas de la Fase 2 | [`14_Vision_DoD_y_Retrospectivas_Afrisan_DM.md`](<Fase 2/Evidencias Proyecto/Evidencias de documentación/14_Vision_DoD_y_Retrospectivas_Afrisan_DM.md>) |
 | Product backlog y sprint backlog | `Fase 1/Documentación del proyecto/01_…` y `02_…`; plan y backlog de Fase 2 en `Evidencias de documentación/01_…` |
 | Línea base del calendario (semanas oficiales, sprints e hitos) | [`16_Linea_Base_de_Planificacion_Afrisan_DM.md`](<Fase 2/Evidencias Proyecto/Evidencias de documentación/16_Linea_Base_de_Planificacion_Afrisan_DM.md>) |
-| Tablero por sprints | [`TRELLO_2026_11_18/Tablero_AFRISAN.md`](AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_18/Tablero_AFRISAN.md), copia del Trello al 18/11 |
+| Tablero por sprints | [`TRELLO_2026_11_19/Tablero_AFRISAN.md`](AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_19/Tablero_AFRISAN.md), copia del Trello al 19/11 |
 | Registro de decisiones y cambios (D-01 a D-38) | [`DECISIONES_Y_PENDIENTES.md`](AFRISAN_NUEVO/04_SEGUIMIENTO/DECISIONES_Y_PENDIENTES.md) |
 | Retrospectivas de la Fase 1 | `Fase 1/Documentación del proyecto/09_Revision_de_Retrospectivas_Afrisan_DM.docx` |
 
