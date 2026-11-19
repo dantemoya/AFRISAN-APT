@@ -1,7 +1,7 @@
 # AFRISAN · Sistema Integral de Gestión y Trazabilidad de Refrigerantes
 
 Repositorio oficial del Proyecto Capstone (**PTY4614 — Duoc UC**) para la empresa **AFRISAN**.
-Corte documental y técnico: **14 de noviembre de 2026**.
+Corte documental y técnico: **18 de noviembre de 2026**.
 
 ---
 
@@ -218,7 +218,7 @@ vida. También están el [manual de usuario](AFRISAN_NUEVO/03_CODIGO/MANUAL_USUA
 | Recorrido completo contra Supabase (CDP-67) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/CORRECCIONES_2026_11_14/recorrido_supabase.mjs` (API local contra Supabase) | 33 comprobaciones correctas el 15/11/2026 |
 | Power BI contra Supabase (CDP-54 a CDP-57) | `node AFRISAN_NUEVO/04_SEGUIMIENTO/POWER_BI_2026_11_15/validar_powerbi_supabase.mjs` (API local contra Supabase) | 62 comprobaciones correctas el 15/11/2026, incluido el consumo por sucursal |
 | Integración continua | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) | Compila y ejecuta xUnit en cada push a `main` |
-| Plan de pruebas | `Evidencias de documentación/06_…` y `07_…` | 72 casos (CDP-01 a CDP-72): 59 aprobados, 12 pendientes y 1 bloqueado; recorrido completo del 14/11, repetido en Supabase el 15/11, y 14 defectos registrados |
+| Plan de pruebas | `Evidencias de documentación/06_…` y `07_…` | 72 casos (CDP-01 a CDP-72) al 18/11/2026: 65 aprobados, 5 pendientes, 1 fallido (CDP-64, por DEF-11) y 1 bloqueado (CDP-58); recorrido completo del 14/11, repetido en Supabase el 15/11, y 16 defectos registrados (12 corregidos y verificados) |
 
 La capa PostgreSQL se prueba con las baterías de integración y no entra en la cobertura de
 xUnit. Por eso la cobertura todavía no llega a la meta del 80 % del acta.
