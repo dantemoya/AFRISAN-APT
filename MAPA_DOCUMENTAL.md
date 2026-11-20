@@ -41,6 +41,7 @@ revisión, o **Pendiente** si depende de un hecho que todavía no ocurre.
 | Tablero de seguimiento por sprints | `AFRISAN_NUEVO/04_SEGUIMIENTO/TRELLO_2026_11_19/Tablero_AFRISAN.md` (corte del 19/11; los anteriores, en `TRELLO_2026_11_18/`, `TRELLO_2026_11_08/` y `TRELLO_2026_10_29/`) | Existente |
 | Informes de Fase 1, avance y monitoreo | `Fase 1/…/05_…`, `Fase 2/Evidencias Proyecto/Evidencias de documentación/02_` y `03_` | Existente |
 | **Informe final del Proyecto APT** | `Fase 2/Evidencias Grupales/Informe_Final_Proyecto_APT_Afrisan_DM.docx` | Existente; movido el 14/11 a la carpeta que pide el docente y actualizado al 15/11 (recorrido completo y correcciones D-39 a D-43) |
+| **Presentación final de Fase 2** | `Fase 2/Evidencias Grupales/Presentacion_Final_Fase_2_Afrisan_DM.pptx` (y `.pdf`) | Nuevo (19/11); expuesta ese día. Reemplaza a `Fase 2/Evidencias Proyecto/Presentación Proyecto.pptx` (08/11) |
 | **Registro de riesgos, supuestos y lecciones aprendidas** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/10_Registro_de_Riesgos_y_Lecciones_Afrisan_DM.xlsx` | Nuevo (11/11) |
 | **Acta de cierre del proyecto** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/12_Acta_de_Cierre_del_Proyecto_Afrisan_DM.docx` | Nuevo (11/11), se firma al cierre |
 | **Estimación de costos de desarrollo y operación** | `Fase 2/Evidencias Proyecto/Evidencias de documentación/13_Estimacion_de_Costos_Afrisan_DM.xlsx` | Nuevo (11/11); falta la tarifa por hora |
